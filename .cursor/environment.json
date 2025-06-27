@@ -1,19 +1,19 @@
 {
   "agentCanUpdateSnapshot": true,
-  "install": "docker build -f Dockerfile.background-agent -t flutter-bg-agent . && echo 'Flutter Docker image built successfully'",
-  "start": "docker run --rm -d --name flutter-dev -p 8080:8080 -v $(pwd):/workspace flutter-bg-agent",
+  "install": "#!/bin/bash\nset -e\n\n# Update system packages\nsudo apt-get update\n\n# Install Flutter dependencies\nsudo apt-get install -y curl git unzip xz-utils zip libglu1-mesa wget\n\n# Install Flutter if not already installed\nif [ ! -d \"$HOME/flutter\" ]; then\n  echo \"Installing Flutter...\"\n  cd $HOME\n  git clone https://github.com/flutter/flutter.git -b stable --depth 1\n  echo 'export PATH=\"$HOME/flutter/bin:$PATH\"' >> ~/.bashrc\n  export PATH=\"$HOME/flutter/bin:$PATH\"\nelse\n  echo \"Flutter already installed\"\n  export PATH=\"$HOME/flutter/bin:$PATH\"\nfi\n\n# Configure Flutter\nflutter config --no-analytics\nflutter doctor -v\nflutter precache --web\n\n# Install project dependencies\ncd /home/seth/workspace/workout_app\nflutter pub get\n\n# Run build_runner if available\ndart run build_runner build --delete-conflicting-outputs || echo \"No build_runner found, skipping...\"\n\n# Make scripts executable\nchmod +x scripts/*.sh || echo \"No scripts found, skipping...\"\n\necho \"Flutter environment setup complete!\"",
+  "start": "export PATH=\"$HOME/flutter/bin:$PATH\" && cd /home/seth/workspace/workout_app",
   "terminals": [
     {
       "name": "Flutter Web Dev",
-      "command": "docker exec -it flutter-dev flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0"
+      "command": "export PATH=\"$HOME/flutter/bin:$PATH\" && cd /home/seth/workspace/workout_app && flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0"
     },
     {
       "name": "Test Runner",
-      "command": "docker exec -it flutter-dev flutter test --reporter=compact"
+      "command": "export PATH=\"$HOME/flutter/bin:$PATH\" && cd /home/seth/workspace/workout_app && flutter test --reporter=compact"
     },
     {
-      "name": "Docker Logs",
-      "command": "docker logs -f flutter-dev"
+      "name": "Flutter Doctor",
+      "command": "export PATH=\"$HOME/flutter/bin:$PATH\" && flutter doctor -v"
     }
   ]
 }
