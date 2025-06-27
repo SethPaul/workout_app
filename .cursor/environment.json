@@ -1,15 +1,19 @@
 {
   "agentCanUpdateSnapshot": true,
-  "install": "git clone https://github.com/flutter/flutter.git -b stable --depth 1 && export PATH=\"$PWD/flutter/bin:$PATH\" && flutter doctor && flutter pub get",
-  "start": "export PATH=\"$PWD/flutter/bin:$PATH\" && chmod +x scripts/*.sh || true",
+  "install": "docker build -f Dockerfile.background-agent -t flutter-bg-agent . && echo 'Flutter Docker image built successfully'",
+  "start": "docker run --rm -d --name flutter-dev -p 8080:8080 -v $(pwd):/workspace flutter-bg-agent",
   "terminals": [
     {
       "name": "Flutter Web Dev",
-      "command": "export PATH=\"$PWD/flutter/bin:$PATH\" && flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0"
+      "command": "docker exec -it flutter-dev flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0"
     },
     {
       "name": "Test Runner",
-      "command": "export PATH=\"$PWD/flutter/bin:$PATH\" && flutter test --reporter=compact"
+      "command": "docker exec -it flutter-dev flutter test --reporter=compact"
+    },
+    {
+      "name": "Docker Logs",
+      "command": "docker logs -f flutter-dev"
     }
   ]
 }

@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  flutter-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.background-agent
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    environment:
+      - FLUTTER_ROOT=/flutter
+    command: ["flutter", "run", "-d", "web-server", "--web-port", "8080", "--web-hostname", "0.0.0.0"]
+
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.background-agent
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    command: ["flutter", "test", "--reporter=compact"]
+    profiles: ["test"] 

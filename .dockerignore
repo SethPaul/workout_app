@@ -1,0 +1,40 @@
+# Flutter/Dart build files
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+
+# Test and coverage
+coverage/
+test_reports/
+
+# Python virtual environment
+venv/
+
+# Node modules (if any)
+node_modules/
+
+# Logs
+*.log
+
+# Environment files
+.env* 
