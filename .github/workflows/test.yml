@@ -51,13 +51,13 @@ jobs:
         genhtml coverage/lcov_cleaned.info -o coverage/html
     
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
-        file: coverage/lcov_cleaned.info
+        files: coverage/lcov_cleaned.info
         fail_ci_if_error: true
     
     - name: Archive test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: test-results
@@ -87,10 +87,10 @@ jobs:
         sudo udevadm trigger --name-match=kvm
     
     - name: Setup Android SDK
-      uses: android-actions/setup-android@v2
+      uses: android-actions/setup-android@v3
     
     - name: AVD cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       id: avd-cache
       with:
         path: |
@@ -131,7 +131,7 @@ jobs:
       run: flutter build apk --debug
     
     - name: Upload APK
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: debug-apk
         path: build/app/outputs/flutter-apk/app-debug.apk 
