@@ -1,35 +1,15 @@
 {
   "agentCanUpdateSnapshot": true,
-  "install": "flutter pub get && dart run build_runner build --delete-conflicting-outputs && ./scripts/download_audio.sh",
+  "install": "flutter pub get && dart run build_runner build --delete-conflicting-outputs",
   "start": "chmod +x scripts/*.sh",
   "terminals": [
     {
       "name": "Flutter Web Dev",
-      "command": "flutter run -d web-server --web-port 8080"
+      "command": "flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0"
     },
     {
-      "name": "Test Watcher",
-      "command": "flutter test --reporter=json | tee test_results.json"
-    },
-    {
-      "name": "Build Runner Watch",
-      "command": "dart run build_runner watch --delete-conflicting-outputs"
-    },
-    {
-      "name": "Database Setup",
-      "command": "dart run database_diagnostic.dart"
-    },
-    {
-      "name": "Integration Tests",
-      "command": "flutter test integration_test/"
-    },
-    {
-      "name": "Coverage Report",
-      "command": "flutter test --coverage && genhtml coverage/lcov.info -o coverage/html"
-    },
-    {
-      "name": "Golden Test Update",
-      "command": "flutter test --update-goldens test/golden/"
+      "name": "Test Runner",
+      "command": "flutter test --reporter=compact"
     }
   ]
 }
