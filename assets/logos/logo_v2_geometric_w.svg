@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f093fb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f5576c;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#1a1a2e"/>
+  
+  <!-- Geometric W design -->
+  <g fill="url(#grad2)">
+    <!-- Left peak -->
+    <polygon points="45,60 65,140 85,80 75,60"/>
+    <!-- Center valley -->
+    <polygon points="85,80 100,120 115,80 100,60"/>
+    <!-- Right peak -->
+    <polygon points="115,80 125,60 145,60 135,140"/>
+  </g>
+  
+  <!-- Accent dots -->
+  <g fill="white" opacity="0.8">
+    <circle cx="55" cy="45" r="3"/>
+    <circle cx="145" cy="45" r="3"/>
+    <circle cx="100" cy="155" r="4"/>
+  </g>
+</svg>

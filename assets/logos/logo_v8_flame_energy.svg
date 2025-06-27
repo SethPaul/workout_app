@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="grad8" cx="50%" cy="70%" r="60%">
+      <stop offset="0%" style="stop-color:#ff6b6b;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#ee5a24;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff9ff3;stop-opacity:1" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#2c2c54"/>
+  
+  <!-- Flame shape -->
+  <g fill="url(#grad8)">
+    <!-- Main flame -->
+    <path d="M 100 160 Q 80 140 85 120 Q 90 100 95 90 Q 100 70 110 60 Q 120 50 125 70 Q 130 90 120 110 Q 115 130 100 160 Z"/>
+    
+    <!-- Inner flame -->
+    <path d="M 100 150 Q 90 135 92 125 Q 95 115 98 110 Q 100 95 105 90 Q 110 85 112 95 Q 115 105 110 120 Q 108 135 100 150 Z" 
+          fill="#ffeaa7" opacity="0.8"/>
+    
+    <!-- Flame tip -->
+    <ellipse cx="110" cy="65" rx="8" ry="15" fill="#fdcb6e"/>
+  </g>
+  
+  <!-- Spark effects -->
+  <g fill="#ffeaa7">
+    <circle cx="75" cy="80" r="2"/>
+    <circle cx="135" cy="95" r="1.5"/>
+    <circle cx="125" cy="75" r="1"/>
+    <circle cx="85" cy="110" r="1.5"/>
+  </g>
+</svg>

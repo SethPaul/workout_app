@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad7" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#43e97b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#38f9d7;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="200" height="200" fill="#0f3460"/>
+  
+  <!-- Stylized W -->
+  <g fill="url(#grad7)">
+    <!-- Left stroke -->
+    <polygon points="40,60 60,60 80,140 70,140"/>
+    <!-- Left middle -->
+    <polygon points="80,140 90,140 100,100 95,95"/>
+    <!-- Right middle -->
+    <polygon points="100,100 105,95 110,140 120,140"/>
+    <!-- Right stroke -->
+    <polygon points="120,140 130,140 160,60 140,60"/>
+  </g>
+  
+  <!-- 3D effect shadows -->
+  <g fill="#2c5282" opacity="0.6">
+    <polygon points="45,65 65,65 85,145 75,145"/>
+    <polygon points="85,145 95,145 105,105 100,100"/>
+    <polygon points="105,105 110,100 115,145 125,145"/>
+    <polygon points="125,145 135,145 165,65 145,65"/>
+  </g>
+  
+  <!-- Decorative elements -->
+  <g fill="white" opacity="0.4">
+    <circle cx="50" cy="45" r="2"/>
+    <circle cx="100" cy="180" r="3"/>
+    <circle cx="150" cy="45" r="2"/>
+  </g>
+</svg>
