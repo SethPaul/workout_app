@@ -1,0 +1,2608 @@
+{
+  "movements": [
+    {
+      "id": "back-squat",
+      "name": "Back Squat",
+      "description": "A compound lower body movement where the barbell is placed on the upper back and the athlete performs a squat",
+      "category": "COMPOUND_LIFT",
+      "subCategory": "Olympic Style",
+      
+      "equipment": [
+        {
+          "name": "Barbell",
+          "type": "BARBELL",
+          "optional": false
+        },
+        {
+          "name": "Squat Rack",
+          "type": "MACHINE",
+          "optional": false
+        },
+        {
+          "name": "Bumper Plates",
+          "type": "ACCESSORY",
+          "optional": false
+        }
+      ],
+      
+      "primaryMuscleGroups": [
+        "QUADS",
+        "GLUTES",
+        "HAMSTRINGS"
+      ],
+      "secondaryMuscleGroups": [
+        "LOWER_BACK",
+        "CORE",
+        "CALVES"
+      ],
+      "stabilizerMuscles": [
+        "ERECTORS",
+        "ABS",
+        "OBLIQUES"
+      ],
+      "grossMuscleGroups": [
+        "LEGS"
+      ],
+      
+      "movementPattern": "SQUAT",
+      "complexity": "INTERMEDIATE",
+      "impact": "HIGH",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Box Squat",
+          "description": "Squat to a box to reduce range of motion",
+          "difficulty": "BEGINNER"
+        },
+        {
+          "name": "Goblet Squat",
+          "description": "Hold kettlebell at chest to learn proper form",
+          "difficulty": "BEGINNER"
+        },
+        {
+          "name": "Front Squat",
+          "description": "More quad dominant variation",
+          "difficulty": "INTERMEDIATE"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 1,
+          "max": 5,
+          "type": "STRENGTH"
+        },
+        {
+          "min": 8,
+          "max": 12,
+          "type": "HYPERTROPHY"
+        },
+        {
+          "min": 15,
+          "max": 20,
+          "type": "ENDURANCE"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 180,
+          "type": "LONG"
+        },
+        {
+          "duration": 120,
+          "type": "MEDIUM"
+        },
+        {
+          "duration": 60,
+          "type": "SHORT"
+        }
+      ],
+      
+      "commonFaults": [
+        "Knees caving inward",
+        "Heels lifting off ground",
+        "Excessive forward lean",
+        "Not hitting proper depth"
+      ],
+      
+      "techniqueCues": [
+        "Brace core before descending",
+        "Push knees out in line with toes",
+        "Keep chest up",
+        "Drive through mid-foot"
+      ],
+      
+      "contraindications": [
+        "Lower back injury",
+        "Knee injury",
+        "Hip mobility restrictions"
+      ],
+      
+      "frequencyGuidelines": "2-3 times per week with 48 hours rest between sessions",
+      "recoveryTime": 48,
+      "volumeGuidelines": "10-20 total working sets per week"
+    },
+    
+    {
+      "id": "deadlift",
+      "name": "Deadlift",
+      "description": "A compound hip hinge movement where the barbell is lifted from the floor to a standing position",
+      "category": "COMPOUND_LIFT",
+      "subCategory": "Power Lift",
+      
+      "equipment": [
+        {
+          "name": "Barbell",
+          "type": "BARBELL",
+          "optional": false
+        },
+        {
+          "name": "Bumper Plates",
+          "type": "ACCESSORY",
+          "optional": false
+        }
+      ],
+      
+      "primaryMuscleGroups": [
+        "HAMSTRINGS",
+        "GLUTES",
+        "LOWER_BACK"
+      ],
+      "secondaryMuscleGroups": [
+        "QUADS",
+        "TRAPS",
+        "FOREARMS"
+      ],
+      "stabilizerMuscles": [
+        "ABS",
+        "OBLIQUES",
+        "ERECTORS"
+      ],
+      "grossMuscleGroups": [
+        "HIPS"
+      ],
+      
+      "movementPattern": "HINGE",
+      "complexity": "INTERMEDIATE",
+      "impact": "HIGH",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Romanian Deadlift",
+          "description": "Start from standing position, focus on hip hinge",
+          "difficulty": "BEGINNER"
+        },
+        {
+          "name": "Trap Bar Deadlift",
+          "description": "More quad dominant variation",
+          "difficulty": "INTERMEDIATE"
+        },
+        {
+          "name": "Sumo Deadlift",
+          "description": "Wider stance variation",
+          "difficulty": "INTERMEDIATE"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 1,
+          "max": 5,
+          "type": "STRENGTH"
+        },
+        {
+          "min": 6,
+          "max": 8,
+          "type": "POWER"
+        },
+        {
+          "min": 8,
+          "max": 12,
+          "type": "HYPERTROPHY"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 180,
+          "type": "LONG"
+        },
+        {
+          "duration": 120,
+          "type": "MEDIUM"
+        }
+      ],
+      
+      "commonFaults": [
+        "Rounding lower back",
+        "Hips rising too fast",
+        "Not maintaining neutral spine",
+        "Not engaging lats"
+      ],
+      
+      "techniqueCues": [
+        "Push floor away",
+        "Keep bar close to body",
+        "Hips and shoulders rise together",
+        "Squeeze glutes at top"
+      ],
+      
+      "contraindications": [
+        "Lower back injury",
+        "Hip injury",
+        "Hamstring injury"
+      ],
+      
+      "frequencyGuidelines": "1-2 times per week with 48-72 hours rest between sessions",
+      "recoveryTime": 72,
+      "volumeGuidelines": "8-15 total working sets per week"
+    },
+    
+    {
+      "id": "burpees",
+      "name": "Burpees",
+      "description": "A full body movement combining a squat, push-up, and jump",
+      "category": "BODYWEIGHT",
+      "subCategory": "Metabolic Conditioning",
+      
+      "equipment": [],
+      
+      "primaryMuscleGroups": [
+        "CHEST",
+        "QUADS",
+        "SHOULDERS"
+      ],
+      "secondaryMuscleGroups": [
+        "TRICEPS",
+        "CORE",
+        "GLUTES"
+      ],
+      "stabilizerMuscles": [
+        "ABS",
+        "OBLIQUES",
+        "LOWER_BACK"
+      ],
+      "grossMuscleGroups": [
+        "FULL_BODY"
+      ],
+      
+      "movementPattern": "LOCOMOTION",
+      "complexity": "INTERMEDIATE",
+      "impact": "HIGH",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Step Back Burpee",
+          "description": "Step back instead of jumping back",
+          "difficulty": "BEGINNER"
+        },
+        {
+          "name": "No Push-up Burpee",
+          "description": "Skip the push-up portion",
+          "difficulty": "BEGINNER"
+        },
+        {
+          "name": "Burpee Box Jump Over",
+          "description": "Add box jump over at the end",
+          "difficulty": "ADVANCED"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 5,
+          "max": 10,
+          "type": "POWER"
+        },
+        {
+          "min": 10,
+          "max": 20,
+          "type": "ENDURANCE"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 30,
+          "type": "SHORT"
+        },
+        {
+          "duration": 60,
+          "type": "MEDIUM"
+        }
+      ],
+      
+      "commonFaults": [
+        "Not maintaining plank position",
+        "Not fully extending hips",
+        "Not landing softly",
+        "Rushing the movement"
+      ],
+      
+      "techniqueCues": [
+        "Land softly",
+        "Maintain tight core",
+        "Full hip extension",
+        "Control the descent"
+      ],
+      
+      "contraindications": [
+        "Shoulder injury",
+        "Wrist injury",
+        "Lower back injury"
+      ],
+      
+      "frequencyGuidelines": "2-3 times per week with 24 hours rest between sessions",
+      "recoveryTime": 24,
+      "volumeGuidelines": "50-100 total reps per session"
+    },
+    
+    {
+      "id": "clean",
+      "name": "Clean",
+      "description": "An Olympic lift where the barbell is pulled from the floor to the front rack position in one fluid motion",
+      "category": "COMPOUND_LIFT",
+      "subCategory": "Olympic Lift",
+      
+      "equipment": [
+        {
+          "name": "Barbell",
+          "type": "BARBELL",
+          "optional": false
+        },
+        {
+          "name": "Bumper Plates",
+          "type": "ACCESSORY",
+          "optional": false
+        }
+      ],
+      
+      "primaryMuscleGroups": [
+        "HAMSTRINGS",
+        "GLUTES",
+        "QUADS",
+        "SHOULDERS"
+      ],
+      "secondaryMuscleGroups": [
+        "TRAPS",
+        "FOREARMS",
+        "LOWER_BACK"
+      ],
+      "stabilizerMuscles": [
+        "ABS",
+        "OBLIQUES",
+        "ERECTORS"
+      ],
+      "grossMuscleGroups": [
+        "FULL_BODY"
+      ],
+      
+      "movementPattern": "PULL",
+      "complexity": "ADVANCED",
+      "impact": "HIGH",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Power Clean",
+          "description": "Catch in quarter squat position",
+          "difficulty": "INTERMEDIATE"
+        },
+        {
+          "name": "Hang Clean",
+          "description": "Start from hang position",
+          "difficulty": "INTERMEDIATE"
+        },
+        {
+          "name": "Dumbbell Clean",
+          "description": "Use dumbbells instead of barbell",
+          "difficulty": "BEGINNER"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 1,
+          "max": 3,
+          "type": "POWER"
+        },
+        {
+          "min": 3,
+          "max": 5,
+          "type": "STRENGTH"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 180,
+          "type": "LONG"
+        },
+        {
+          "duration": 120,
+          "type": "MEDIUM"
+        }
+      ],
+      
+      "commonFaults": [
+        "Early arm pull",
+        "Not extending fully",
+        "Poor front rack position",
+        "Not keeping bar close"
+      ],
+      
+      "techniqueCues": [
+        "Keep bar close to body",
+        "Full extension at top",
+        "Fast elbows under",
+        "Active front rack"
+      ],
+      
+      "contraindications": [
+        "Shoulder injury",
+        "Wrist injury",
+        "Lower back injury"
+      ],
+      
+      "frequencyGuidelines": "2-3 times per week with 48 hours rest between sessions",
+      "recoveryTime": 48,
+      "volumeGuidelines": "15-25 total reps per session"
+    },
+    
+    {
+      "id": "pull-up",
+      "name": "Pull-up",
+      "description": "A bodyweight exercise where the athlete pulls their body up to a bar until their chin is over the bar",
+      "category": "BODYWEIGHT",
+      "subCategory": "Gymnastic",
+      
+      "equipment": [
+        {
+          "name": "Pull-up Bar",
+          "type": "MACHINE",
+          "optional": false
+        }
+      ],
+      
+      "primaryMuscleGroups": [
+        "BACK",
+        "BICEPS",
+        "SHOULDERS"
+      ],
+      "secondaryMuscleGroups": [
+        "FOREARMS",
+        "CORE"
+      ],
+      "stabilizerMuscles": [
+        "ABS",
+        "OBLIQUES"
+      ],
+      "grossMuscleGroups": [
+        "PULL"
+      ],
+      
+      "movementPattern": "PULL",
+      "complexity": "INTERMEDIATE",
+      "impact": "LOW",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Ring Rows",
+          "description": "Horizontal pulling variation",
+          "difficulty": "BEGINNER"
+        },
+        {
+          "name": "Band Assisted Pull-up",
+          "description": "Use resistance band for assistance",
+          "difficulty": "BEGINNER"
+        },
+        {
+          "name": "Strict Pull-up",
+          "description": "No kipping, strict form",
+          "difficulty": "INTERMEDIATE"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 1,
+          "max": 5,
+          "type": "STRENGTH"
+        },
+        {
+          "min": 5,
+          "max": 12,
+          "type": "HYPERTROPHY"
+        },
+        {
+          "min": 12,
+          "max": 20,
+          "type": "ENDURANCE"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 120,
+          "type": "MEDIUM"
+        },
+        {
+          "duration": 60,
+          "type": "SHORT"
+        }
+      ],
+      
+      "commonFaults": [
+        "Not full range of motion",
+        "Kipping without control",
+        "Not engaging back",
+        "Poor shoulder position"
+      ],
+      
+      "techniqueCues": [
+        "Engage lats first",
+        "Full range of motion",
+        "Control the descent",
+        "Keep core tight"
+      ],
+      
+      "contraindications": [
+        "Shoulder injury",
+        "Elbow injury",
+        "Wrist injury"
+      ],
+      
+      "frequencyGuidelines": "2-3 times per week with 24 hours rest between sessions",
+      "recoveryTime": 24,
+      "volumeGuidelines": "30-50 total reps per session"
+    },
+    
+    {
+      "id": "wall-balls",
+      "name": "Wall Balls",
+      "description": "A combination of a squat and overhead throw using a medicine ball",
+      "category": "ACCESSORY",
+      "subCategory": "Metabolic Conditioning",
+      
+      "equipment": [
+        {
+          "name": "Medicine Ball",
+          "type": "ACCESSORY",
+          "optional": false
+        }
+      ],
+      
+      "primaryMuscleGroups": [
+        "QUADS",
+        "SHOULDERS",
+        "TRICEPS"
+      ],
+      "secondaryMuscleGroups": [
+        "GLUTES",
+        "CORE",
+        "CHEST"
+      ],
+      "stabilizerMuscles": [
+        "ABS",
+        "OBLIQUES",
+        "LOWER_BACK"
+      ],
+      "grossMuscleGroups": [
+        "LEGS",
+        "PUSH"
+      ],
+      
+      "movementPattern": "PUSH",
+      "complexity": "INTERMEDIATE",
+      "impact": "MEDIUM",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Light Wall Balls",
+          "description": "Use lighter medicine ball",
+          "difficulty": "BEGINNER"
+        },
+        {
+          "name": "Wall Ball Shots",
+          "description": "Focus on accuracy and height",
+          "difficulty": "INTERMEDIATE"
+        },
+        {
+          "name": "Wall Ball Burpees",
+          "description": "Add burpee between throws",
+          "difficulty": "ADVANCED"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 10,
+          "max": 20,
+          "type": "ENDURANCE"
+        },
+        {
+          "min": 20,
+          "max": 30,
+          "type": "METABOLIC"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 60,
+          "type": "SHORT"
+        },
+        {
+          "duration": 30,
+          "type": "SHORT"
+        }
+      ],
+      
+      "commonFaults": [
+        "Not squatting deep enough",
+        "Not throwing high enough",
+        "Poor catch mechanics",
+        "Not maintaining rhythm"
+      ],
+      
+      "techniqueCues": [
+        "Catch and squat simultaneously",
+        "Throw with legs and arms",
+        "Aim for consistent height",
+        "Maintain breathing rhythm"
+      ],
+      
+      "contraindications": [
+        "Shoulder injury",
+        "Knee injury",
+        "Lower back injury"
+      ],
+      
+      "frequencyGuidelines": "2-3 times per week with 24 hours rest between sessions",
+      "recoveryTime": 24,
+      "volumeGuidelines": "50-100 total reps per session"
+    },
+    
+    {
+      "id": "kettlebell-swing",
+      "name": "Kettlebell Swing",
+      "description": "A hip hinge movement where the kettlebell is swung between the legs and up to chest height",
+      "category": "ACCESSORY",
+      "subCategory": "Power",
+      
+      "equipment": [
+        {
+          "name": "Kettlebell",
+          "type": "KETTLEBELL",
+          "optional": false
+        }
+      ],
+      
+      "primaryMuscleGroups": [
+        "HAMSTRINGS",
+        "GLUTES",
+        "LOWER_BACK"
+      ],
+      "secondaryMuscleGroups": [
+        "SHOULDERS",
+        "CORE",
+        "FOREARMS"
+      ],
+      "stabilizerMuscles": [
+        "ABS",
+        "OBLIQUES",
+        "ERECTORS"
+      ],
+      "grossMuscleGroups": [
+        "HIPS"
+      ],
+      
+      "movementPattern": "HINGE",
+      "complexity": "INTERMEDIATE",
+      "impact": "MEDIUM",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Russian Swing",
+          "description": "Swing to chest height",
+          "difficulty": "BEGINNER"
+        },
+        {
+          "name": "American Swing",
+          "description": "Swing overhead",
+          "difficulty": "INTERMEDIATE"
+        },
+        {
+          "name": "Single Arm Swing",
+          "description": "Use one arm at a time",
+          "difficulty": "INTERMEDIATE"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 10,
+          "max": 15,
+          "type": "POWER"
+        },
+        {
+          "min": 15,
+          "max": 20,
+          "type": "ENDURANCE"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 60,
+          "type": "SHORT"
+        },
+        {
+          "duration": 30,
+          "type": "SHORT"
+        }
+      ],
+      
+      "commonFaults": [
+        "Squatting instead of hinging",
+        "Using arms to swing",
+        "Not fully extending hips",
+        "Poor timing"
+      ],
+      
+      "techniqueCues": [
+        "Hinge at hips",
+        "Snap hips forward",
+        "Let arms follow momentum",
+        "Keep core tight"
+      ],
+      
+      "contraindications": [
+        "Lower back injury",
+        "Hip injury",
+        "Shoulder injury"
+      ],
+      
+      "frequencyGuidelines": "2-3 times per week with 24 hours rest between sessions",
+      "recoveryTime": 24,
+      "volumeGuidelines": "50-100 total reps per session"
+    },
+    
+    {
+      "id": "snatch",
+      "name": "Snatch",
+      "description": "An Olympic lift where the barbell is pulled from the floor to overhead in one fluid motion",
+      "category": "COMPOUND_LIFT",
+      "subCategory": "Olympic Lift",
+      
+      "equipment": [
+        {
+          "name": "Barbell",
+          "type": "BARBELL",
+          "optional": false
+        },
+        {
+          "name": "Bumper Plates",
+          "type": "ACCESSORY",
+          "optional": false
+        }
+      ],
+      
+      "primaryMuscleGroups": [
+        "HAMSTRINGS",
+        "GLUTES",
+        "SHOULDERS",
+        "TRAPS"
+      ],
+      "secondaryMuscleGroups": [
+        "QUADS",
+        "LOWER_BACK",
+        "FOREARMS"
+      ],
+      "stabilizerMuscles": [
+        "ABS",
+        "OBLIQUES",
+        "ERECTORS"
+      ],
+      "grossMuscleGroups": [
+        "FULL_BODY"
+      ],
+      
+      "movementPattern": "PULL",
+      "complexity": "ADVANCED",
+      "impact": "HIGH",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Power Snatch",
+          "description": "Catch in quarter squat position",
+          "difficulty": "INTERMEDIATE"
+        },
+        {
+          "name": "Hang Snatch",
+          "description": "Start from hang position",
+          "difficulty": "INTERMEDIATE"
+        },
+        {
+          "name": "Dumbbell Snatch",
+          "description": "Use dumbbell instead of barbell",
+          "difficulty": "BEGINNER"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 1,
+          "max": 3,
+          "type": "POWER"
+        },
+        {
+          "min": 3,
+          "max": 5,
+          "type": "STRENGTH"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 180,
+          "type": "LONG"
+        },
+        {
+          "duration": 120,
+          "type": "MEDIUM"
+        }
+      ],
+      
+      "commonFaults": [
+        "Early arm pull",
+        "Not extending fully",
+        "Poor overhead position",
+        "Not keeping bar close"
+      ],
+      
+      "techniqueCues": [
+        "Keep bar close to body",
+        "Full extension at top",
+        "Fast turnover under bar",
+        "Active overhead position"
+      ],
+      
+      "contraindications": [
+        "Shoulder injury",
+        "Wrist injury",
+        "Lower back injury"
+      ],
+      
+      "frequencyGuidelines": "2-3 times per week with 48 hours rest between sessions",
+      "recoveryTime": 48,
+      "volumeGuidelines": "15-25 total reps per session"
+    },
+    
+    {
+      "id": "push-up",
+      "name": "Push-up",
+      "description": "A bodyweight exercise where the athlete lowers and raises their body using their arms while maintaining a plank position",
+      "category": "BODYWEIGHT",
+      "subCategory": "Gymnastic",
+      
+      "equipment": [],
+      
+      "primaryMuscleGroups": [
+        "CHEST",
+        "TRICEPS",
+        "SHOULDERS"
+      ],
+      "secondaryMuscleGroups": [
+        "CORE",
+        "SERRATUS"
+      ],
+      "stabilizerMuscles": [
+        "ABS",
+        "OBLIQUES",
+        "LOWER_BACK"
+      ],
+      "grossMuscleGroups": [
+        "PUSH"
+      ],
+      
+      "movementPattern": "PUSH",
+      "complexity": "INTERMEDIATE",
+      "impact": "LOW",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Knee Push-up",
+          "description": "Perform from knees instead of toes",
+          "difficulty": "BEGINNER"
+        },
+        {
+          "name": "Incline Push-up",
+          "description": "Hands elevated on box or bench",
+          "difficulty": "BEGINNER"
+        },
+        {
+          "name": "Decline Push-up",
+          "description": "Feet elevated for increased difficulty",
+          "difficulty": "ADVANCED"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 5,
+          "max": 10,
+          "type": "STRENGTH"
+        },
+        {
+          "min": 10,
+          "max": 20,
+          "type": "ENDURANCE"
+        },
+        {
+          "min": 20,
+          "max": 50,
+          "type": "METABOLIC"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 60,
+          "type": "SHORT"
+        },
+        {
+          "duration": 30,
+          "type": "SHORT"
+        }
+      ],
+      
+      "commonFaults": [
+        "Sagging hips",
+        "Not full range of motion",
+        "Flaring elbows",
+        "Poor hand position"
+      ],
+      
+      "techniqueCues": [
+        "Keep core tight",
+        "Full range of motion",
+        "Elbows at 45 degrees",
+        "Hands shoulder width"
+      ],
+      
+      "contraindications": [
+        "Shoulder injury",
+        "Wrist injury",
+        "Lower back injury"
+      ],
+      
+      "frequencyGuidelines": "3-4 times per week with 24 hours rest between sessions",
+      "recoveryTime": 24,
+      "volumeGuidelines": "50-100 total reps per session"
+    },
+    
+    {
+      "id": "box-jump",
+      "name": "Box Jump",
+      "description": "A plyometric movement where the athlete jumps onto an elevated box and lands softly",
+      "category": "PLYOMETRIC",
+      "subCategory": "Jump",
+      
+      "equipment": [
+        {
+          "name": "Box",
+          "type": "MACHINE",
+          "optional": false
+        }
+      ],
+      
+      "primaryMuscleGroups": [
+        "QUADS",
+        "GLUTES",
+        "HAMSTRINGS"
+      ],
+      "secondaryMuscleGroups": [
+        "CALVES",
+        "CORE"
+      ],
+      "stabilizerMuscles": [
+        "ABS",
+        "OBLIQUES",
+        "LOWER_BACK"
+      ],
+      "grossMuscleGroups": [
+        "LEGS"
+      ],
+      
+      "movementPattern": "JUMP",
+      "complexity": "INTERMEDIATE",
+      "impact": "HIGH",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Step Up",
+          "description": "Step up instead of jumping",
+          "difficulty": "BEGINNER"
+        },
+        {
+          "name": "Box Jump Over",
+          "description": "Jump over box instead of landing on it",
+          "difficulty": "INTERMEDIATE"
+        },
+        {
+          "name": "Broad Jump",
+          "description": "Jump forward instead of up",
+          "difficulty": "INTERMEDIATE"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 5,
+          "max": 10,
+          "type": "POWER"
+        },
+        {
+          "min": 10,
+          "max": 20,
+          "type": "ENDURANCE"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 60,
+          "type": "SHORT"
+        },
+        {
+          "duration": 30,
+          "type": "SHORT"
+        }
+      ],
+      
+      "commonFaults": [
+        "Not landing softly",
+        "Not fully extending hips",
+        "Poor box height selection",
+        "Not maintaining balance"
+      ],
+      
+      "techniqueCues": [
+        "Land softly",
+        "Full hip extension",
+        "Arms drive up",
+        "Soft landing"
+      ],
+      
+      "contraindications": [
+        "Knee injury",
+        "Ankle injury",
+        "Lower back injury"
+      ],
+      
+      "frequencyGuidelines": "2-3 times per week with 24 hours rest between sessions",
+      "recoveryTime": 24,
+      "volumeGuidelines": "30-50 total reps per session"
+    },
+    
+    {
+      "id": "double-unders",
+      "name": "Double Unders",
+      "description": "A jump rope movement where the rope passes under the feet twice per jump",
+      "category": "CARDIO",
+      "subCategory": "Jump Rope",
+      
+      "equipment": [
+        {
+          "name": "Jump Rope",
+          "type": "ACCESSORY",
+          "optional": false
+        }
+      ],
+      
+      "primaryMuscleGroups": [
+        "CALVES",
+        "SHOULDERS",
+        "FOREARMS"
+      ],
+      "secondaryMuscleGroups": [
+        "CORE",
+        "QUADS"
+      ],
+      "stabilizerMuscles": [
+        "ABS",
+        "OBLIQUES"
+      ],
+      "grossMuscleGroups": [
+        "CARDIO"
+      ],
+      
+      "movementPattern": "LOCOMOTION",
+      "complexity": "INTERMEDIATE",
+      "impact": "MEDIUM",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Single Unders",
+          "description": "One rope pass per jump",
+          "difficulty": "BEGINNER"
+        },
+        {
+          "name": "Double Under Practice",
+          "description": "Alternate singles and doubles",
+          "difficulty": "INTERMEDIATE"
+        },
+        {
+          "name": "Triple Unders",
+          "description": "Three rope passes per jump",
+          "difficulty": "ADVANCED"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 10,
+          "max": 20,
+          "type": "SKILL"
+        },
+        {
+          "min": 20,
+          "max": 50,
+          "type": "ENDURANCE"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 30,
+          "type": "SHORT"
+        },
+        {
+          "duration": 15,
+          "type": "SHORT"
+        }
+      ],
+      
+      "commonFaults": [
+        "Arms too wide",
+        "Not jumping high enough",
+        "Poor timing",
+        "Not maintaining rhythm"
+      ],
+      
+      "techniqueCues": [
+        "Keep arms close",
+        "Jump higher than singles",
+        "Wrist rotation",
+        "Maintain rhythm"
+      ],
+      
+      "contraindications": [
+        "Knee injury",
+        "Ankle injury",
+        "Shoulder injury"
+      ],
+      
+      "frequencyGuidelines": "3-4 times per week with 24 hours rest between sessions",
+      "recoveryTime": 24,
+      "volumeGuidelines": "100-200 total reps per session"
+    },
+    
+    {
+      "id": "bench-press",
+      "name": "Bench Press",
+      "description": "A compound upper body movement where the athlete presses a barbell from chest level to full arm extension",
+      "category": "COMPOUND_LIFT",
+      "subCategory": "Power Lift",
+      
+      "equipment": [
+        {
+          "name": "Barbell",
+          "type": "BARBELL",
+          "optional": false
+        },
+        {
+          "name": "Bench",
+          "type": "MACHINE",
+          "optional": false
+        }
+      ],
+      
+      "primaryMuscleGroups": [
+        "CHEST",
+        "TRICEPS",
+        "SHOULDERS"
+      ],
+      "secondaryMuscleGroups": [
+        "SERRATUS",
+        "FOREARMS"
+      ],
+      "stabilizerMuscles": [
+        "ABS",
+        "OBLIQUES",
+        "LOWER_BACK"
+      ],
+      "grossMuscleGroups": [
+        "PUSH"
+      ],
+      
+      "movementPattern": "PUSH",
+      "complexity": "INTERMEDIATE",
+      "impact": "MEDIUM",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Dumbbell Bench Press",
+          "description": "Use dumbbells instead of barbell",
+          "difficulty": "INTERMEDIATE"
+        },
+        {
+          "name": "Incline Bench Press",
+          "description": "Bench set at incline",
+          "difficulty": "INTERMEDIATE"
+        },
+        {
+          "name": "Close Grip Bench Press",
+          "description": "Hands closer together",
+          "difficulty": "INTERMEDIATE"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 1,
+          "max": 5,
+          "type": "STRENGTH"
+        },
+        {
+          "min": 6,
+          "max": 8,
+          "type": "POWER"
+        },
+        {
+          "min": 8,
+          "max": 12,
+          "type": "HYPERTROPHY"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 180,
+          "type": "LONG"
+        },
+        {
+          "duration": 120,
+          "type": "MEDIUM"
+        }
+      ],
+      
+      "commonFaults": [
+        "Bouncing bar off chest",
+        "Not maintaining arch",
+        "Flaring elbows",
+        "Poor bar path"
+      ],
+      
+      "techniqueCues": [
+        "Maintain arch",
+        "Control the descent",
+        "Drive feet into ground",
+        "Keep elbows at 45 degrees"
+      ],
+      
+      "contraindications": [
+        "Shoulder injury",
+        "Wrist injury",
+        "Lower back injury"
+      ],
+      
+      "frequencyGuidelines": "1-2 times per week with 48 hours rest between sessions",
+      "recoveryTime": 48,
+      "volumeGuidelines": "15-25 total reps per session"
+    },
+    
+    {
+      "id": "jerk",
+      "name": "Jerk",
+      "description": "An Olympic lift where the barbell is driven from the front rack position to overhead using a split or push jerk technique",
+      "category": "COMPOUND_LIFT",
+      "subCategory": "Olympic Lift",
+      
+      "equipment": [
+        {
+          "name": "Barbell",
+          "type": "BARBELL",
+          "optional": false
+        },
+        {
+          "name": "Bumper Plates",
+          "type": "ACCESSORY",
+          "optional": false
+        }
+      ],
+      
+      "primaryMuscleGroups": [
+        "SHOULDERS",
+        "TRICEPS",
+        "QUADS",
+        "GLUTES"
+      ],
+      "secondaryMuscleGroups": [
+        "CORE",
+        "CALVES",
+        "FOREARMS"
+      ],
+      "stabilizerMuscles": [
+        "ABS",
+        "OBLIQUES",
+        "ERECTORS"
+      ],
+      "grossMuscleGroups": [
+        "FULL_BODY"
+      ],
+      
+      "movementPattern": "PUSH",
+      "complexity": "ADVANCED",
+      "impact": "HIGH",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Push Jerk",
+          "description": "No split, just push under",
+          "difficulty": "INTERMEDIATE"
+        },
+        {
+          "name": "Split Jerk",
+          "description": "Split stance to receive",
+          "difficulty": "ADVANCED"
+        },
+        {
+          "name": "Dumbbell Jerk",
+          "description": "Use dumbbells instead of barbell",
+          "difficulty": "INTERMEDIATE"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 1,
+          "max": 3,
+          "type": "POWER"
+        },
+        {
+          "min": 3,
+          "max": 5,
+          "type": "STRENGTH"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 180,
+          "type": "LONG"
+        },
+        {
+          "duration": 120,
+          "type": "MEDIUM"
+        }
+      ],
+      
+      "commonFaults": [
+        "Not driving enough with legs",
+        "Poor overhead position",
+        "Not fully extending arms",
+        "Poor footwork"
+      ],
+      
+      "techniqueCues": [
+        "Drive with legs",
+        "Fast feet",
+        "Active overhead",
+        "Lock out arms"
+      ],
+      
+      "contraindications": [
+        "Shoulder injury",
+        "Wrist injury",
+        "Lower back injury"
+      ],
+      
+      "frequencyGuidelines": "2-3 times per week with 48 hours rest between sessions",
+      "recoveryTime": 48,
+      "volumeGuidelines": "15-25 total reps per session"
+    },
+    
+    {
+      "id": "handstand-push-up",
+      "name": "Handstand Push-up",
+      "description": "A bodyweight exercise where the athlete performs a push-up while in a handstand position against a wall",
+      "category": "BODYWEIGHT",
+      "subCategory": "Gymnastic",
+      
+      "equipment": [
+        {
+          "name": "Wall",
+          "type": "MACHINE",
+          "optional": false
+        }
+      ],
+      
+      "primaryMuscleGroups": [
+        "SHOULDERS",
+        "TRICEPS",
+        "UPPER_CHEST"
+      ],
+      "secondaryMuscleGroups": [
+        "CORE",
+        "TRAPS",
+        "FOREARMS"
+      ],
+      "stabilizerMuscles": [
+        "ABS",
+        "OBLIQUES",
+        "LOWER_BACK"
+      ],
+      "grossMuscleGroups": [
+        "PUSH"
+      ],
+      
+      "movementPattern": "PUSH",
+      "complexity": "ADVANCED",
+      "impact": "MEDIUM",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Pike Push-up",
+          "description": "Feet elevated, hips piked",
+          "difficulty": "BEGINNER"
+        },
+        {
+          "name": "Strict Handstand Push-up",
+          "description": "No kipping, strict form",
+          "difficulty": "INTERMEDIATE"
+        },
+        {
+          "name": "Kipping Handstand Push-up",
+          "description": "Use kip for momentum",
+          "difficulty": "ADVANCED"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 1,
+          "max": 5,
+          "type": "STRENGTH"
+        },
+        {
+          "min": 5,
+          "max": 10,
+          "type": "ENDURANCE"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 120,
+          "type": "MEDIUM"
+        },
+        {
+          "duration": 60,
+          "type": "SHORT"
+        }
+      ],
+      
+      "commonFaults": [
+        "Not maintaining hollow position",
+        "Not full range of motion",
+        "Poor hand position",
+        "Not maintaining balance"
+      ],
+      
+      "techniqueCues": [
+        "Keep hollow position",
+        "Full range of motion",
+        "Hands shoulder width",
+        "Look at hands"
+      ],
+      
+      "contraindications": [
+        "Shoulder injury",
+        "Wrist injury",
+        "Lower back injury"
+      ],
+      
+      "frequencyGuidelines": "2-3 times per week with 48 hours rest between sessions",
+      "recoveryTime": 48,
+      "volumeGuidelines": "20-40 total reps per session"
+    },
+    
+    {
+      "id": "row",
+      "name": "Row",
+      "description": "A cardio movement using a rowing machine to simulate the motion of rowing a boat",
+      "category": "CARDIO",
+      "subCategory": "Machine",
+      
+      "equipment": [
+        {
+          "name": "Rower",
+          "type": "MACHINE",
+          "optional": false
+        }
+      ],
+      
+      "primaryMuscleGroups": [
+        "BACK",
+        "HAMSTRINGS",
+        "GLUTES"
+      ],
+      "secondaryMuscleGroups": [
+        "SHOULDERS",
+        "CORE",
+        "QUADS"
+      ],
+      "stabilizerMuscles": [
+        "ABS",
+        "OBLIQUES",
+        "LOWER_BACK"
+      ],
+      "grossMuscleGroups": [
+        "CARDIO"
+      ],
+      
+      "movementPattern": "PULL",
+      "complexity": "INTERMEDIATE",
+      "impact": "LOW",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Light Resistance",
+          "description": "Lower damper setting",
+          "difficulty": "BEGINNER"
+        },
+        {
+          "name": "High Resistance",
+          "description": "Higher damper setting",
+          "difficulty": "ADVANCED"
+        },
+        {
+          "name": "Sprint Intervals",
+          "description": "Alternate high and low intensity",
+          "difficulty": "INTERMEDIATE"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 100,
+          "max": 500,
+          "type": "ENDURANCE"
+        },
+        {
+          "min": 50,
+          "max": 100,
+          "type": "SPRINT"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 60,
+          "type": "SHORT"
+        },
+        {
+          "duration": 30,
+          "type": "SHORT"
+        }
+      ],
+      
+      "commonFaults": [
+        "Poor sequencing",
+        "Not using legs enough",
+        "Rounding back",
+        "Poor rhythm"
+      ],
+      
+      "techniqueCues": [
+        "Legs, body, arms",
+        "Arms, body, legs",
+        "Maintain posture",
+        "Smooth transitions"
+      ],
+      
+      "contraindications": [
+        "Lower back injury",
+        "Shoulder injury",
+        "Knee injury"
+      ],
+      
+      "frequencyGuidelines": "3-4 times per week with 24 hours rest between sessions",
+      "recoveryTime": 24,
+      "volumeGuidelines": "1000-2000 meters per session"
+    },
+    
+    {
+      "id": "front-squat",
+      "name": "Front Squat",
+      "description": "A compound lower body movement where the barbell is held in the front rack position while performing a squat",
+      "category": "COMPOUND_LIFT",
+      "subCategory": "Olympic Style",
+      
+      "equipment": [
+        {
+          "name": "Barbell",
+          "type": "BARBELL",
+          "optional": false
+        },
+        {
+          "name": "Squat Rack",
+          "type": "MACHINE",
+          "optional": false
+        },
+        {
+          "name": "Bumper Plates",
+          "type": "ACCESSORY",
+          "optional": false
+        }
+      ],
+      
+      "primaryMuscleGroups": [
+        "QUADS",
+        "GLUTES",
+        "CORE"
+      ],
+      "secondaryMuscleGroups": [
+        "HAMSTRINGS",
+        "UPPER_BACK",
+        "SHOULDERS"
+      ],
+      "stabilizerMuscles": [
+        "ABS",
+        "OBLIQUES",
+        "ERECTORS"
+      ],
+      "grossMuscleGroups": [
+        "LEGS"
+      ],
+      
+      "movementPattern": "SQUAT",
+      "complexity": "INTERMEDIATE",
+      "impact": "HIGH",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Goblet Squat",
+          "description": "Hold kettlebell at chest",
+          "difficulty": "BEGINNER"
+        },
+        {
+          "name": "Front Rack Hold",
+          "description": "Hold position to build strength",
+          "difficulty": "BEGINNER"
+        },
+        {
+          "name": "Cross Arm Front Squat",
+          "description": "Cross arms to hold bar",
+          "difficulty": "INTERMEDIATE"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 1,
+          "max": 5,
+          "type": "STRENGTH"
+        },
+        {
+          "min": 8,
+          "max": 12,
+          "type": "HYPERTROPHY"
+        },
+        {
+          "min": 15,
+          "max": 20,
+          "type": "ENDURANCE"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 180,
+          "type": "LONG"
+        },
+        {
+          "duration": 120,
+          "type": "MEDIUM"
+        }
+      ],
+      
+      "commonFaults": [
+        "Elbows dropping",
+        "Not maintaining upright position",
+        "Not hitting proper depth",
+        "Poor front rack position"
+      ],
+      
+      "techniqueCues": [
+        "Keep elbows high",
+        "Maintain upright torso",
+        "Drive knees out",
+        "Full depth"
+      ],
+      
+      "contraindications": [
+        "Lower back injury",
+        "Knee injury",
+        "Wrist injury"
+      ],
+      
+      "frequencyGuidelines": "2-3 times per week with 48 hours rest between sessions",
+      "recoveryTime": 48,
+      "volumeGuidelines": "15-25 total reps per session"
+    },
+    {
+      "id": "dips",
+      "name": "Dips",
+      "description": "A bodyweight exercise where the athlete lowers and raises their body using parallel bars or rings",
+      "category": "BODYWEIGHT",
+      "subCategory": "Gymnastic",
+      
+      "equipment": [
+        {
+          "name": "Parallel Bars",
+          "type": "MACHINE",
+          "optional": false
+        }
+      ],
+      
+      "primaryMuscleGroups": [
+        "CHEST",
+        "TRICEPS",
+        "SHOULDERS"
+      ],
+      "secondaryMuscleGroups": [
+        "LATS",
+        "CORE"
+      ],
+      "stabilizerMuscles": [
+        "ABS",
+        "OBLIQUES",
+        "LOWER_BACK"
+      ],
+      "grossMuscleGroups": [
+        "PUSH"
+      ],
+      
+      "movementPattern": "PUSH",
+      "complexity": "INTERMEDIATE",
+      "impact": "LOW",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Band Assisted Dips",
+          "description": "Use resistance band for assistance",
+          "difficulty": "BEGINNER"
+        },
+        {
+          "name": "Ring Dips",
+          "description": "Perform on gymnastics rings",
+          "difficulty": "ADVANCED"
+        },
+        {
+          "name": "Box Dips",
+          "description": "Use box or bench for support",
+          "difficulty": "BEGINNER"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 5,
+          "max": 10,
+          "type": "STRENGTH"
+        },
+        {
+          "min": 10,
+          "max": 20,
+          "type": "ENDURANCE"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 90,
+          "type": "MEDIUM"
+        },
+        {
+          "duration": 60,
+          "type": "SHORT"
+        }
+      ],
+      
+      "commonFaults": [
+        "Not full range of motion",
+        "Flaring elbows",
+        "Not maintaining hollow position",
+        "Poor shoulder position"
+      ],
+      
+      "techniqueCues": [
+        "Keep elbows close",
+        "Full range of motion",
+        "Maintain hollow position",
+        "Control the descent"
+      ],
+      
+      "contraindications": [
+        "Shoulder injury",
+        "Elbow injury",
+        "Wrist injury"
+      ],
+      
+      "frequencyGuidelines": "2-3 times per week with 48 hours rest between sessions",
+      "recoveryTime": 48,
+      "volumeGuidelines": "30-50 total reps per session"
+    },
+    {
+      "id": "run",
+      "name": "Run",
+      "description": "A cardio movement where the athlete moves at a faster pace than walking",
+      "category": "CARDIO",
+      "subCategory": "Locomotion",
+      
+      "equipment": [],
+      
+      "primaryMuscleGroups": [
+        "QUADS",
+        "HAMSTRINGS",
+        "CALVES"
+      ],
+      "secondaryMuscleGroups": [
+        "GLUTES",
+        "CORE",
+        "SHOULDERS"
+      ],
+      "stabilizerMuscles": [
+        "ABS",
+        "OBLIQUES",
+        "LOWER_BACK"
+      ],
+      "grossMuscleGroups": [
+        "CARDIO"
+      ],
+      
+      "movementPattern": "LOCOMOTION",
+      "complexity": "BEGINNER",
+      "impact": "HIGH",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Jog",
+          "description": "Slower pace for longer duration",
+          "difficulty": "BEGINNER"
+        },
+        {
+          "name": "Sprint",
+          "description": "Maximum effort for short duration",
+          "difficulty": "INTERMEDIATE"
+        },
+        {
+          "name": "Shuttle Run",
+          "description": "Short distance with direction changes",
+          "difficulty": "INTERMEDIATE"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 100,
+          "max": 400,
+          "type": "SPRINT"
+        },
+        {
+          "min": 800,
+          "max": 1600,
+          "type": "ENDURANCE"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 120,
+          "type": "MEDIUM"
+        },
+        {
+          "duration": 60,
+          "type": "SHORT"
+        }
+      ],
+      
+      "commonFaults": [
+        "Poor running form",
+        "Overstriding",
+        "Not maintaining posture",
+        "Poor breathing pattern"
+      ],
+      
+      "techniqueCues": [
+        "Mid-foot strike",
+        "Upright posture",
+        "Relaxed shoulders",
+        "Controlled breathing"
+      ],
+      
+      "contraindications": [
+        "Knee injury",
+        "Ankle injury",
+        "Lower back injury"
+      ],
+      
+      "frequencyGuidelines": "3-4 times per week with 24 hours rest between sessions",
+      "recoveryTime": 24,
+      "volumeGuidelines": "1-3 miles per session"
+    },
+    {
+      "id": "overhead-press",
+      "name": "Overhead Press",
+      "description": "A compound upper body movement where the barbell is pressed from shoulder level to overhead",
+      "category": "COMPOUND_LIFT",
+      "subCategory": "Strength",
+      
+      "equipment": [
+        {
+          "name": "Barbell",
+          "type": "BARBELL",
+          "optional": false
+        }
+      ],
+      
+      "primaryMuscleGroups": [
+        "SHOULDERS",
+        "TRICEPS",
+        "UPPER_CHEST"
+      ],
+      "secondaryMuscleGroups": [
+        "CORE",
+        "TRAPS",
+        "FOREARMS"
+      ],
+      "stabilizerMuscles": [
+        "ABS",
+        "OBLIQUES",
+        "LOWER_BACK"
+      ],
+      "grossMuscleGroups": [
+        "PUSH"
+      ],
+      
+      "movementPattern": "PUSH",
+      "complexity": "INTERMEDIATE",
+      "impact": "MEDIUM",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Dumbbell Press",
+          "description": "Use dumbbells instead of barbell",
+          "difficulty": "INTERMEDIATE"
+        },
+        {
+          "name": "Push Press",
+          "description": "Use leg drive to assist the press",
+          "difficulty": "INTERMEDIATE"
+        },
+        {
+          "name": "Strict Press",
+          "description": "No leg drive, strict form",
+          "difficulty": "INTERMEDIATE"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 1,
+          "max": 5,
+          "type": "STRENGTH"
+        },
+        {
+          "min": 6,
+          "max": 8,
+          "type": "POWER"
+        },
+        {
+          "min": 8,
+          "max": 12,
+          "type": "HYPERTROPHY"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 180,
+          "type": "LONG"
+        },
+        {
+          "duration": 120,
+          "type": "MEDIUM"
+        }
+      ],
+      
+      "commonFaults": [
+        "Not maintaining core stability",
+        "Poor overhead position",
+        "Not fully extending arms",
+        "Leaning back too much"
+      ],
+      
+      "techniqueCues": [
+        "Brace core",
+        "Active overhead position",
+        "Full lockout",
+        "Keep bar close to face"
+      ],
+      
+      "contraindications": [
+        "Shoulder injury",
+        "Wrist injury",
+        "Lower back injury"
+      ],
+      
+      "frequencyGuidelines": "2-3 times per week with 48 hours rest between sessions",
+      "recoveryTime": 48,
+      "volumeGuidelines": "15-25 total reps per session"
+    },
+    {
+      "id": "abmat-sit-up",
+      "name": "Abmat Sit-up",
+      "description": "A core exercise using an abmat to support the lower back while performing sit-ups",
+      "category": "ACCESSORY",
+      "subCategory": "Core",
+      
+      "equipment": [
+        {
+          "name": "Abmat",
+          "type": "ACCESSORY",
+          "optional": false
+        }
+      ],
+      
+      "primaryMuscleGroups": [
+        "ABS",
+        "HIP_FLEXORS"
+      ],
+      "secondaryMuscleGroups": [
+        "OBLIQUES",
+        "LOWER_BACK"
+      ],
+      "stabilizerMuscles": [
+        "QUADS",
+        "HAMSTRINGS"
+      ],
+      "grossMuscleGroups": [
+        "CORE"
+      ],
+      
+      "movementPattern": "CORE",
+      "complexity": "BEGINNER",
+      "impact": "LOW",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Anchored Sit-up",
+          "description": "Feet anchored for assistance",
+          "difficulty": "BEGINNER"
+        },
+        {
+          "name": "GHD Sit-up",
+          "description": "Perform on GHD machine",
+          "difficulty": "INTERMEDIATE"
+        },
+        {
+          "name": "Weighted Sit-up",
+          "description": "Hold weight for added resistance",
+          "difficulty": "INTERMEDIATE"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 10,
+          "max": 20,
+          "type": "ENDURANCE"
+        },
+        {
+          "min": 20,
+          "max": 50,
+          "type": "METABOLIC"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 60,
+          "type": "SHORT"
+        },
+        {
+          "duration": 30,
+          "type": "SHORT"
+        }
+      ],
+      
+      "commonFaults": [
+        "Using momentum",
+        "Not maintaining form",
+        "Not full range of motion",
+        "Poor breathing pattern"
+      ],
+      
+      "techniqueCues": [
+        "Control the movement",
+        "Full range of motion",
+        "Maintain core engagement",
+        "Breathe rhythmically"
+      ],
+      
+      "contraindications": [
+        "Lower back injury",
+        "Hip injury",
+        "Abdominal injury"
+      ],
+      
+      "frequencyGuidelines": "3-4 times per week with 24 hours rest between sessions",
+      "recoveryTime": 24,
+      "volumeGuidelines": "50-100 total reps per session"
+    },
+    {
+      "id": "power-clean",
+      "name": "Power Clean",
+      "description": "An Olympic lift variation where the barbell is pulled from the floor to the front rack position, catching in a quarter squat",
+      "category": "COMPOUND_LIFT",
+      "subCategory": "Olympic Lift",
+      
+      "equipment": [
+        {
+          "name": "Barbell",
+          "type": "BARBELL",
+          "optional": false
+        },
+        {
+          "name": "Bumper Plates",
+          "type": "ACCESSORY",
+          "optional": false
+        }
+      ],
+      
+      "primaryMuscleGroups": [
+        "HAMSTRINGS",
+        "GLUTES",
+        "QUADS",
+        "SHOULDERS"
+      ],
+      "secondaryMuscleGroups": [
+        "TRAPS",
+        "FOREARMS",
+        "LOWER_BACK"
+      ],
+      "stabilizerMuscles": [
+        "ABS",
+        "OBLIQUES",
+        "ERECTORS"
+      ],
+      "grossMuscleGroups": [
+        "FULL_BODY"
+      ],
+      
+      "movementPattern": "PULL",
+      "complexity": "INTERMEDIATE",
+      "impact": "HIGH",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Hang Power Clean",
+          "description": "Start from hang position",
+          "difficulty": "INTERMEDIATE"
+        },
+        {
+          "name": "Dumbbell Power Clean",
+          "description": "Use dumbbells instead of barbell",
+          "difficulty": "BEGINNER"
+        },
+        {
+          "name": "Kettlebell Power Clean",
+          "description": "Use kettlebell instead of barbell",
+          "difficulty": "BEGINNER"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 1,
+          "max": 3,
+          "type": "POWER"
+        },
+        {
+          "min": 3,
+          "max": 5,
+          "type": "STRENGTH"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 180,
+          "type": "LONG"
+        },
+        {
+          "duration": 120,
+          "type": "MEDIUM"
+        }
+      ],
+      
+      "commonFaults": [
+        "Early arm pull",
+        "Not extending fully",
+        "Poor front rack position",
+        "Not keeping bar close"
+      ],
+      
+      "techniqueCues": [
+        "Keep bar close to body",
+        "Full extension at top",
+        "Fast elbows under",
+        "Active front rack"
+      ],
+      
+      "contraindications": [
+        "Shoulder injury",
+        "Wrist injury",
+        "Lower back injury"
+      ],
+      
+      "frequencyGuidelines": "2-3 times per week with 48 hours rest between sessions",
+      "recoveryTime": 48,
+      "volumeGuidelines": "15-25 total reps per session"
+    },
+    {
+      "id": "ring-rows",
+      "name": "Ring Rows",
+      "description": "A bodyweight exercise where the athlete pulls their body up using gymnastics rings while maintaining a horizontal position",
+      "category": "BODYWEIGHT",
+      "subCategory": "Gymnastic",
+      
+      "equipment": [
+        {
+          "name": "Gymnastics Rings",
+          "type": "ACCESSORY",
+          "optional": false
+        }
+      ],
+      
+      "primaryMuscleGroups": [
+        "BACK",
+        "BICEPS",
+        "SHOULDERS"
+      ],
+      "secondaryMuscleGroups": [
+        "CORE",
+        "FOREARMS"
+      ],
+      "stabilizerMuscles": [
+        "ABS",
+        "OBLIQUES",
+        "LOWER_BACK"
+      ],
+      "grossMuscleGroups": [
+        "PULL"
+      ],
+      
+      "movementPattern": "PULL",
+      "complexity": "BEGINNER",
+      "impact": "LOW",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Feet Elevated",
+          "description": "Place feet on box for increased difficulty",
+          "difficulty": "INTERMEDIATE"
+        },
+        {
+          "name": "Single Arm Row",
+          "description": "Perform one arm at a time",
+          "difficulty": "INTERMEDIATE"
+        },
+        {
+          "name": "Ring Support Hold",
+          "description": "Hold top position",
+          "difficulty": "BEGINNER"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 8,
+          "max": 12,
+          "type": "STRENGTH"
+        },
+        {
+          "min": 12,
+          "max": 20,
+          "type": "ENDURANCE"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 60,
+          "type": "SHORT"
+        },
+        {
+          "duration": 30,
+          "type": "SHORT"
+        }
+      ],
+      
+      "commonFaults": [
+        "Not maintaining plank position",
+        "Not full range of motion",
+        "Poor shoulder position",
+        "Not engaging back"
+      ],
+      
+      "techniqueCues": [
+        "Maintain plank position",
+        "Full range of motion",
+        "Engage lats",
+        "Keep core tight"
+      ],
+      
+      "contraindications": [
+        "Shoulder injury",
+        "Wrist injury",
+        "Lower back injury"
+      ],
+      
+      "frequencyGuidelines": "2-3 times per week with 24 hours rest between sessions",
+      "recoveryTime": 24,
+      "volumeGuidelines": "40-60 total reps per session"
+    },
+    {
+      "id": "assault-bike",
+      "name": "Assault Bike",
+      "description": "A cardio machine that combines air resistance with arm and leg movement",
+      "category": "CARDIO",
+      "subCategory": "Machine",
+      
+      "equipment": [
+        {
+          "name": "Assault Bike",
+          "type": "MACHINE",
+          "optional": false
+        }
+      ],
+      
+      "primaryMuscleGroups": [
+        "QUADS",
+        "HAMSTRINGS",
+        "SHOULDERS"
+      ],
+      "secondaryMuscleGroups": [
+        "GLUTES",
+        "CORE",
+        "ARMS"
+      ],
+      "stabilizerMuscles": [
+        "ABS",
+        "OBLIQUES",
+        "LOWER_BACK"
+      ],
+      "grossMuscleGroups": [
+        "CARDIO"
+      ],
+      
+      "movementPattern": "LOCOMOTION",
+      "complexity": "BEGINNER",
+      "impact": "LOW",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Light Resistance",
+          "description": "Lower resistance setting",
+          "difficulty": "BEGINNER"
+        },
+        {
+          "name": "High Resistance",
+          "description": "Higher resistance setting",
+          "difficulty": "ADVANCED"
+        },
+        {
+          "name": "Sprint Intervals",
+          "description": "Alternate high and low intensity",
+          "difficulty": "INTERMEDIATE"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 10,
+          "max": 30,
+          "type": "SPRINT"
+        },
+        {
+          "min": 60,
+          "max": 120,
+          "type": "ENDURANCE"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 60,
+          "type": "SHORT"
+        },
+        {
+          "duration": 30,
+          "type": "SHORT"
+        }
+      ],
+      
+      "commonFaults": [
+        "Poor posture",
+        "Not using full range of motion",
+        "Not maintaining rhythm",
+        "Poor breathing pattern"
+      ],
+      
+      "techniqueCues": [
+        "Maintain posture",
+        "Full range of motion",
+        "Keep steady rhythm",
+        "Breathe consistently"
+      ],
+      
+      "contraindications": [
+        "Knee injury",
+        "Shoulder injury",
+        "Lower back injury"
+      ],
+      
+      "frequencyGuidelines": "3-4 times per week with 24 hours rest between sessions",
+      "recoveryTime": 24,
+      "volumeGuidelines": "5-15 minutes per session"
+    },
+    {
+      "id": "romanian-deadlift",
+      "name": "Romanian Deadlift",
+      "description": "A hip hinge movement where the barbell is lowered with a focus on hamstring and glute engagement",
+      "category": "COMPOUND_LIFT",
+      "subCategory": "Strength",
+      
+      "equipment": [
+        {
+          "name": "Barbell",
+          "type": "BARBELL",
+          "optional": false
+        }
+      ],
+      
+      "primaryMuscleGroups": [
+        "HAMSTRINGS",
+        "GLUTES",
+        "LOWER_BACK"
+      ],
+      "secondaryMuscleGroups": [
+        "TRAPS",
+        "FOREARMS",
+        "CORE"
+      ],
+      "stabilizerMuscles": [
+        "ABS",
+        "OBLIQUES",
+        "ERECTORS"
+      ],
+      "grossMuscleGroups": [
+        "HIPS"
+      ],
+      
+      "movementPattern": "HINGE",
+      "complexity": "INTERMEDIATE",
+      "impact": "MEDIUM",
+      "unilateral": false,
+      
+      "scalingOptions": [
+        {
+          "name": "Dumbbell RDL",
+          "description": "Use dumbbells instead of barbell",
+          "difficulty": "BEGINNER"
+        },
+        {
+          "name": "Single Leg RDL",
+          "description": "Perform one leg at a time",
+          "difficulty": "INTERMEDIATE"
+        },
+        {
+          "name": "Kettlebell RDL",
+          "description": "Use kettlebell instead of barbell",
+          "difficulty": "BEGINNER"
+        }
+      ],
+      
+      "targetRepRanges": [
+        {
+          "min": 6,
+          "max": 8,
+          "type": "STRENGTH"
+        },
+        {
+          "min": 8,
+          "max": 12,
+          "type": "HYPERTROPHY"
+        },
+        {
+          "min": 12,
+          "max": 15,
+          "type": "ENDURANCE"
+        }
+      ],
+      
+      "restPeriods": [
+        {
+          "duration": 120,
+          "type": "MEDIUM"
+        },
+        {
+          "duration": 90,
+          "type": "MEDIUM"
+        }
+      ],
+      
+      "commonFaults": [
+        "Rounding lower back",
+        "Bending knees too much",
+        "Not maintaining neutral spine",
+        "Not feeling hamstring stretch"
+      ],
+      
+      "techniqueCues": [
+        "Push hips back",
+        "Keep back flat",
+        "Feel hamstring stretch",
+        "Squeeze glutes at top"
+      ],
+      
+      "contraindications": [
+        "Lower back injury",
+        "Hamstring injury",
+        "Hip injury"
+      ],
+      
+      "frequencyGuidelines": "2-3 times per week with 48 hours rest between sessions",
+      "recoveryTime": 48,
+      "volumeGuidelines": "20-30 total reps per session"
+    }
+  ]
+} 

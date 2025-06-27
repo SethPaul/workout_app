@@ -1,0 +1,70 @@
+# Test Configuration for Workout App
+
+# Coverage Settings
+coverage:
+  min_coverage: 80
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart" 
+    - "**/generated/**"
+    - "test/**"
+    - "integration_test/**"
+    - "lib/main.dart"
+
+# Test Types
+test_types:
+  unit_tests:
+    path: "test/unit/"
+    pattern: "**/*_test.dart"
+    timeout: 30s
+    
+  widget_tests:
+    path: "test/widgets/"
+    pattern: "**/*_test.dart"
+    timeout: 60s
+    
+  integration_tests:
+    path: "integration_test/"
+    pattern: "**/*_test.dart"
+    timeout: 300s
+    
+  golden_tests:
+    path: "test/golden/"
+    pattern: "**/*_test.dart"
+    timeout: 60s
+    update_goldens: false
+
+# BDD Settings
+bdd:
+  features_path: "test/features/"
+  step_definitions_path: "test/features/step_definitions/"
+  
+# Test Data
+test_data:
+  database: "test_workout_app.db"
+  fixtures_path: "test/fixtures/"
+  
+# Environment
+test_environment:
+  flutter_test: true
+  integration_test: true
+  mockito_nullsafety: true
+  
+# Reporting
+reporting:
+  html_report: true
+  junit_report: true
+  coverage_report: true
+  output_directory: "test_reports/"
+  
+# CI/CD Settings
+ci:
+  fail_on_coverage_below: 80
+  fail_on_test_failure: true
+  parallel_jobs: 4
+  
+# Performance Testing
+performance:
+  enable_profiling: true
+  memory_leak_detection: true
+  frame_rate_monitoring: true 

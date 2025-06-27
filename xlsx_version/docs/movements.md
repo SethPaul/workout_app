@@ -1,0 +1,84 @@
+# Movements Reference
+
+## Main Movements
+- back squat
+- bar complexes
+- burpees
+- clean
+- deadlift
+- front squat
+- grass hoppers
+- over head squat
+- pistols/lunge/side lunge
+- renegade manmakers
+- row
+- snatch
+- turkish getups
+
+## Accessory/Finisher Movements
+- 
+- 1 bear crawls
+- 1 farmer's carry
+- 1 grapevines
+- 1 mile  run
+- 1 minute bike
+- 1 sled push
+- 1 suicide sprints
+- 10 KB swings
+- 10 box jumps
+- 10 good mornings
+- 10 landmine twists
+- 10 seated russion twists
+- 10 step ups
+- 10 wall balls
+- 10s ropes
+- 20 dead bugs
+- 20 mountain climbers
+- 20s assault bike
+- 3 minute run
+- 3 pistols
+- 30 on 30 off
+- 30s planks
+- 4 burpees
+- 5 Dips
+- 5 GHD back extensions
+- 5 GHD situps
+- 5 Hammer curls
+- 5 KB snatch
+- 5 Pushpress
+- 5 Ring Rows
+- 5 ball slams
+- 5 bar complexes
+- 5 bench press
+- 5 bentover_rows
+- 5 box jumps
+- 5 clean
+- 5 deadlift
+- 5 dumbell rows
+- 5 flys
+- 5 grass hoppers
+- 5 high pulls
+- 5 jerk
+- 5 knees to elbows
+- 5 lunges
+- 5 mile bike
+- 5 pull ups
+- 5 pushups
+- 5 renegade manmakers
+- 5 romanian deadlift
+- 5 sandbag drops
+- 5 side lunges
+- 5 skull crushers
+- 5 snatch
+- 5 star shrugs
+- 5 strict press
+- 5 sumo deadift
+- 5 thrusters
+- 5 tire flip
+- 5 turkish getups
+- 500m row
+- AMRAP
+- EMOM
+- N rounds
+- Tabata
+- clusters
