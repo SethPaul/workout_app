@@ -1,6 +1,6 @@
 {
   "agentCanUpdateSnapshot": true,
-  "install": "flutter pub get && dart run build_runner build --delete-conflicting-outputs",
+  "install": "flutter pub get && dart run build_runner build --delete-conflicting-outputs && ./scripts/download_audio.sh",
   "start": "chmod +x scripts/*.sh",
   "terminals": [
     {
@@ -14,6 +14,22 @@
     {
       "name": "Build Runner Watch",
       "command": "dart run build_runner watch --delete-conflicting-outputs"
+    },
+    {
+      "name": "Database Setup",
+      "command": "dart run database_diagnostic.dart"
+    },
+    {
+      "name": "Integration Tests",
+      "command": "flutter test integration_test/"
+    },
+    {
+      "name": "Coverage Report",
+      "command": "flutter test --coverage && genhtml coverage/lcov.info -o coverage/html"
+    },
+    {
+      "name": "Golden Test Update",
+      "command": "flutter test --update-goldens test/golden/"
     }
   ]
 }
