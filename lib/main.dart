@@ -13,7 +13,9 @@ import 'package:workout_app/services/workout_generator.dart';
 import 'package:workout_app/services/workout_service.dart';
 import 'package:workout_app/services/workout_template_service.dart';
 import 'package:workout_app/services/user_progress_service.dart';
+import 'package:workout_app/services/default_workout_service.dart';
 import 'package:workout_app/data/database/database_helper.dart';
+import 'package:workout_app/screens/onboarding_screen.dart';
 import 'package:logger/logger.dart';
 
 void main() async {
@@ -60,9 +62,11 @@ void main() async {
       repository: userProgressRepository,
     );
 
-    // Seed database with sample templates if empty
-    logger.i('Checking for sample data...');
-    await _seedSampleTemplates(workoutTemplateService);
+    // Create default workout service
+    logger.i('Creating default workout service...');
+    final defaultWorkoutService = DefaultWorkoutService(
+      templateService: workoutTemplateService,
+    );
 
     // Initialize user progress
     logger.i('Initializing user progress...');
@@ -73,6 +77,7 @@ void main() async {
     runApp(WorkoutApp(
       workoutService: workoutService,
       userProgressService: userProgressService,
+      defaultWorkoutService: defaultWorkoutService,
     ));
   } catch (e, stackTrace) {
     final logger = Logger();
@@ -87,103 +92,18 @@ void main() async {
   }
 }
 
-Future<void> _seedSampleTemplates(
-    WorkoutTemplateService templateService) async {
-  final logger = Logger();
 
-  try {
-    final existingTemplates = await templateService.getAllTemplates();
-    if (existingTemplates.isNotEmpty) {
-      logger.i('Sample templates already exist, skipping seeding');
-      return;
-    }
-
-    logger.i('Seeding sample workout templates...');
-
-    final sampleTemplates = [
-      {
-        'name': 'Quick HIIT Cardio',
-        'description': 'High-intensity interval training for busy schedules',
-        'format': WorkoutFormat.tabata,
-        'intensity': IntensityLevel.high,
-        'targetDuration': 15,
-        'preferredCategories': [
-          MovementCategory.cardio,
-          MovementCategory.bodyweight
-        ],
-      },
-      {
-        'name': 'Strength Builder',
-        'description': 'Compound movements for building overall strength',
-        'format': WorkoutFormat.forTime,
-        'intensity': IntensityLevel.medium,
-        'targetDuration': 30,
-        'preferredCategories': [MovementCategory.compoundLift],
-        'isMainMovementOnly': true,
-      },
-      {
-        'name': 'Endurance Challenge',
-        'description': 'Long form workout to build stamina',
-        'format': WorkoutFormat.amrap,
-        'intensity': IntensityLevel.medium,
-        'targetDuration': 20,
-        'preferredCategories': [
-          MovementCategory.cardio,
-          MovementCategory.bodyweight
-        ],
-      },
-      {
-        'name': 'Power Hour',
-        'description': 'High-intensity strength and conditioning',
-        'format': WorkoutFormat.emom,
-        'intensity': IntensityLevel.high,
-        'targetDuration': 45,
-        'preferredCategories': [
-          MovementCategory.compoundLift,
-          MovementCategory.cardio
-        ],
-      },
-      {
-        'name': 'Recovery Session',
-        'description': 'Low-intensity movement for active recovery',
-        'format': WorkoutFormat.forTime,
-        'intensity': IntensityLevel.low,
-        'targetDuration': 25,
-        'preferredCategories': [
-          MovementCategory.bodyweight,
-          MovementCategory.accessory
-        ],
-      },
-    ];
-
-    for (final templateData in sampleTemplates) {
-      await templateService.createTemplate(
-        name: templateData['name'] as String,
-        description: templateData['description'] as String,
-        format: templateData['format'] as WorkoutFormat,
-        intensity: templateData['intensity'] as IntensityLevel,
-        targetDuration: templateData['targetDuration'] as int,
-        preferredCategories:
-            templateData['preferredCategories'] as List<MovementCategory>?,
-        isMainMovementOnly: templateData['isMainMovementOnly'] as bool?,
-      );
-    }
-
-    logger.i('Sample templates seeded successfully');
-  } catch (e) {
-    logger.e('Error seeding sample templates: $e');
-    // Don't throw - let the app continue even if seeding fails
-  }
-}
 
 class WorkoutApp extends StatelessWidget {
   final WorkoutService workoutService;
   final UserProgressService userProgressService;
+  final DefaultWorkoutService defaultWorkoutService;
 
   const WorkoutApp({
     super.key,
     required this.workoutService,
     required this.userProgressService,
+    required this.defaultWorkoutService,
   });
 
   @override
@@ -194,10 +114,84 @@ class WorkoutApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: HomeScreen(
+      home: AppInitializer(
         workoutService: workoutService,
         userProgressService: userProgressService,
+        defaultWorkoutService: defaultWorkoutService,
       ),
+    );
+  }
+}
+
+class AppInitializer extends StatefulWidget {
+  final WorkoutService workoutService;
+  final UserProgressService userProgressService;
+  final DefaultWorkoutService defaultWorkoutService;
+
+  const AppInitializer({
+    super.key,
+    required this.workoutService,
+    required this.userProgressService,
+    required this.defaultWorkoutService,
+  });
+
+  @override
+  State<AppInitializer> createState() => _AppInitializerState();
+}
+
+class _AppInitializerState extends State<AppInitializer> {
+  bool _isLoading = true;
+  bool _showOnboarding = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkFirstRun();
+  }
+
+  Future<void> _checkFirstRun() async {
+    try {
+      final userProgress = await widget.userProgressService.getCurrentUserProgress();
+      setState(() {
+        _showOnboarding = userProgress?.isFirstRun ?? true;
+        _isLoading = false;
+      });
+    } catch (e) {
+      // If there's an error, assume it's first run
+      setState(() {
+        _showOnboarding = true;
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _completeOnboarding() {
+    setState(() {
+      _showOnboarding = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_showOnboarding) {
+      return OnboardingScreen(
+        defaultWorkoutService: widget.defaultWorkoutService,
+        userProgressService: widget.userProgressService,
+        onComplete: _completeOnboarding,
+      );
+    }
+
+    return HomeScreen(
+      workoutService: widget.workoutService,
+      userProgressService: widget.userProgressService,
     );
   }
 }

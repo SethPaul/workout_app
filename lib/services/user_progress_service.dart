@@ -183,6 +183,11 @@ class UserProgressService {
     }
   }
 
+  /// Update user progress directly
+  Future<void> updateUserProgress(UserProgress updatedProgress) async {
+    await _repository.saveUserProgress(updatedProgress);
+  }
+
   /// Clear all user progress (for testing or reset)
   Future<void> clearUserProgress() async {
     await _repository.deleteUserProgress(_defaultUserId);
