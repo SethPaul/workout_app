@@ -1,15 +1,15 @@
 {
   "agentCanUpdateSnapshot": true,
-  "install": "cd $HOME && wget -O flutter.tar.xz https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.24.5-stable.tar.xz && tar xf flutter.tar.xz && rm flutter.tar.xz && echo 'export PATH=\"$HOME/flutter/bin:$PATH\"' >> ~/.bashrc && export PATH=\"$HOME/flutter/bin:$PATH\" && flutter config --no-analytics && flutter doctor --android-licenses || true && flutter precache --web && flutter pub get && dart run build_runner build --delete-conflicting-outputs",
-  "start": "export PATH=\"$HOME/flutter/bin:$PATH\" && chmod +x scripts/*.sh || true",
+  "install": "git clone https://github.com/flutter/flutter.git -b stable --depth 1 && export PATH=\"$PWD/flutter/bin:$PATH\" && flutter doctor && flutter pub get",
+  "start": "export PATH=\"$PWD/flutter/bin:$PATH\" && chmod +x scripts/*.sh || true",
   "terminals": [
     {
       "name": "Flutter Web Dev",
-      "command": "export PATH=\"$HOME/flutter/bin:$PATH\" && flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0"
+      "command": "export PATH=\"$PWD/flutter/bin:$PATH\" && flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0"
     },
     {
       "name": "Test Runner",
-      "command": "export PATH=\"$HOME/flutter/bin:$PATH\" && flutter test --reporter=compact"
+      "command": "export PATH=\"$PWD/flutter/bin:$PATH\" && flutter test --reporter=compact"
     }
   ]
 }
