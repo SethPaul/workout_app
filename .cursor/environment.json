@@ -1,7 +1,7 @@
 {
   "agentCanUpdateSnapshot": true,
-  "install": "curl -fsSL https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.24.5-stable.tar.xz -o flutter.tar.xz && tar -xf flutter.tar.xz && rm flutter.tar.xz && echo 'export PATH=\"$HOME/flutter/bin:$PATH\"' >> ~/.bashrc && export PATH=\"$HOME/flutter/bin:$PATH\" && flutter doctor && flutter pub get && dart run build_runner build --delete-conflicting-outputs",
-  "start": "export PATH=\"$HOME/flutter/bin:$PATH\" && chmod +x scripts/*.sh",
+  "install": "cd $HOME && wget -O flutter.tar.xz https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.24.5-stable.tar.xz && tar xf flutter.tar.xz && rm flutter.tar.xz && echo 'export PATH=\"$HOME/flutter/bin:$PATH\"' >> ~/.bashrc && export PATH=\"$HOME/flutter/bin:$PATH\" && flutter config --no-analytics && flutter doctor --android-licenses || true && flutter precache --web && flutter pub get && dart run build_runner build --delete-conflicting-outputs",
+  "start": "export PATH=\"$HOME/flutter/bin:$PATH\" && chmod +x scripts/*.sh || true",
   "terminals": [
     {
       "name": "Flutter Web Dev",
