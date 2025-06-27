@@ -1,0 +1,15 @@
+{
+  "agentCanUpdateSnapshot": true,
+  "install": "if command -v docker &> /dev/null; then docker build -f Dockerfile.background-agent -t flutter-bg-agent . && echo 'Docker Flutter setup complete'; else echo 'Docker not available, using direct install' && git clone https://github.com/flutter/flutter.git -b stable --depth 1 && export PATH=\"$PWD/flutter/bin:$PATH\" && flutter doctor && flutter pub get; fi",
+  "start": "if command -v docker &> /dev/null; then docker run --rm -d --name flutter-dev -p 8080:8080 -v $(pwd):/workspace flutter-bg-agent; else export PATH=\"$PWD/flutter/bin:$PATH\" && chmod +x scripts/*.sh || true; fi",
+  "terminals": [
+    {
+      "name": "Flutter Web Dev",
+      "command": "if docker ps | grep flutter-dev &> /dev/null; then docker exec -it flutter-dev flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0; else export PATH=\"$PWD/flutter/bin:$PATH\" && flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0; fi"
+    },
+    {
+      "name": "Test Runner", 
+      "command": "if docker ps | grep flutter-dev &> /dev/null; then docker exec -it flutter-dev flutter test --reporter=compact; else export PATH=\"$PWD/flutter/bin:$PATH\" && flutter test --reporter=compact; fi"
+    }
+  ]
+} 

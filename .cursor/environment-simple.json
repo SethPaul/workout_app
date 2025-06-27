@@ -1,0 +1,10 @@
+{
+  "agentCanUpdateSnapshot": true,
+  "install": "wget -qO- https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.24.5-stable.tar.xz | tar xJ && export PATH=\"$PWD/flutter/bin:$PATH\" && flutter --version && flutter pub get",
+  "terminals": [
+    {
+      "name": "Flutter App",
+      "command": "export PATH=\"$PWD/flutter/bin:$PATH\" && flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0"
+    }
+  ]
+} 
