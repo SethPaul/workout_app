@@ -55,8 +55,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: dependency-report
-<<<<<<< Updated upstream
         path: dependency-report.md
-=======
-        path: dependency-report.md 
->>>>>>> Stashed changes
