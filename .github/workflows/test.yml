@@ -8,6 +8,7 @@ on:
 
 env:
   FLUTTER_VERSION: '3.24.3'
+  PUB_CACHE: ${{ github.workspace }}/.pub-cache
 
 jobs:
   analyze:
@@ -28,8 +29,11 @@ jobs:
     - name: Disable Flutter analytics
       run: flutter config --no-analytics
     
-    - name: Get dependencies
-      run: flutter pub get
+    - name: Clear pub cache and get dependencies
+      run: |
+        flutter pub cache repair
+        flutter pub get
+        flutter pub deps --style=list
     
     - name: Verify formatting
       run: dart format --output=none --set-exit-if-changed .
@@ -56,8 +60,22 @@ jobs:
     - name: Disable Flutter analytics
       run: flutter config --no-analytics
     
-    - name: Get dependencies
-      run: flutter pub get
+    - name: Clear pub cache and get dependencies
+      run: |
+        flutter pub cache repair
+        flutter pub get
+        flutter pub deps --style=list
+    
+    - name: Debug dependency resolution
+      run: |
+        echo "Flutter version:"
+        flutter --version
+        echo "Dart version:"
+        dart --version
+        echo "MCP Toolkit version check:"
+        flutter pub deps | grep mcp_toolkit || echo "mcp_toolkit not found in deps"
+        echo "HTTP package version:"
+        flutter pub deps | grep "http " || echo "http package not found"
     
     - name: Run tests with coverage
       run: flutter test test/services/ test/data/ test/widgets/ test/features/ --coverage --reporter expanded
@@ -127,8 +145,11 @@ jobs:
     - name: Disable Flutter analytics
       run: flutter config --no-analytics
     
-    - name: Get dependencies
-      run: flutter pub get
+    - name: Clear pub cache and get dependencies
+      run: |
+        flutter pub cache repair
+        flutter pub get
+        flutter pub deps --style=list
     
     - name: Run golden tests
       run: flutter test test/golden/ --reporter expanded
@@ -167,8 +188,11 @@ jobs:
     - name: Disable Flutter analytics
       run: flutter config --no-analytics
     
-    - name: Get dependencies
-      run: flutter pub get
+    - name: Clear pub cache and get dependencies
+      run: |
+        flutter pub cache repair
+        flutter pub get
+        flutter pub deps --style=list
     
     - name: Build APK (Debug)
       run: flutter build apk --debug --verbose
@@ -213,8 +237,11 @@ jobs:
     - name: Disable Flutter analytics
       run: flutter config --no-analytics
     
-    - name: Get dependencies
-      run: flutter pub get
+    - name: Clear pub cache and get dependencies
+      run: |
+        flutter pub cache repair
+        flutter pub get
+        flutter pub deps --style=list
     
     - name: Enable KVM group perms
       run: |
@@ -267,29 +294,36 @@ jobs:
   test-summary:
     name: Test Summary
     runs-on: ubuntu-latest
-    needs: [analyze, test, build-android]
+    needs: [analyze, test, golden-tests, build-android]
     if: always()
     
     steps:
-    - name: Check test results
+    - name: Check job statuses
       run: |
-        echo "Analyze job: ${{ needs.analyze.result }}"
-        echo "Test job: ${{ needs.test.result }}"
-        echo "Build job: ${{ needs.build-android.result }}"
+        echo "Analyze: ${{ needs.analyze.result }}"
+        echo "Test: ${{ needs.test.result }}"
+        echo "Golden Tests: ${{ needs.golden-tests.result }}"
+        echo "Build Android: ${{ needs.build-android.result }}"
         
+        # Fail if critical jobs failed
         if [[ "${{ needs.analyze.result }}" == "failure" ]]; then
-          echo "❌ Analysis failed - code formatting or static analysis issues"
+          echo "❌ Code analysis failed"
           exit 1
         fi
         
         if [[ "${{ needs.test.result }}" == "failure" ]]; then
-          echo "❌ Tests failed - unit or widget test failures"
+          echo "❌ Unit/Widget tests failed"
           exit 1
         fi
         
         if [[ "${{ needs.build-android.result }}" == "failure" ]]; then
-          echo "❌ Build failed - compilation issues"
+          echo "❌ Android build failed"
           exit 1
         fi
         
-        echo "✅ All critical jobs passed successfully!"
+        echo "✅ All critical tests passed!"
+        
+        # Golden tests are allowed to fail
+        if [[ "${{ needs.golden-tests.result }}" != "success" ]]; then
+          echo "⚠️ Golden tests had issues (non-blocking)"
+        fi
