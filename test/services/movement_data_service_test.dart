@@ -1,12 +1,16 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:workout_app/data/models/movement.dart';
 import 'package:workout_app/data/repositories/movement_repository.dart';
 import 'package:workout_app/services/movement_data_service.dart';
 
-class MockMovementRepository extends Mock implements MovementRepository {}
+import 'movement_data_service_test.mocks.dart';
 
+@GenerateMocks([MovementRepository])
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('MovementDataService', () {
     late MockMovementRepository mockRepository;
     late MovementDataService service;
@@ -20,11 +24,14 @@ void main() {
         () async {
       // Arrange
       when(mockRepository.getAllMovements()).thenAnswer((_) async => []);
+      when(mockRepository.createMovement(any)).thenAnswer((_) async => 'test-id');
 
-      // Act & Assert - This will test that the method exists and can be called
-      // The actual JSON loading will be tested in integration tests
-      expect(() => service.initializeMovementLibrary(), isA<Function>());
-      expect(() => service.getMovementCount(), isA<Function>());
+      // Act
+      await service.initializeMovementLibrary();
+
+      // Assert
+      verify(mockRepository.getAllMovements()).called(1);
+      // The service should load movements from JSON when repository is empty
     });
 
     test('should not reload movements if they already exist', () async {
@@ -51,7 +58,7 @@ void main() {
 
       // Assert
       verify(mockRepository.getAllMovements()).called(1);
-      // Note: Can't easily verify createMovement was never called due to mockito limitations with complex types
+      verifyNever(mockRepository.createMovement(any));
     });
 
     test('should get movement count', () async {
@@ -88,6 +95,7 @@ void main() {
 
       // Assert
       expect(count, equals(2));
+      verify(mockRepository.getAllMovements()).called(1);
     });
   });
 }
