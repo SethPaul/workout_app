@@ -116,4 +116,8 @@ jobs:
         artifacts: "artifacts/release-apks/*.apk,artifacts/release-aab/*.aab"
         token: ${{ secrets.GITHUB_TOKEN }}
         draft: true
+<<<<<<< Updated upstream
         generateReleaseNotes: true
+=======
+        generateReleaseNotes: true 
+>>>>>>> Stashed changes

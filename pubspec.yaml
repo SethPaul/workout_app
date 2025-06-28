@@ -55,9 +55,6 @@ dependencies:
   logger: ^2.0.2+1
   uuid: ^3.0.7
   audioplayers: ^5.2.1
-  
-  # MCP Flutter Integration
-  mcp_toolkit: ^0.2.0
 
 dev_dependencies:
   flutter_test:

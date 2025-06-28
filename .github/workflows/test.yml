@@ -72,8 +72,11 @@ jobs:
         flutter --version
         echo "Dart version:"
         dart --version
+<<<<<<< Updated upstream
         echo "MCP Toolkit version check:"
         flutter pub deps | grep mcp_toolkit || echo "mcp_toolkit not found in deps"
+=======
+>>>>>>> Stashed changes
         echo "HTTP package version:"
         flutter pub deps | grep "http " || echo "http package not found"
     
@@ -294,6 +297,7 @@ jobs:
   test-summary:
     name: Test Summary
     runs-on: ubuntu-latest
+<<<<<<< Updated upstream
     needs: [analyze, test, golden-tests, build-android]
     if: always()
     
@@ -308,15 +312,34 @@ jobs:
         # Fail if critical jobs failed
         if [[ "${{ needs.analyze.result }}" == "failure" ]]; then
           echo "❌ Code analysis failed"
+=======
+    needs: [analyze, test, build-android]
+    if: always()
+    
+    steps:
+    - name: Check test results
+      run: |
+        echo "Analyze job: ${{ needs.analyze.result }}"
+        echo "Test job: ${{ needs.test.result }}"
+        echo "Build job: ${{ needs.build-android.result }}"
+        
+        if [[ "${{ needs.analyze.result }}" == "failure" ]]; then
+          echo "❌ Analysis failed - code formatting or static analysis issues"
+>>>>>>> Stashed changes
           exit 1
         fi
         
         if [[ "${{ needs.test.result }}" == "failure" ]]; then
+<<<<<<< Updated upstream
           echo "❌ Unit/Widget tests failed"
+=======
+          echo "❌ Tests failed - unit or widget test failures"
+>>>>>>> Stashed changes
           exit 1
         fi
         
         if [[ "${{ needs.build-android.result }}" == "failure" ]]; then
+<<<<<<< Updated upstream
           echo "❌ Android build failed"
           exit 1
         fi
@@ -327,3 +350,10 @@ jobs:
         if [[ "${{ needs.golden-tests.result }}" != "success" ]]; then
           echo "⚠️ Golden tests had issues (non-blocking)"
         fi
+=======
+          echo "❌ Build failed - compilation issues"
+          exit 1
+        fi
+        
+        echo "✅ All critical jobs passed successfully!" 
+>>>>>>> Stashed changes
