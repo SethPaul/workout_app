@@ -32,11 +32,13 @@ jobs:
     - name: Clear pub cache and get dependencies
       run: |
         flutter pub cache repair
-        flutter pub get
+        flutter pub get --verbose
+        echo "Dependency resolution completed successfully"
         flutter pub deps --style=list
     
     - name: Verify formatting
       run: dart format --output=none --set-exit-if-changed .
+      continue-on-error: false
     
     - name: Analyze project source
       run: flutter analyze --fatal-infos
@@ -74,9 +76,26 @@ jobs:
         dart --version
         echo "HTTP package version:"
         flutter pub deps | grep "http " || echo "http package not found"
+        echo "Checking for test files:"
+        find test/ -name "*_test.dart" | head -10 || echo "No test files found"
     
-    - name: Run tests with coverage
-      run: flutter test test/services/ test/data/ test/widgets/ test/features/ --coverage --reporter expanded
+    - name: Find and run tests with coverage
+      run: |
+        # Find all test directories that actually contain test files
+        test_dirs=""
+        for dir in test/services test/data test/widgets test/features; do
+          if [ -d "$dir" ] && [ "$(find $dir -name '*_test.dart' | wc -l)" -gt 0 ]; then
+            test_dirs="$test_dirs $dir"
+          fi
+        done
+        
+        if [ -n "$test_dirs" ]; then
+          echo "Running tests in: $test_dirs"
+          flutter test $test_dirs --coverage --reporter expanded
+        else
+          echo "No test files found in expected directories, running all tests"
+          flutter test --coverage --reporter expanded
+        fi
     
     - name: Check coverage file exists
       run: |
@@ -150,7 +169,13 @@ jobs:
         flutter pub deps --style=list
     
     - name: Run golden tests
-      run: flutter test test/golden/ --reporter expanded
+      run: |
+        if [ -d "test/golden" ] && [ "$(find test/golden -name '*_test.dart' | wc -l)" -gt 0 ]; then
+          echo "Running golden tests"
+          flutter test test/golden/ --reporter expanded
+        else
+          echo "No golden test files found, skipping golden tests"
+        fi
       continue-on-error: true
     
     - name: Archive golden test failures
