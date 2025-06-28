@@ -6,21 +6,25 @@ import 'package:workout_app/data/models/movement_cadence.dart';
 import 'package:workout_app/data/repositories/workout_pool_repository.dart';
 import 'package:workout_app/data/repositories/movement_cadence_repository.dart';
 import 'package:workout_app/data/repositories/movement_repository.dart';
+import 'package:workout_app/services/workout_pool_generator.dart';
 import 'package:logger/logger.dart';
 
 class WorkoutPoolService {
   final WorkoutPoolRepository _workoutPoolRepository;
   final MovementCadenceRepository _movementCadenceRepository;
   final MovementRepository _movementRepository;
+  final WorkoutPoolGenerator _workoutPoolGenerator;
   final Logger _logger = Logger();
 
   WorkoutPoolService({
     required WorkoutPoolRepository workoutPoolRepository,
     required MovementCadenceRepository movementCadenceRepository,
     required MovementRepository movementRepository,
+    WorkoutPoolGenerator? workoutPoolGenerator,
   })  : _workoutPoolRepository = workoutPoolRepository,
         _movementCadenceRepository = movementCadenceRepository,
-        _movementRepository = movementRepository;
+        _movementRepository = movementRepository,
+        _workoutPoolGenerator = workoutPoolGenerator ?? WorkoutPoolGenerator();
 
   /// Get today's workout from the pool using intelligent selection
   Future<Workout?> getTodaysWorkout({
@@ -274,128 +278,24 @@ class WorkoutPoolService {
     }
   }
 
-  /// Create default workout pools with predefined workouts
+  /// Create extensive default workout pools using the comprehensive generator
   Future<void> _createDefaultWorkoutPools(List<Movement> movements) async {
-    final now = DateTime.now();
-    
-    // Group movements by category for easier workout creation
-    final deadliftMovements = movements.where((m) => m.name.toLowerCase().contains('deadlift')).toList();
-    final squatMovements = movements.where((m) => m.name.toLowerCase().contains('squat')).toList();
-    final pushMovements = movements.where((m) => 
-        m.name.toLowerCase().contains('press') || 
-        m.name.toLowerCase().contains('push')).toList();
-    final pullMovements = movements.where((m) => 
-        m.name.toLowerCase().contains('pull') || 
-        m.name.toLowerCase().contains('row')).toList();
-    final cardioMovements = movements.where((m) => 
-        m.categories.contains(MovementCategory.cardio)).toList();
+    _logger.i('Generating extensive workout pools from ${movements.length} movements...');
 
-    final workoutPools = <WorkoutPool>[];
+    // Use the comprehensive workout pool generator
+    final workoutPools = await _workoutPoolGenerator.generateExtensiveWorkoutPools(movements);
 
-    // Heavy Deadlift + Push Press (Weekly - matches requirements)
-    if (deadliftMovements.isNotEmpty && pushMovements.isNotEmpty) {
-      workoutPools.add(WorkoutPool(
-        id: 'pool_deadlift_push_${now.millisecondsSinceEpoch}',
-        name: 'Heavy Deadlift + Push Press',
-        description: 'Classic strength combination - deadlifts every 7 days',
-        format: WorkoutFormat.forReps,
-        intensity: IntensityLevel.high,
-        movements: [
-          WorkoutMovement(movementId: deadliftMovements.first.id, reps: 5),
-          WorkoutMovement(movementId: pushMovements.first.id, reps: 5),
-        ],
-        duration: 45,
-        cadenceDays: 7, // Weekly as specified in requirements
-        createdAt: now,
-        updatedAt: now,
-      ));
-    }
-
-    // EMOM 10 minutes 5 cleans (as specified in requirements)
-    final cleanMovements = movements.where((m) => m.name.toLowerCase().contains('clean')).toList();
-    if (cleanMovements.isNotEmpty) {
-      workoutPools.add(WorkoutPool(
-        id: 'pool_emom_clean_${now.millisecondsSinceEpoch}',
-        name: 'EMOM 10 minutes 5 cleans',
-        description: 'Every minute on the minute clean practice',
-        format: WorkoutFormat.emom,
-        intensity: IntensityLevel.medium,
-        movements: [
-          WorkoutMovement(movementId: cleanMovements.first.id, reps: 5),
-        ],
-        duration: 10,
-        formatSpecificSettings: {'minutes': 10, 'intervalSeconds': 60},
-        cadenceDays: 3, // Twice weekly
-        createdAt: now,
-        updatedAt: now,
-      ));
-    }
-
-    // Intervals cycling/rowing (as specified in requirements)
-    if (cardioMovements.isNotEmpty) {
-      workoutPools.add(WorkoutPool(
-        id: 'pool_intervals_cardio_${now.millisecondsSinceEpoch}',
-        name: 'Intervals - Cycling/Rowing',
-        description: 'High intensity cardio intervals',
-        format: WorkoutFormat.roundsForTime,
-        intensity: IntensityLevel.high,
-        movements: [
-          WorkoutMovement(movementId: cardioMovements.first.id, reps: 1, timeInSeconds: 300), // 5 minutes
-        ],
-        duration: 20,
-        rounds: 4,
-        cadenceDays: 2, // Every other day
-        createdAt: now,
-        updatedAt: now,
-      ));
-    }
-
-    // Add more default workouts...
-    // Squat + Pull workout
-    if (squatMovements.isNotEmpty && pullMovements.isNotEmpty) {
-      workoutPools.add(WorkoutPool(
-        id: 'pool_squat_pull_${now.millisecondsSinceEpoch}',
-        name: 'Squat & Pull Strength',
-        description: 'Lower body and pulling strength focus',
-        format: WorkoutFormat.forReps,
-        intensity: IntensityLevel.high,
-        movements: [
-          WorkoutMovement(movementId: squatMovements.first.id, reps: 8),
-          WorkoutMovement(movementId: pullMovements.first.id, reps: 8),
-        ],
-        duration: 40,
-        cadenceDays: 7, // Weekly
-        createdAt: now,
-        updatedAt: now,
-      ));
-    }
-
-    // AMRAP bodyweight workout
-    final bodyweightMovements = movements.where((m) => 
-        m.requiredEquipment.contains(EquipmentType.bodyweight)).toList();
-    if (bodyweightMovements.length >= 3) {
-      workoutPools.add(WorkoutPool(
-        id: 'pool_amrap_bodyweight_${now.millisecondsSinceEpoch}',
-        name: 'AMRAP Bodyweight Circuit',
-        description: 'High volume bodyweight movements',
-        format: WorkoutFormat.amrap,
-        intensity: IntensityLevel.medium,
-        movements: bodyweightMovements.take(3).map((m) => 
-            WorkoutMovement(movementId: m.id, reps: 10)).toList(),
-        duration: 15,
-        timeCapInMinutes: 15,
-        cadenceDays: 3, // Twice weekly
-        createdAt: now,
-        updatedAt: now,
-      ));
-    }
-
-    // Save all workout pools
+    // Save all generated workout pools
     for (final pool in workoutPools) {
-      await _workoutPoolRepository.createWorkoutPool(pool);
+      try {
+        await _workoutPoolRepository.createWorkoutPool(pool);
+      } catch (e) {
+        _logger.w('Failed to create workout pool ${pool.name}: $e');
+        // Continue with other pools even if one fails
+      }
     }
 
-    _logger.i('Created ${workoutPools.length} default workout pools');
+    _logger.i('Successfully created ${workoutPools.length} extensive workout pools');
   }
 
   /// Get available equipment-based workout pools
