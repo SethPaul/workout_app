@@ -60,14 +60,25 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y lcov
+        echo "📊 Generating coverage report..."
+        
+        # Check what files are in the coverage report
+        echo "Files in coverage report:"
+        grep "SF:" coverage/lcov.info | head -10
+        
+        # Only exclude patterns that actually exist in the coverage file
+        # Remove test files from coverage (these patterns definitely exist)
         lcov --remove coverage/lcov.info \
-          '**/*.g.dart' \
-          '**/*.freezed.dart' \
-          '**/generated/**' \
-          'test/**' \
-          'integration_test/**' \
+          'test/*' \
+          'integration_test/*' \
           -o coverage/lcov_cleaned.info
+        
+        # Generate HTML coverage report
         genhtml coverage/lcov_cleaned.info -o coverage/html
+        
+        echo "✅ Coverage report generated successfully!"
+        echo "Coverage files:"
+        ls -la coverage/
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v5.4.3
