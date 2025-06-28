@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.2.3 <4.0.0'
+  sdk: '>=3.2.0 <4.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -56,8 +56,8 @@ dependencies:
   uuid: ^3.0.7
   audioplayers: ^5.2.1
   
-  # MCP Flutter Integration
-  mcp_toolkit: ^0.2.0
+  # MCP Flutter Integration (temporarily removed due to Dart SDK version conflicts)
+  # mcp_toolkit: ^0.2.0
 
 dev_dependencies:
   flutter_test:
@@ -70,8 +70,8 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^2.0.0
   bloc_test: ^9.1.5
-  mockito: ^5.4.6
-  build_runner: ^2.4.15
+  mockito: ^5.4.4
+  build_runner: ^2.3.3
   
   # Integration Testing
   integration_test:
@@ -87,7 +87,7 @@ dev_dependencies:
   faker: ^2.1.0
   
   # Test Coverage
-  coverage: ^1.7.2
+  coverage: ^1.6.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
