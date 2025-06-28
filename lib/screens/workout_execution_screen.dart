@@ -42,7 +42,20 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
   }
 
   Future<void> _initializeAudio() async {
-    await _audioCueService.initialize();
+    try {
+      await _audioCueService.initialize();
+    } catch (e) {
+      // Audio initialization failed, but don't prevent the workout from continuing
+      print('Failed to initialize audio: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Audio unavailable - workout will continue silently'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -77,6 +90,8 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
 
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return; // Prevent setState after dispose
+
       if (!_isPaused) {
         setState(() {
           _elapsedSeconds++;
@@ -126,7 +141,11 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
   }
 
   void _completeMovement() {
-    if (_workout == null) return;
+    if (_workout == null ||
+        _workout!.movements.isEmpty ||
+        _currentMovementIndex >= _workout!.movements.length) {
+      return;
+    }
 
     final currentMovement = _workout!.movements[_currentMovementIndex];
     final completedReps = _completedReps[_currentMovementIndex] ?? 0;
@@ -296,6 +315,15 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
   }
 
   Widget _buildWorkoutContent() {
+    // Safety check: ensure we have movements and valid index
+    if (_workout == null ||
+        _workout!.movements.isEmpty ||
+        _currentMovementIndex >= _workout!.movements.length) {
+      return const Center(
+        child: Text('No movements available for this workout'),
+      );
+    }
+
     final currentMovement = _workout!.movements[_currentMovementIndex];
     final completedReps = _completedReps[_currentMovementIndex] ?? 0;
     final remainingReps = currentMovement.reps - completedReps;

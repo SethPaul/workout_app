@@ -4,15 +4,24 @@ import 'package:workout_app/data/models/workout.dart';
 class AudioCueService {
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isMuted = false;
+  bool _isInitialized = false;
 
   // Audio cue types
-  static const String _beepSound = 'assets/audio/beep.mp3';
-  static const String _bellSound = 'assets/audio/bell.mp3';
-  static const String _whistleSound = 'assets/audio/whistle.mp3';
-  static const String _countdownSound = 'assets/audio/countdown.mp3';
+  static const String _beepSound = 'audio/beep.mp3';
+  static const String _bellSound = 'audio/bell.mp3';
+  static const String _whistleSound = 'audio/whistle.mp3';
+  static const String _countdownSound = 'audio/countdown.mp3';
 
   Future<void> initialize() async {
-    await _audioPlayer.setSource(AssetSource(_beepSound));
+    try {
+      await _audioPlayer.setSource(AssetSource(_beepSound));
+      _isInitialized = true;
+    } catch (e) {
+      // Audio initialization failed, disable audio features
+      print('AudioCueService: Failed to initialize audio - $e');
+      _isMuted = true; // Automatically mute if audio fails
+      _isInitialized = false;
+    }
   }
 
   void toggleMute() {
@@ -20,60 +29,62 @@ class AudioCueService {
   }
 
   bool get isMuted => _isMuted;
+  bool get isInitialized => _isInitialized;
+
+  Future<void> _playSound(String soundPath) async {
+    if (_isMuted || !_isInitialized) return;
+
+    try {
+      await _audioPlayer.play(AssetSource(soundPath));
+    } catch (e) {
+      // Silently handle audio playback errors
+      print('AudioCueService: Failed to play $soundPath - $e');
+    }
+  }
 
   Future<void> playBeep() async {
-    if (_isMuted) return;
-    await _audioPlayer.play(AssetSource(_beepSound));
+    await _playSound(_beepSound);
   }
 
   Future<void> playBell() async {
-    if (_isMuted) return;
-    await _audioPlayer.play(AssetSource(_bellSound));
+    await _playSound(_bellSound);
   }
 
   Future<void> playWhistle() async {
-    if (_isMuted) return;
-    await _audioPlayer.play(AssetSource(_whistleSound));
+    await _playSound(_whistleSound);
   }
 
   Future<void> playCountdown() async {
-    if (_isMuted) return;
-    await _audioPlayer.play(AssetSource(_countdownSound));
+    await _playSound(_countdownSound);
   }
 
   Future<void> playWorkoutStart() async {
-    if (_isMuted) return;
     await playBell();
   }
 
   Future<void> playWorkoutEnd() async {
-    if (_isMuted) return;
     await playWhistle();
   }
 
   Future<void> playRoundStart() async {
-    if (_isMuted) return;
     await playBeep();
   }
 
   Future<void> playRestStart() async {
-    if (_isMuted) return;
     await playBeep();
   }
 
   Future<void> playRestEnd() async {
-    if (_isMuted) return;
     await playBell();
   }
 
   Future<void> playMovementTransition() async {
-    if (_isMuted) return;
     await playBeep();
   }
 
   Future<void> playFormatSpecificCue(
       WorkoutFormat format, int secondsRemaining) async {
-    if (_isMuted) return;
+    if (_isMuted || !_isInitialized) return;
 
     switch (format) {
       case WorkoutFormat.emom:
@@ -126,6 +137,10 @@ class AudioCueService {
   }
 
   void dispose() {
-    _audioPlayer.dispose();
+    try {
+      _audioPlayer.dispose();
+    } catch (e) {
+      print('AudioCueService: Error disposing audio player - $e');
+    }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:workout_app/data/models/workout.dart';
 import 'package:workout_app/services/workout_service.dart';
@@ -6,10 +7,12 @@ import 'package:workout_app/screens/workout_templates_screen.dart';
 
 class WorkoutListScreen extends StatefulWidget {
   final WorkoutService workoutService;
+  final ValueNotifier<int>? refreshTrigger;
 
   const WorkoutListScreen({
     super.key,
     required this.workoutService,
+    this.refreshTrigger,
   });
 
   @override
@@ -26,6 +29,19 @@ class _WorkoutListScreenState extends State<WorkoutListScreen> {
   @override
   void initState() {
     super.initState();
+    _loadWorkouts();
+
+    // Listen to refresh trigger
+    widget.refreshTrigger?.addListener(_onRefreshTrigger);
+  }
+
+  @override
+  void dispose() {
+    widget.refreshTrigger?.removeListener(_onRefreshTrigger);
+    super.dispose();
+  }
+
+  void _onRefreshTrigger() {
     _loadWorkouts();
   }
 

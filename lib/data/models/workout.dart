@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:equatable/equatable.dart';
 import 'package:workout_app/data/models/movement.dart';
 
@@ -83,7 +84,8 @@ class Workout extends Equatable {
     this.notes,
   });
 
-  factory Workout.fromMap(Map<String, dynamic> map) {
+  factory Workout.fromMap(Map<String, dynamic> map,
+      {List<WorkoutMovement>? movements}) {
     return Workout(
       id: map['id'] as String,
       name: map['name'] as String,
@@ -94,12 +96,14 @@ class Workout extends Equatable {
       intensity: IntensityLevel.values.firstWhere(
         (e) => e.toString() == 'IntensityLevel.${map['intensity']}',
       ),
-      movements: [], // TODO: Load movements from database
+      movements: movements ?? [],
       rounds: map['rounds'] as int?,
       duration: map['duration'] as int,
-      timeCapInMinutes: map['timeCapInMinutes'] as int?,
-      formatSpecificSettings:
-          map['formatSpecificSettings'] as Map<String, dynamic>?,
+      timeCapInMinutes: map['time_cap_in_minutes'] as int?,
+      formatSpecificSettings: map['format_specific_settings'] != null
+          ? jsonDecode(map['format_specific_settings'] as String)
+              as Map<String, dynamic>
+          : null,
       completedAt: map['completed_at'] != null
           ? DateTime.parse(map['completed_at'] as String)
           : null,
@@ -115,11 +119,12 @@ class Workout extends Equatable {
       'description': description,
       'format': format.toString().split('.').last,
       'intensity': intensity.toString().split('.').last,
-      'movements': movements.map((m) => m.toJson()).toList(),
       'rounds': rounds,
       'duration': duration,
-      'timeCapInMinutes': timeCapInMinutes,
-      'formatSpecificSettings': formatSpecificSettings,
+      'time_cap_in_minutes': timeCapInMinutes,
+      'format_specific_settings': formatSpecificSettings != null
+          ? jsonEncode(formatSpecificSettings!)
+          : null,
       'completed_at': completedAt?.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
       'notes': notes,

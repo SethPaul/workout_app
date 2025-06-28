@@ -22,7 +22,7 @@ class SQLiteMovementRepository implements MovementRepository {
   @override
   Future<List<Movement>> getAllMovements() async {
     final db = await _dbHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query('movements');
+    final List<Map<String, dynamic>> maps = await db.query('movement_library');
     return List.generate(maps.length, (i) => _movementFromMap(maps[i]));
   }
 
@@ -30,7 +30,7 @@ class SQLiteMovementRepository implements MovementRepository {
   Future<Movement?> getMovementById(String id) async {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
-      'movements',
+      'movement_library',
       where: 'id = ?',
       whereArgs: [id],
     );
@@ -42,7 +42,7 @@ class SQLiteMovementRepository implements MovementRepository {
   Future<List<Movement>> getMovementsByCategory(
       MovementCategory category) async {
     final db = await _dbHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query('movements');
+    final List<Map<String, dynamic>> maps = await db.query('movement_library');
     return maps
         .map((map) => _movementFromMap(map))
         .where((movement) => movement.categories.contains(category))
@@ -53,7 +53,7 @@ class SQLiteMovementRepository implements MovementRepository {
   Future<List<Movement>> getMovementsByEquipment(
       EquipmentType equipment) async {
     final db = await _dbHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query('movements');
+    final List<Map<String, dynamic>> maps = await db.query('movement_library');
     return maps
         .map((map) => _movementFromMap(map))
         .where((movement) => movement.requiredEquipment.contains(equipment))
@@ -65,8 +65,8 @@ class SQLiteMovementRepository implements MovementRepository {
       DifficultyLevel difficulty) async {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
-      'movements',
-      where: 'difficulty = ?',
+      'movement_library',
+      where: 'difficultyLevel = ?',
       whereArgs: [difficulty.toString().split('.').last],
     );
     return List.generate(maps.length, (i) => _movementFromMap(maps[i]));
@@ -76,7 +76,7 @@ class SQLiteMovementRepository implements MovementRepository {
   Future<List<Movement>> getMainMovements() async {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
-      'movements',
+      'movement_library',
       where: 'isMainMovement = ?',
       whereArgs: [1],
     );
@@ -87,7 +87,7 @@ class SQLiteMovementRepository implements MovementRepository {
   Future<String> createMovement(Movement movement) async {
     final db = await _dbHelper.database;
     await db.insert(
-      'movements',
+      'movement_library',
       _movementToMap(movement),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
@@ -98,7 +98,7 @@ class SQLiteMovementRepository implements MovementRepository {
   Future<void> updateMovement(Movement movement) async {
     final db = await _dbHelper.database;
     await db.update(
-      'movements',
+      'movement_library',
       _movementToMap(movement),
       where: 'id = ?',
       whereArgs: [movement.id],
@@ -109,7 +109,7 @@ class SQLiteMovementRepository implements MovementRepository {
   Future<void> deleteMovement(String id) async {
     final db = await _dbHelper.database;
     await db.delete(
-      'movements',
+      'movement_library',
       where: 'id = ?',
       whereArgs: [id],
     );

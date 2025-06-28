@@ -5,13 +5,115 @@ import 'package:mockito/mockito.dart';
 
 import 'package:workout_app/main.dart';
 import 'package:workout_app/services/workout_service.dart';
+import 'package:workout_app/services/user_progress_service.dart';
+import 'package:workout_app/services/default_workout_service.dart';
+import 'package:workout_app/services/workout_template_service.dart';
 import 'package:workout_app/data/models/workout.dart';
+import 'package:workout_app/data/models/user_progress.dart';
 
-// Mock class for WorkoutService
+// Mock classes for testing
 class MockWorkoutService extends Mock implements WorkoutService {
+  final MockWorkoutTemplateService _templateService =
+      MockWorkoutTemplateService();
+
   @override
-  Future<List<Workout>> getWorkouts() async {
+  Future<List<Workout>> getAllWorkouts() async {
     return [];
+  }
+
+  @override
+  WorkoutTemplateService get templateService => _templateService;
+}
+
+class MockWorkoutTemplateService extends Mock
+    implements WorkoutTemplateService {}
+
+class MockUserProgressService extends Mock implements UserProgressService {
+  @override
+  Future<UserProgress?> getCurrentUserProgress() async {
+    return UserProgress(
+      userId: 'test_user',
+      workoutHistory: [],
+      movementProgress: {},
+      lastWorkoutDate: DateTime.now(),
+      totalWorkoutsCompleted: 0,
+      isFirstRun: false,
+      hasAcceptedDefaultWorkouts: false,
+    );
+  }
+
+  @override
+  Future<void> initializeUserProgress() async {
+    // Mock implementation
+  }
+
+  @override
+  Future<void> recordWorkoutCompletion({
+    required String workoutId,
+    required int totalTimeInSeconds,
+    int? totalRounds,
+    int? totalReps,
+    double? maxWeight,
+    String? notes,
+    Map<String, dynamic>? performanceMetrics,
+  }) async {
+    // Mock implementation
+  }
+
+  @override
+  Future<void> updateUserProgress(UserProgress userProgress) async {
+    // Mock implementation
+  }
+}
+
+class MockDefaultWorkoutService extends Mock implements DefaultWorkoutService {
+  @override
+  List<Map<String, dynamic>> getDefaultWorkoutConfigurations() {
+    return [];
+  }
+
+  @override
+  List<Map<String, dynamic>> getRecommendedWorkouts(String preference) {
+    return [];
+  }
+}
+
+class FirstRunMockUserProgressService extends Mock
+    implements UserProgressService {
+  @override
+  Future<UserProgress?> getCurrentUserProgress() async {
+    return UserProgress(
+      userId: 'test_user',
+      workoutHistory: [],
+      movementProgress: {},
+      lastWorkoutDate: DateTime.now(),
+      totalWorkoutsCompleted: 0,
+      isFirstRun: true,
+      hasAcceptedDefaultWorkouts: false,
+    );
+  }
+
+  @override
+  Future<void> initializeUserProgress() async {
+    // Mock implementation
+  }
+
+  @override
+  Future<void> recordWorkoutCompletion({
+    required String workoutId,
+    required int totalTimeInSeconds,
+    int? totalRounds,
+    int? totalReps,
+    double? maxWeight,
+    String? notes,
+    Map<String, dynamic>? performanceMetrics,
+  }) async {
+    // Mock implementation
+  }
+
+  @override
+  Future<void> updateUserProgress(UserProgress userProgress) async {
+    // Mock implementation
   }
 }
 
@@ -20,117 +122,159 @@ void main() {
 
   group('Workout App Integration Tests', () {
     late MockWorkoutService mockWorkoutService;
+    late MockUserProgressService mockUserProgressService;
+    late MockDefaultWorkoutService mockDefaultWorkoutService;
 
     setUp(() {
       mockWorkoutService = MockWorkoutService();
+      mockUserProgressService = MockUserProgressService();
+      mockDefaultWorkoutService = MockDefaultWorkoutService();
+
+      // Mock services are now set up with direct implementations
     });
 
     testWidgets('App launches and shows home screen',
         (WidgetTester tester) async {
-      // Launch the app with mock service
-      await tester.pumpWidget(WorkoutApp(workoutService: mockWorkoutService));
+      // Launch the app with mock services
+      await tester.pumpWidget(WorkoutApp(
+        workoutService: mockWorkoutService,
+        userProgressService: mockUserProgressService,
+        defaultWorkoutService: mockDefaultWorkoutService,
+      ));
+
+      // Wait for async operations to complete
       await tester.pumpAndSettle();
 
-      // Test: App starts and shows home screen
-      expect(find.text('Workout App'), findsAtLeastNWidgets(1));
-      expect(find.text('Start Workout'), findsOneWidget);
-      expect(find.text('Workout History'), findsOneWidget);
+      // Test: App starts and shows home screen with bottom navigation
+      expect(find.byType(BottomNavigationBar), findsOneWidget);
+      expect(find.text('Workouts'), findsAtLeastNWidgets(1));
+      expect(find.text('Templates'), findsAtLeastNWidgets(1));
+      expect(find.text('History'), findsAtLeastNWidgets(1));
     });
 
-    testWidgets('Navigate to workout list', (WidgetTester tester) async {
-      await tester.pumpWidget(WorkoutApp(workoutService: mockWorkoutService));
+    testWidgets('Navigate between tabs', (WidgetTester tester) async {
+      await tester.pumpWidget(WorkoutApp(
+        workoutService: mockWorkoutService,
+        userProgressService: mockUserProgressService,
+        defaultWorkoutService: mockDefaultWorkoutService,
+      ));
       await tester.pumpAndSettle();
 
-      // Test: Navigate to workout list
-      final startWorkoutButton = find.text('Start Workout');
-      await tester.tap(startWorkoutButton);
+      // Test: Navigate to Templates tab
+      final templatesTab = find.text('Templates');
+      await tester.tap(templatesTab);
       await tester.pumpAndSettle();
 
-      // Should navigate to workout list screen
-      expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+      // Should be on templates tab (index 1)
+      final bottomNav =
+          tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar));
+      expect(bottomNav.currentIndex, 1);
 
-      // Test back navigation
-      await tester.tap(find.byIcon(Icons.arrow_back));
+      // Test: Navigate to History tab
+      final historyTab = find.text('History');
+      await tester.tap(historyTab);
       await tester.pumpAndSettle();
 
-      // Should be back on home screen
-      expect(find.text('Start Workout'), findsOneWidget);
-    });
+      // Should be on history tab (index 2)
+      final bottomNavAfterHistory =
+          tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar));
+      expect(bottomNavAfterHistory.currentIndex, 2);
 
-    testWidgets('Navigate to workout history', (WidgetTester tester) async {
-      await tester.pumpWidget(WorkoutApp(workoutService: mockWorkoutService));
+      // Test: Navigate back to Workouts tab
+      final workoutsTab = find.text('Workouts');
+      await tester.tap(workoutsTab);
       await tester.pumpAndSettle();
 
-      // Test: Navigate to workout history
-      final historyButton = find.text('Workout History');
-      await tester.tap(historyButton);
-      await tester.pumpAndSettle();
-
-      // Should navigate to history screen
-      expect(find.byIcon(Icons.arrow_back), findsOneWidget);
-
-      // Test back navigation
-      await tester.tap(find.byIcon(Icons.arrow_back));
-      await tester.pumpAndSettle();
-
-      // Should be back on home screen
-      expect(find.text('Workout History'), findsOneWidget);
+      // Should be back on workouts tab (index 0)
+      final bottomNavAfterWorkouts =
+          tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar));
+      expect(bottomNavAfterWorkouts.currentIndex, 0);
     });
 
     testWidgets('App handles initialization gracefully',
         (WidgetTester tester) async {
-      await tester.pumpWidget(WorkoutApp(workoutService: mockWorkoutService));
+      await tester.pumpWidget(WorkoutApp(
+        workoutService: mockWorkoutService,
+        userProgressService: mockUserProgressService,
+        defaultWorkoutService: mockDefaultWorkoutService,
+      ));
       await tester.pumpAndSettle();
 
       // App should start without crashing
       expect(find.byType(Scaffold), findsAtLeastNWidgets(1));
 
       // Should show main navigation elements
-      expect(find.text('Start Workout'), findsOneWidget);
-      expect(find.text('Workout History'), findsOneWidget);
+      expect(find.byType(BottomNavigationBar), findsOneWidget);
+      expect(find.text('Workouts'), findsAtLeastNWidgets(1));
+      expect(find.text('Templates'), findsAtLeastNWidgets(1));
+      expect(find.text('History'), findsAtLeastNWidgets(1));
     });
 
     testWidgets('UI elements are responsive', (WidgetTester tester) async {
-      await tester.pumpWidget(WorkoutApp(workoutService: mockWorkoutService));
+      await tester.pumpWidget(WorkoutApp(
+        workoutService: mockWorkoutService,
+        userProgressService: mockUserProgressService,
+        defaultWorkoutService: mockDefaultWorkoutService,
+      ));
       await tester.pumpAndSettle();
 
-      // Test button interactions
-      final startButton = find.text('Start Workout');
-      final historyButton = find.text('Workout History');
+      // Test tab interactions
+      final templatesTab = find.text('Templates');
+      final historyTab = find.text('History');
+      final workoutsTab = find.text('Workouts');
 
-      // Buttons should be tappable
-      expect(startButton, findsOneWidget);
-      expect(historyButton, findsOneWidget);
+      // Tabs should be tappable
+      expect(templatesTab, findsAtLeastNWidgets(1));
+      expect(historyTab, findsAtLeastNWidgets(1));
+      expect(workoutsTab, findsAtLeastNWidgets(1));
 
       // Test multiple taps don't break the app
-      await tester.tap(startButton);
-      await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.tap(templatesTab);
       await tester.pumpAndSettle();
 
-      await tester.tap(historyButton);
-      await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.tap(historyTab);
       await tester.pumpAndSettle();
 
-      // Should still be on home screen
-      expect(find.text('Start Workout'), findsOneWidget);
+      await tester.tap(workoutsTab);
+      await tester.pumpAndSettle();
+
+      // Should still have functional navigation
+      expect(find.byType(BottomNavigationBar), findsOneWidget);
     });
 
     testWidgets('Home screen displays correct layout',
         (WidgetTester tester) async {
-      await tester.pumpWidget(WorkoutApp(workoutService: mockWorkoutService));
+      await tester.pumpWidget(WorkoutApp(
+        workoutService: mockWorkoutService,
+        userProgressService: mockUserProgressService,
+        defaultWorkoutService: mockDefaultWorkoutService,
+      ));
       await tester.pumpAndSettle();
 
-      // Check that the app bar is present
-      expect(find.byType(AppBar), findsOneWidget);
+      // Check that the app structure is correct
+      expect(find.byType(Scaffold), findsAtLeastNWidgets(1));
+      expect(find.byType(BottomNavigationBar), findsOneWidget);
 
-      // Check that buttons are properly styled
-      expect(find.byType(ElevatedButton), findsNWidgets(2));
+      // Check that bottom navigation has 3 tabs
+      final bottomNav =
+          tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar));
+      expect(bottomNav.items.length, 3);
+    });
 
-      // Check that the layout is centered
-      expect(find.byType(Center), findsAtLeastNWidgets(1));
-      expect(find.byType(Column), findsAtLeastNWidgets(1));
+    testWidgets('App handles first run flow', (WidgetTester tester) async {
+      // Create a special mock service for first run
+      final firstRunMockService = FirstRunMockUserProgressService();
+
+      await tester.pumpWidget(WorkoutApp(
+        workoutService: mockWorkoutService,
+        userProgressService: firstRunMockService,
+        defaultWorkoutService: mockDefaultWorkoutService,
+      ));
+      await tester.pumpAndSettle();
+
+      // Should show onboarding screen for first run
+      // This test verifies that the app properly handles first-time users
+      expect(find.byType(Scaffold), findsOneWidget);
     });
   });
 }

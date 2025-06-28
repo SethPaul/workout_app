@@ -96,6 +96,9 @@ class UserProgress extends Equatable {
   final int totalWorkoutsCompleted;
   final Map<String, dynamic>? goals;
   final Map<String, dynamic>? achievements;
+  final bool isFirstRun;
+  final bool hasAcceptedDefaultWorkouts;
+  final DateTime? onboardingCompletedAt;
 
   const UserProgress({
     required this.userId,
@@ -105,6 +108,9 @@ class UserProgress extends Equatable {
     required this.totalWorkoutsCompleted,
     this.goals,
     this.achievements,
+    this.isFirstRun = true,
+    this.hasAcceptedDefaultWorkouts = false,
+    this.onboardingCompletedAt,
   });
 
   factory UserProgress.fromJson(Map<String, dynamic> json) {
@@ -123,6 +129,11 @@ class UserProgress extends Equatable {
       totalWorkoutsCompleted: json['totalWorkoutsCompleted'] as int,
       goals: json['goals'] as Map<String, dynamic>?,
       achievements: json['achievements'] as Map<String, dynamic>?,
+      isFirstRun: json['isFirstRun'] as bool? ?? true,
+      hasAcceptedDefaultWorkouts: json['hasAcceptedDefaultWorkouts'] as bool? ?? false,
+      onboardingCompletedAt: json['onboardingCompletedAt'] == null
+          ? null
+          : DateTime.parse(json['onboardingCompletedAt'] as String),
     );
   }
 
@@ -136,6 +147,9 @@ class UserProgress extends Equatable {
       'totalWorkoutsCompleted': totalWorkoutsCompleted,
       'goals': goals,
       'achievements': achievements,
+      'isFirstRun': isFirstRun,
+      'hasAcceptedDefaultWorkouts': hasAcceptedDefaultWorkouts,
+      'onboardingCompletedAt': onboardingCompletedAt?.toIso8601String(),
     };
   }
 
@@ -147,6 +161,9 @@ class UserProgress extends Equatable {
     int? totalWorkoutsCompleted,
     Map<String, dynamic>? goals,
     Map<String, dynamic>? achievements,
+    bool? isFirstRun,
+    bool? hasAcceptedDefaultWorkouts,
+    DateTime? onboardingCompletedAt,
   }) {
     return UserProgress(
       userId: userId ?? this.userId,
@@ -157,6 +174,10 @@ class UserProgress extends Equatable {
           totalWorkoutsCompleted ?? this.totalWorkoutsCompleted,
       goals: goals ?? this.goals,
       achievements: achievements ?? this.achievements,
+      isFirstRun: isFirstRun ?? this.isFirstRun,
+      hasAcceptedDefaultWorkouts:
+          hasAcceptedDefaultWorkouts ?? this.hasAcceptedDefaultWorkouts,
+      onboardingCompletedAt: onboardingCompletedAt ?? this.onboardingCompletedAt,
     );
   }
 
@@ -169,5 +190,8 @@ class UserProgress extends Equatable {
         totalWorkoutsCompleted,
         goals,
         achievements,
+        isFirstRun,
+        hasAcceptedDefaultWorkouts,
+        onboardingCompletedAt,
       ];
 }

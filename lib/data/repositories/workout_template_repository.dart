@@ -153,21 +153,36 @@ class SQLiteWorkoutTemplateRepository implements WorkoutTemplateRepository {
       'format': template.format.toString().split('.').last,
       'intensity': template.intensity.toString().split('.').last,
       'targetDuration': template.targetDuration,
-      'preferredCategories': jsonEncode(template.preferredCategories
-          ?.map((c) => c.toString().split('.').last)
-          .toList()),
-      'availableEquipment': jsonEncode(template.availableEquipment
-          ?.map((e) => e.toString().split('.').last)
-          .toList()),
-      'isMainMovementOnly': template.isMainMovementOnly,
+      'preferredCategories': template.preferredCategories != null
+          ? jsonEncode(template.preferredCategories!
+              .map((c) => c.toString().split('.').last)
+              .toList())
+          : null,
+      'availableEquipment': template.availableEquipment != null
+          ? jsonEncode(template.availableEquipment!
+              .map((e) => e.toString().split('.').last)
+              .toList())
+          : null,
+      'isMainMovementOnly': template.isMainMovementOnly != null
+          ? (template.isMainMovementOnly! ? 1 : 0)
+          : null,
       'created_at': template.createdAt.toIso8601String(),
       'lastUsed': template.lastUsed?.toIso8601String(),
       'timesUsed': template.timesUsed,
-      'metadata': jsonEncode(template.metadata),
+      'metadata':
+          template.metadata != null ? jsonEncode(template.metadata!) : null,
     };
   }
 
   WorkoutTemplate _templateFromMap(Map<String, dynamic> map) {
+    print('DEBUG: Processing template from map: ${map.keys}');
+    print(
+        'DEBUG: preferredCategories value: ${map['preferredCategories']} (type: ${map['preferredCategories'].runtimeType})');
+    print(
+        'DEBUG: availableEquipment value: ${map['availableEquipment']} (type: ${map['availableEquipment'].runtimeType})');
+    print(
+        'DEBUG: metadata value: ${map['metadata']} (type: ${map['metadata'].runtimeType})');
+
     return WorkoutTemplate(
       id: map['id'] as String,
       name: map['name'] as String,
@@ -179,24 +194,66 @@ class SQLiteWorkoutTemplateRepository implements WorkoutTemplateRepository {
         (e) => e.toString() == 'IntensityLevel.${map['intensity']}',
       ),
       targetDuration: map['targetDuration'] as int,
-      preferredCategories:
-          (jsonDecode(map['preferredCategories'] as String) as List?)
-              ?.map((c) => MovementCategory.values
-                  .firstWhere((mc) => mc.toString() == 'MovementCategory.$c'))
-              .toList(),
-      availableEquipment:
-          (jsonDecode(map['availableEquipment'] as String) as List?)
-              ?.map((e) => EquipmentType.values
-                  .firstWhere((et) => et.toString() == 'EquipmentType.$e'))
-              .toList(),
-      isMainMovementOnly: map['isMainMovementOnly'] as bool?,
+      preferredCategories: map['preferredCategories'] != null
+          ? () {
+              try {
+                print(
+                    'DEBUG: Attempting to decode preferredCategories: ${map['preferredCategories']}');
+                final decoded =
+                    jsonDecode(map['preferredCategories']!) as List?;
+                print(
+                    'DEBUG: Successfully decoded preferredCategories: $decoded');
+                return decoded
+                    ?.map((c) => MovementCategory.values.firstWhere(
+                        (mc) => mc.toString() == 'MovementCategory.$c'))
+                    .toList();
+              } catch (e) {
+                print('ERROR: Failed to decode preferredCategories: $e');
+                return null;
+              }
+            }()
+          : null,
+      availableEquipment: map['availableEquipment'] != null
+          ? () {
+              try {
+                print(
+                    'DEBUG: Attempting to decode availableEquipment: ${map['availableEquipment']}');
+                final decoded = jsonDecode(map['availableEquipment']!) as List?;
+                print(
+                    'DEBUG: Successfully decoded availableEquipment: $decoded');
+                return decoded
+                    ?.map((e) => EquipmentType.values.firstWhere(
+                        (et) => et.toString() == 'EquipmentType.$e'))
+                    .toList();
+              } catch (e) {
+                print('ERROR: Failed to decode availableEquipment: $e');
+                return null;
+              }
+            }()
+          : null,
+      isMainMovementOnly: map['isMainMovementOnly'] != null
+          ? (map['isMainMovementOnly'] as int) == 1
+          : null,
       createdAt: DateTime.parse(map['created_at'] as String),
       lastUsed: map['lastUsed'] != null
           ? DateTime.parse(map['lastUsed'] as String)
           : null,
       timesUsed: map['timesUsed'] as int? ?? 0,
       metadata: map['metadata'] != null
-          ? jsonDecode(map['metadata'] as String) as Map<String, dynamic>
+          ? () {
+              try {
+                print(
+                    'DEBUG: Attempting to decode metadata: ${map['metadata']}');
+                final decoded = jsonDecode(map['metadata']!);
+                // Safely cast only if it's actually a Map
+                final result = decoded is Map<String, dynamic> ? decoded : null;
+                print('DEBUG: Successfully decoded metadata: $result');
+                return result;
+              } catch (e) {
+                print('ERROR: Failed to decode metadata: $e');
+                return null;
+              }
+            }()
           : null,
     );
   }
