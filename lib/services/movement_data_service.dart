@@ -300,4 +300,9 @@ class MovementDataService {
     _logger.i('Force reloading movements from JSON...');
     await initializeMovementLibrary(forceReload: true);
   }
+
+  /// Get all movements from the repository
+  Future<List<Movement>> getAllMovements() async {
+    return await _repository.getAllMovements();
+  }
 }

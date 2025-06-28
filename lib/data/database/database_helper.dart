@@ -8,7 +8,7 @@ class DatabaseHelper {
   static Database? _database;
   final _logger = Logger();
   static const int _databaseVersion =
-      4; // Increment version for movement library separation
+      5; // Increment version for workout pool and movement cadence support
 
   factory DatabaseHelper() => _instance;
 
@@ -193,6 +193,72 @@ class DatabaseHelper {
       ''');
       _logger.i('Created movement_progress table');
 
+      // Create workout pools table
+      await db.execute('''
+        CREATE TABLE workout_pools(
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          description TEXT,
+          format TEXT NOT NULL,
+          intensity TEXT NOT NULL,
+          rounds INTEGER,
+          duration INTEGER NOT NULL,
+          time_cap_in_minutes INTEGER,
+          format_specific_settings TEXT,
+          is_enabled INTEGER DEFAULT 1,
+          last_performed TEXT,
+          cadence_days INTEGER DEFAULT 7,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          metadata TEXT
+        )
+      ''');
+      _logger.i('Created workout_pools table');
+
+      // Create workout pool movements table
+      await db.execute('''
+        CREATE TABLE workout_pool_movements(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          workout_pool_id TEXT NOT NULL,
+          movement_id TEXT NOT NULL,
+          reps INTEGER NOT NULL,
+          weight REAL,
+          scaling_option TEXT,
+          time_in_seconds INTEGER,
+          order_index INTEGER NOT NULL,
+          FOREIGN KEY (workout_pool_id) REFERENCES workout_pools (id) ON DELETE CASCADE,
+          FOREIGN KEY (movement_id) REFERENCES movement_library (id)
+        )
+      ''');
+      _logger.i('Created workout_pool_movements table');
+
+      // Create workout pool equipment table
+      await db.execute('''
+        CREATE TABLE workout_pool_equipment(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          workout_pool_id TEXT NOT NULL,
+          equipment_id TEXT NOT NULL,
+          FOREIGN KEY (workout_pool_id) REFERENCES workout_pools (id) ON DELETE CASCADE
+        )
+      ''');
+      _logger.i('Created workout_pool_equipment table');
+
+      // Create movement cadences table
+      await db.execute('''
+        CREATE TABLE movement_cadences(
+          id TEXT PRIMARY KEY,
+          movement_id TEXT NOT NULL,
+          days_interval INTEGER NOT NULL,
+          last_performed TEXT,
+          is_enabled INTEGER DEFAULT 1,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          UNIQUE(movement_id),
+          FOREIGN KEY (movement_id) REFERENCES movement_library (id)
+        )
+      ''');
+      _logger.i('Created movement_cadences table');
+
       _logger.i('All database tables created successfully');
     } catch (e) {
       _logger.e('Error creating database tables: $e');
@@ -329,6 +395,79 @@ class DatabaseHelper {
 
         _logger.i(
             'Successfully separated movement library from workout movements');
+      }
+
+      if (oldVersion < 5) {
+        // Add workout pool and movement cadence tables for version 5
+        _logger.i('Adding workout pool and movement cadence tables...');
+
+        // Create workout pools table
+        await db.execute('''
+          CREATE TABLE workout_pools(
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            description TEXT,
+            format TEXT NOT NULL,
+            intensity TEXT NOT NULL,
+            rounds INTEGER,
+            duration INTEGER NOT NULL,
+            time_cap_in_minutes INTEGER,
+            format_specific_settings TEXT,
+            is_enabled INTEGER DEFAULT 1,
+            last_performed TEXT,
+            cadence_days INTEGER DEFAULT 7,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            metadata TEXT
+          )
+        ''');
+        _logger.i('Created workout_pools table');
+
+        // Create workout pool movements table
+        await db.execute('''
+          CREATE TABLE workout_pool_movements(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            workout_pool_id TEXT NOT NULL,
+            movement_id TEXT NOT NULL,
+            reps INTEGER NOT NULL,
+            weight REAL,
+            scaling_option TEXT,
+            time_in_seconds INTEGER,
+            order_index INTEGER NOT NULL,
+            FOREIGN KEY (workout_pool_id) REFERENCES workout_pools (id) ON DELETE CASCADE,
+            FOREIGN KEY (movement_id) REFERENCES movement_library (id)
+          )
+        ''');
+        _logger.i('Created workout_pool_movements table');
+
+        // Create workout pool equipment table
+        await db.execute('''
+          CREATE TABLE workout_pool_equipment(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            workout_pool_id TEXT NOT NULL,
+            equipment_id TEXT NOT NULL,
+            FOREIGN KEY (workout_pool_id) REFERENCES workout_pools (id) ON DELETE CASCADE
+          )
+        ''');
+        _logger.i('Created workout_pool_equipment table');
+
+        // Create movement cadences table
+        await db.execute('''
+          CREATE TABLE movement_cadences(
+            id TEXT PRIMARY KEY,
+            movement_id TEXT NOT NULL,
+            days_interval INTEGER NOT NULL,
+            last_performed TEXT,
+            is_enabled INTEGER DEFAULT 1,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            UNIQUE(movement_id),
+            FOREIGN KEY (movement_id) REFERENCES movement_library (id)
+          )
+        ''');
+        _logger.i('Created movement_cadences table');
+
+        _logger.i('Successfully added workout pool and movement cadence tables');
       }
 
       _logger.i('Database upgrade completed successfully');
