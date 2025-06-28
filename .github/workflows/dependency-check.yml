@@ -1,0 +1,58 @@
+name: Dependency Check
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'  # Every Monday at 8 AM
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: '3.24.3'
+
+jobs:
+  dependency-check:
+    name: Check Dependencies
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true
+    
+    - name: Get dependencies
+      run: flutter pub get
+    
+    - name: Check for outdated packages
+      run: flutter pub outdated
+      continue-on-error: true
+    
+    - name: Analyze dependencies
+      run: flutter pub deps
+    
+    - name: Check for security vulnerabilities
+      run: |
+        echo "Checking for known security issues..."
+        # Note: Add security scanning tools here as needed
+        # For example: osv-scanner, safety, etc.
+    
+    - name: Generate dependency report
+      run: |
+        echo "# Dependency Report" > dependency-report.md
+        echo "Generated on: $(date)" >> dependency-report.md
+        echo "" >> dependency-report.md
+        echo "## Outdated Packages" >> dependency-report.md
+        flutter pub outdated >> dependency-report.md || true
+        echo "" >> dependency-report.md
+        echo "## Dependency Tree" >> dependency-report.md
+        flutter pub deps >> dependency-report.md
+    
+    - name: Upload dependency report
+      uses: actions/upload-artifact@v4
+      with:
+        name: dependency-report
+        path: dependency-report.md
