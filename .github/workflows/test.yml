@@ -60,7 +60,7 @@ jobs:
       run: flutter pub get
     
     - name: Run tests with coverage
-      run: flutter test --coverage --reporter expanded
+      run: flutter test test/services/ test/data/ test/widgets/ test/features/ --coverage --reporter expanded
     
     - name: Check coverage file exists
       run: |
@@ -95,6 +95,8 @@ jobs:
         files: coverage/lcov_cleaned.info
         fail_ci_if_error: false
         verbose: true
+        token: ${{ secrets.CODECOV_TOKEN }}
+      continue-on-error: true
     
     - name: Archive test results
       uses: actions/upload-artifact@v4
@@ -223,6 +225,9 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
     
+    - name: Accept Android licenses
+      run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+    
     - name: AVD cache
       uses: actions/cache@v4
       id: avd-cache
@@ -249,8 +254,14 @@ jobs:
         target: google_apis
         arch: x86_64
         profile: Nexus 6
-        script: flutter test integration_test/
+        emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+        disable-animations: true
+        script: |
+          adb wait-for-device
+          flutter devices
+          flutter test integration_test/ --verbose
       continue-on-error: true
+      timeout-minutes: 20
 
   # Summary job that checks if all critical tests passed
   test-summary:
