@@ -1,0 +1,60 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "/usr/local/bin/npx",
+      "args": ["-y", "playwright-mcp-server"]
+    },
+    "codebase-knowledge": {
+      "command": "/home/seth/.local/bin/uvx",
+      "args": [
+        "--from", 
+        "/home/seth/workspace/codebase_knowledge_mcp/dist/codebase_knowledge_mcp-0.1.6-py3-none-any.whl",
+        "codebase-knowledge-mcp"
+      ],
+      "env": {
+        "DATABASE_URL": "postgresql://knowledge_user:dev_password_123@localhost:5432/knowledge_reduced",
+        "REDIS_URL": "redis://localhost:6379/0"
+      }
+    },
+    "language-server": {
+      "command": "/home/seth/go/bin/mcp-language-server",
+      "args": [
+        "--workspace",
+        "/home/seth/workspace/codebase_knowledge_mcp/",
+        "--lsp",
+        "/home/seth/.npm-global/bin/pyright-langserver",
+        "--",
+        "--stdio"
+      ],
+      "env": {
+        "PATH": "/home/seth/go/bin:/home/seth/.npm-global/bin:/usr/local/bin:/usr/bin:/bin",
+        "NODE_PATH": "/home/seth/.npm-global/lib/node_modules"
+      }
+    },
+    "flutter-inspector": {
+      "command": "/home/seth/flutter_inspector_mcp",
+      "args": [
+        "--dart-vm-host=localhost",
+        "--dart-vm-port=8181",
+        "--no-resources",
+        "--images"
+      ],
+      "env": {},
+      "disabled": false
+    },
+    "github": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
+      }
+    }
+  }
+}

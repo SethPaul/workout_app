@@ -18,18 +18,12 @@ import 'package:workout_app/services/movement_data_service.dart';
 import 'package:workout_app/data/database/database_helper.dart';
 import 'package:workout_app/screens/onboarding_screen.dart';
 import 'package:logger/logger.dart';
-import 'package:mcp_toolkit/mcp_toolkit.dart';
 import 'dart:async';
 
 void main() async {
   runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
-
-      // Initialize MCP Toolkit for AI-powered debugging and development
-      MCPToolkitBinding.instance
-        ..initialize() // Initializes the Toolkit
-        ..initializeFlutterToolkit(); // Adds Flutter related methods to the MCP server
 
       try {
         final logger = Logger();
@@ -113,8 +107,9 @@ void main() async {
       }
     },
     (error, stack) {
-      // Critical for MCP error capturing - ensures errors are captured and available to MCP server
-      MCPToolkitBinding.instance.handleZoneError(error, stack);
+      // Log any unhandled errors
+      final logger = Logger();
+      logger.e('Unhandled error in app', error: error, stackTrace: stack);
     },
   );
 }
