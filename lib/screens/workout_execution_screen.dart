@@ -72,8 +72,9 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
     });
 
     try {
-      final workout =
-          await widget.workoutService.getWorkoutById(widget.workoutId);
+      final workout = await widget.workoutService.getWorkoutById(
+        widget.workoutId,
+      );
       setState(() {
         _workout = workout;
         _isLoading = false;
@@ -188,11 +189,9 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error completing workout: $e'),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error completing workout: $e')));
       }
     }
   }
@@ -238,33 +237,23 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
-            Text(
-              _error!,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            Text(_error!, style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadWorkout,
-              child: const Text('Retry'),
-            ),
+            ElevatedButton(onPressed: _loadWorkout, child: const Text('Retry')),
           ],
         ),
       );
     }
 
     if (_workout == null) {
-      return const Center(
-        child: Text('Workout not found'),
-      );
+      return const Center(child: Text('Workout not found'));
     }
 
     return Column(
       children: [
         _buildTimer(),
         if (_isResting) _buildRestTimer(),
-        Expanded(
-          child: _buildWorkoutContent(),
-        ),
+        Expanded(child: _buildWorkoutContent()),
       ],
     );
   }
@@ -278,16 +267,16 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
         children: [
           Text(
             _formatTime(_elapsedSeconds),
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Colors.white,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(color: Colors.white),
           ),
           if (_workout!.rounds != null)
             Text(
               'Round $_currentRound/${_workout!.rounds}',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(color: Colors.white),
             ),
         ],
       ),
@@ -305,9 +294,9 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
           const SizedBox(width: 8),
           Text(
             'Rest: ${_formatTime(_restSeconds)}',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.white,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(color: Colors.white),
           ),
         ],
       ),
@@ -354,9 +343,7 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (movement.reps > 0)
-                        Text(
-                          'Reps: $movementCompletedReps/${movement.reps}',
-                        ),
+                        Text('Reps: $movementCompletedReps/${movement.reps}'),
                       if (movement.timeInSeconds != null)
                         Text('Time: ${movement.timeInSeconds}s'),
                       if (movement.weight != null)

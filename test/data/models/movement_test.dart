@@ -14,12 +14,12 @@ void main() {
         muscleGroups: [
           MuscleGroup.chest,
           MuscleGroup.shoulders,
-          MuscleGroup.triceps
+          MuscleGroup.triceps,
         ],
         difficultyLevel: DifficultyLevel.beginner,
         scalingOptions: {
           'beginner': 'Knee push-ups',
-          'advanced': 'Diamond push-ups'
+          'advanced': 'Diamond push-ups',
         },
         guidelines: {'reps': '8-12', 'sets': '3-4'},
       );
@@ -30,13 +30,19 @@ void main() {
       expect(movement.categories, contains(MovementCategory.bodyweight));
       expect(movement.requiredEquipment, contains(EquipmentType.bodyweight));
       expect(
-          movement.muscleGroups,
-          containsAll(
-              [MuscleGroup.chest, MuscleGroup.shoulders, MuscleGroup.triceps]));
+        movement.muscleGroups,
+        containsAll([
+          MuscleGroup.chest,
+          MuscleGroup.shoulders,
+          MuscleGroup.triceps,
+        ]),
+      );
       expect(movement.difficultyLevel, equals(DifficultyLevel.beginner));
       expect(movement.isMainMovement, isFalse);
       expect(
-          movement.scalingOptions, containsPair('beginner', 'Knee push-ups'));
+        movement.scalingOptions,
+        containsPair('beginner', 'Knee push-ups'),
+      );
       expect(movement.guidelines, containsPair('reps', '8-12'));
     });
 
@@ -51,12 +57,12 @@ void main() {
         muscleGroups: [
           MuscleGroup.chest,
           MuscleGroup.shoulders,
-          MuscleGroup.triceps
+          MuscleGroup.triceps,
         ],
         difficultyLevel: DifficultyLevel.beginner,
         scalingOptions: {
           'beginner': 'Knee push-ups',
-          'advanced': 'Diamond push-ups'
+          'advanced': 'Diamond push-ups',
         },
         guidelines: {'reps': '8-12', 'sets': '3-4'},
       );
@@ -87,12 +93,12 @@ void main() {
         muscleGroups: [
           MuscleGroup.chest,
           MuscleGroup.shoulders,
-          MuscleGroup.triceps
+          MuscleGroup.triceps,
         ],
         difficultyLevel: DifficultyLevel.beginner,
         scalingOptions: {
           'beginner': 'Knee push-ups',
-          'advanced': 'Diamond push-ups'
+          'advanced': 'Diamond push-ups',
         },
         guidelines: {'reps': '8-12', 'sets': '3-4'},
       );
@@ -107,11 +113,15 @@ void main() {
       expect(modifiedMovement.name, equals('Modified Push-up'));
       expect(modifiedMovement.description, equals(movement.description));
       expect(modifiedMovement.categories, equals(movement.categories));
-      expect(modifiedMovement.requiredEquipment,
-          equals(movement.requiredEquipment));
+      expect(
+        modifiedMovement.requiredEquipment,
+        equals(movement.requiredEquipment),
+      );
       expect(modifiedMovement.muscleGroups, equals(movement.muscleGroups));
-      expect(modifiedMovement.difficultyLevel,
-          equals(DifficultyLevel.intermediate));
+      expect(
+        modifiedMovement.difficultyLevel,
+        equals(DifficultyLevel.intermediate),
+      );
       expect(modifiedMovement.isMainMovement, isTrue);
       expect(modifiedMovement.scalingOptions, equals(movement.scalingOptions));
       expect(modifiedMovement.guidelines, equals(movement.guidelines));

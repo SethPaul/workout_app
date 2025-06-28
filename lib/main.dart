@@ -95,21 +95,25 @@ void main() async {
 
         logger.i('App initialization complete!');
 
-        runApp(WorkoutApp(
-          workoutService: workoutService,
-          userProgressService: userProgressService,
-          defaultWorkoutService: defaultWorkoutService,
-        ));
+        runApp(
+          WorkoutApp(
+            workoutService: workoutService,
+            userProgressService: userProgressService,
+            defaultWorkoutService: defaultWorkoutService,
+          ),
+        );
       } catch (e, stackTrace) {
         final logger = Logger();
         logger.e('Failed to initialize app', error: e, stackTrace: stackTrace);
-        runApp(const MaterialApp(
-          home: Scaffold(
-            body: Center(
-              child: Text('Failed to initialize app. Please restart.'),
+        runApp(
+          const MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: Text('Failed to initialize app. Please restart.'),
+              ),
             ),
           ),
-        ));
+        );
       }
     },
     (error, stack) {
@@ -176,8 +180,8 @@ class _AppInitializerState extends State<AppInitializer> {
 
   Future<void> _checkFirstRun() async {
     try {
-      final userProgress =
-          await widget.userProgressService.getCurrentUserProgress();
+      final userProgress = await widget.userProgressService
+          .getCurrentUserProgress();
       setState(() {
         _showOnboarding = userProgress?.isFirstRun ?? true;
         _isLoading = false;
@@ -200,11 +204,7 @@ class _AppInitializerState extends State<AppInitializer> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (_showOnboarding) {
@@ -300,10 +300,7 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.library_books),
             label: 'Templates',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'History',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
         ],
       ),
     );

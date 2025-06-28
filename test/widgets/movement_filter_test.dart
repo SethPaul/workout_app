@@ -18,26 +18,19 @@ void main() {
 
     setUp(() {
       mockMovementBloc = MockMovementBloc();
-      when(mockMovementBloc.state).thenReturn(
-        const MovementLoaded(
-          movements: [],
-          filterQuery: '',
-        ),
-      );
+      when(
+        mockMovementBloc.state,
+      ).thenReturn(const MovementLoaded(movements: [], filterQuery: ''));
       when(mockMovementBloc.stream).thenAnswer((_) => const Stream.empty());
     });
 
     testWidgets('renders all filter sections', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData(
-            useMaterial3: true,
-          ),
+          theme: ThemeData(useMaterial3: true),
           home: BlocProvider<MovementBloc>.value(
             value: mockMovementBloc,
-            child: const Scaffold(
-              body: MovementFilter(),
-            ),
+            child: const Scaffold(body: MovementFilter()),
           ),
         ),
       );
@@ -49,18 +42,15 @@ void main() {
       expect(find.text('Movement Type'), findsOneWidget);
     });
 
-    testWidgets('selects and deselects category chips',
-        (WidgetTester tester) async {
+    testWidgets('selects and deselects category chips', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData(
-            useMaterial3: true,
-          ),
+          theme: ThemeData(useMaterial3: true),
           home: BlocProvider<MovementBloc>.value(
             value: mockMovementBloc,
-            child: const Scaffold(
-              body: MovementFilter(),
-            ),
+            child: const Scaffold(body: MovementFilter()),
           ),
         ),
       );
@@ -75,34 +65,25 @@ void main() {
       await tester.pump();
 
       // Verify chip is selected
-      expect(
-        tester.widget<FilterChip>(categoryChip).selected,
-        true,
-      );
+      expect(tester.widget<FilterChip>(categoryChip).selected, true);
 
       // Tap again to deselect
       await tester.tap(categoryChip);
       await tester.pump();
 
       // Verify chip is deselected
-      expect(
-        tester.widget<FilterChip>(categoryChip).selected,
-        false,
-      );
+      expect(tester.widget<FilterChip>(categoryChip).selected, false);
     });
 
-    testWidgets('selects and deselects equipment chips',
-        (WidgetTester tester) async {
+    testWidgets('selects and deselects equipment chips', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData(
-            useMaterial3: true,
-          ),
+          theme: ThemeData(useMaterial3: true),
           home: BlocProvider<MovementBloc>.value(
             value: mockMovementBloc,
-            child: const Scaffold(
-              body: MovementFilter(),
-            ),
+            child: const Scaffold(body: MovementFilter()),
           ),
         ),
       );
@@ -117,34 +98,25 @@ void main() {
       await tester.pump();
 
       // Verify chip is selected
-      expect(
-        tester.widget<FilterChip>(equipmentChip).selected,
-        true,
-      );
+      expect(tester.widget<FilterChip>(equipmentChip).selected, true);
 
       // Tap again to deselect
       await tester.tap(equipmentChip);
       await tester.pump();
 
       // Verify chip is deselected
-      expect(
-        tester.widget<FilterChip>(equipmentChip).selected,
-        false,
-      );
+      expect(tester.widget<FilterChip>(equipmentChip).selected, false);
     });
 
-    testWidgets('clears all filters when Clear All is pressed',
-        (WidgetTester tester) async {
+    testWidgets('clears all filters when Clear All is pressed', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData(
-            useMaterial3: true,
-          ),
+          theme: ThemeData(useMaterial3: true),
           home: BlocProvider<MovementBloc>.value(
             value: mockMovementBloc,
-            child: const Scaffold(
-              body: MovementFilter(),
-            ),
+            child: const Scaffold(body: MovementFilter()),
           ),
         ),
       );
@@ -175,32 +147,20 @@ void main() {
       await tester.pump();
 
       // Verify all chips are deselected
-      expect(
-        tester.widget<FilterChip>(categoryChip).selected,
-        false,
-      );
-      expect(
-        tester.widget<FilterChip>(equipmentChip).selected,
-        false,
-      );
-      expect(
-        tester.widget<FilterChip>(mainMovementChip).selected,
-        false,
-      );
+      expect(tester.widget<FilterChip>(categoryChip).selected, false);
+      expect(tester.widget<FilterChip>(equipmentChip).selected, false);
+      expect(tester.widget<FilterChip>(mainMovementChip).selected, false);
     });
 
-    testWidgets('applies filters when Apply is pressed',
-        (WidgetTester tester) async {
+    testWidgets('applies filters when Apply is pressed', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData(
-            useMaterial3: true,
-          ),
+          theme: ThemeData(useMaterial3: true),
           home: BlocProvider<MovementBloc>.value(
             value: mockMovementBloc,
-            child: const Scaffold(
-              body: MovementFilter(),
-            ),
+            child: const Scaffold(body: MovementFilter()),
           ),
         ),
       );

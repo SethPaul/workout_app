@@ -4,10 +4,7 @@ import 'package:workout_app/services/default_workout_service.dart';
 class DefaultWorkoutsScreen extends StatefulWidget {
   final DefaultWorkoutService defaultWorkoutService;
 
-  const DefaultWorkoutsScreen({
-    super.key,
-    required this.defaultWorkoutService,
-  });
+  const DefaultWorkoutsScreen({super.key, required this.defaultWorkoutService});
 
   @override
   State<DefaultWorkoutsScreen> createState() => _DefaultWorkoutsScreenState();
@@ -19,8 +16,9 @@ class _DefaultWorkoutsScreenState extends State<DefaultWorkoutsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final workoutsByCategory = widget.defaultWorkoutService.getDefaultWorkoutsByCategory();
-    
+    final workoutsByCategory = widget.defaultWorkoutService
+        .getDefaultWorkoutsByCategory();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Default Workouts'),
@@ -28,7 +26,7 @@ class _DefaultWorkoutsScreenState extends State<DefaultWorkoutsScreen> {
           if (_selectedWorkouts.values.any((selected) => selected))
             TextButton(
               onPressed: _isLoading ? null : _addSelectedWorkouts,
-              child: _isLoading 
+              child: _isLoading
                   ? const SizedBox(
                       height: 16,
                       width: 16,
@@ -50,15 +48,15 @@ class _DefaultWorkoutsScreenState extends State<DefaultWorkoutsScreen> {
             const SizedBox(height: 8),
             Text(
               'These professionally designed templates will help you get started on your fitness journey.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600]
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: 24),
             ...workoutsByCategory.entries.map((entry) {
               final category = entry.key;
               final workouts = entry.value;
-              
+
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -68,16 +66,16 @@ class _DefaultWorkoutsScreenState extends State<DefaultWorkoutsScreen> {
                       children: [
                         Text(
                           category,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const Spacer(),
                         TextButton(
-                          onPressed: () => _selectAllInCategory(category, workouts),
+                          onPressed: () =>
+                              _selectAllInCategory(category, workouts),
                           child: Text(
-                            _areAllSelectedInCategory(category, workouts) 
-                                ? 'Unselect All' 
+                            _areAllSelectedInCategory(category, workouts)
+                                ? 'Unselect All'
                                 : 'Select All',
                           ),
                         ),
@@ -95,7 +93,7 @@ class _DefaultWorkoutsScreenState extends State<DefaultWorkoutsScreen> {
       floatingActionButton: _selectedWorkouts.values.any((selected) => selected)
           ? FloatingActionButton.extended(
               onPressed: _isLoading ? null : _addSelectedWorkouts,
-              icon: _isLoading 
+              icon: _isLoading
                   ? const SizedBox(
                       height: 16,
                       width: 16,
@@ -103,7 +101,7 @@ class _DefaultWorkoutsScreenState extends State<DefaultWorkoutsScreen> {
                     )
                   : const Icon(Icons.add),
               label: Text(
-                'Add ${_selectedWorkouts.values.where((selected) => selected).length} Workouts'
+                'Add ${_selectedWorkouts.values.where((selected) => selected).length} Workouts',
               ),
             )
           : null,
@@ -113,7 +111,7 @@ class _DefaultWorkoutsScreenState extends State<DefaultWorkoutsScreen> {
   Widget _buildWorkoutCard(Map<String, dynamic> workout) {
     final workoutName = workout['name'] as String;
     final isSelected = _selectedWorkouts[workoutName] ?? false;
-    
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: CheckboxListTile(
@@ -177,7 +175,10 @@ class _DefaultWorkoutsScreenState extends State<DefaultWorkoutsScreen> {
     );
   }
 
-  void _selectAllInCategory(String category, List<Map<String, dynamic>> workouts) {
+  void _selectAllInCategory(
+    String category,
+    List<Map<String, dynamic>> workouts,
+  ) {
     final areAllSelected = _areAllSelectedInCategory(category, workouts);
     setState(() {
       for (final workout in workouts) {
@@ -187,7 +188,10 @@ class _DefaultWorkoutsScreenState extends State<DefaultWorkoutsScreen> {
     });
   }
 
-  bool _areAllSelectedInCategory(String category, List<Map<String, dynamic>> workouts) {
+  bool _areAllSelectedInCategory(
+    String category,
+    List<Map<String, dynamic>> workouts,
+  ) {
     return workouts.every((workout) {
       final workoutName = workout['name'] as String;
       return _selectedWorkouts[workoutName] ?? false;
@@ -207,8 +211,10 @@ class _DefaultWorkoutsScreenState extends State<DefaultWorkoutsScreen> {
     });
 
     try {
-      await widget.defaultWorkoutService.addSelectedDefaultWorkouts(selectedNames);
-      
+      await widget.defaultWorkoutService.addSelectedDefaultWorkouts(
+        selectedNames,
+      );
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

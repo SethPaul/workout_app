@@ -10,8 +10,9 @@ class AppLaunchedStep extends Given1WithWorld<String, FlutterWorld> {
   @override
   Future<void> executeStep(String parameter1) async {
     await TestHelpers.initTestDatabase();
-    await world.appDriver
-        .pumpWidget(TestHelpers.createTestWidget(const MyApp()));
+    await world.appDriver.pumpWidget(
+      TestHelpers.createTestWidget(const MyApp()),
+    );
     await world.appDriver.pumpAndSettle();
   }
 
@@ -85,8 +86,10 @@ class MovementDisplayInfoStep extends Then1WithWorld<String, FlutterWorld> {
 
     expect(find.text(firstMovement.name), findsOneWidget);
     // Note: Description might be truncated in list view
-    expect(find.textContaining(firstMovement.description.substring(0, 10)),
-        findsOneWidget);
+    expect(
+      find.textContaining(firstMovement.description.substring(0, 10)),
+      findsOneWidget,
+    );
   }
 
   @override
@@ -100,7 +103,8 @@ class DifferentCategoriesStep extends Given1WithWorld<String, FlutterWorld> {
     final movements = [
       MockDataFactory.createMovement(categories: [MovementCategory.bodyweight]),
       MockDataFactory.createMovement(
-          categories: [MovementCategory.compoundLift]),
+        categories: [MovementCategory.compoundLift],
+      ),
       MockDataFactory.createMovement(categories: [MovementCategory.cardio]),
     ];
     world.setProperty('testMovements', movements);

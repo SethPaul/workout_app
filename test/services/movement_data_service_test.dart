@@ -16,8 +16,7 @@ void main() {
       service = MovementDataService(repository: mockRepository);
     });
 
-    test('should initialize movement library when no movements exist',
-        () async {
+    test('should initialize movement library when no movements exist', () async {
       // Arrange
       when(mockRepository.getAllMovements()).thenAnswer((_) async => []);
 
@@ -43,8 +42,9 @@ void main() {
         ),
       ];
 
-      when(mockRepository.getAllMovements())
-          .thenAnswer((_) async => existingMovements);
+      when(
+        mockRepository.getAllMovements(),
+      ).thenAnswer((_) async => existingMovements);
 
       // Act
       await service.initializeMovementLibrary();

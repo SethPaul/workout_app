@@ -34,11 +34,7 @@ class TestWorkoutApp extends StatelessWidget {
 
         if (!snapshot.hasData) {
           return const MaterialApp(
-            home: Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(),
-              ),
-            ),
+            home: Scaffold(body: Center(child: CircularProgressIndicator())),
           );
         }
 
@@ -57,8 +53,9 @@ class TestWorkoutApp extends StatelessWidget {
     // Create test repositories that use the test database
     final movementRepository = TestMovementRepository(testDatabaseHelper);
     final workoutRepository = TestWorkoutRepository(testDatabaseHelper);
-    final workoutTemplateRepository =
-        TestWorkoutTemplateRepository(testDatabaseHelper);
+    final workoutTemplateRepository = TestWorkoutTemplateRepository(
+      testDatabaseHelper,
+    );
 
     // Create some test movements for the app to work with
     await _seedTestData(movementRepository);
@@ -98,10 +95,7 @@ class TestWorkoutApp extends StatelessWidget {
 class WorkoutApp extends StatelessWidget {
   final WorkoutService workoutService;
 
-  const WorkoutApp({
-    super.key,
-    required this.workoutService,
-  });
+  const WorkoutApp({super.key, required this.workoutService});
 
   @override
   Widget build(BuildContext context) {
@@ -119,10 +113,7 @@ class WorkoutApp extends StatelessWidget {
 class HomeScreen extends StatelessWidget {
   final WorkoutService workoutService;
 
-  const HomeScreen({
-    super.key,
-    required this.workoutService,
-  });
+  const HomeScreen({super.key, required this.workoutService});
 
   @override
   Widget build(BuildContext context) {
@@ -145,9 +136,8 @@ class HomeScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => WorkoutListScreen(
-                      workoutService: workoutService,
-                    ),
+                    builder: (context) =>
+                        WorkoutListScreen(workoutService: workoutService),
                   ),
                 );
               },
@@ -159,9 +149,8 @@ class HomeScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => WorkoutHistoryScreen(
-                      workoutService: workoutService,
-                    ),
+                    builder: (context) =>
+                        WorkoutHistoryScreen(workoutService: workoutService),
                   ),
                 );
               },
@@ -208,10 +197,10 @@ class TestWorkoutService extends WorkoutService {
     required WorkoutRepository repository,
     required WorkoutTemplateService templateService,
   }) : super(
-          repository: repository,
-          templateService: templateService,
-          databaseHelper: DatabaseHelper(), // Use default singleton
-        );
+         repository: repository,
+         templateService: templateService,
+         databaseHelper: DatabaseHelper(), // Use default singleton
+       );
 
   // Override methods that use database helper directly
   @override

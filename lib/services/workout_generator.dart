@@ -6,10 +6,7 @@ class WorkoutGenerator {
   final List<Movement> availableMovements;
   final UserProgress? userProgress;
 
-  WorkoutGenerator({
-    required this.availableMovements,
-    this.userProgress,
-  });
+  WorkoutGenerator({required this.availableMovements, this.userProgress});
 
   /// Generates a workout based on the specified parameters
   Workout generateWorkout({
@@ -80,8 +77,9 @@ class WorkoutGenerator {
 
       // Filter by equipment if specified
       if (availableEquipment != null &&
-          !movement.requiredEquipment
-              .any((e) => availableEquipment.contains(e))) {
+          !movement.requiredEquipment.any(
+            (e) => availableEquipment.contains(e),
+          )) {
         return false;
       }
 
@@ -104,8 +102,9 @@ class WorkoutGenerator {
     final numMovements = _getNumMovementsForFormat(format, targetDuration);
 
     // Group movements by muscle groups
-    final movementsByMuscleGroup =
-        _groupMovementsByMuscleGroup(filteredMovements);
+    final movementsByMuscleGroup = _groupMovementsByMuscleGroup(
+      filteredMovements,
+    );
 
     // Select movements based on format and intensity
     final selectedMovements = <Movement>[];
@@ -123,9 +122,11 @@ class WorkoutGenerator {
     if (format == WorkoutFormat.tabata) {
       selectedMovements.addAll(
         filteredMovements
-            .where((m) =>
-                m.categories.contains(MovementCategory.cardio) ||
-                m.categories.contains(MovementCategory.bodyweight))
+            .where(
+              (m) =>
+                  m.categories.contains(MovementCategory.cardio) ||
+                  m.categories.contains(MovementCategory.bodyweight),
+            )
             .take(numMovements),
       );
     }
@@ -155,25 +156,27 @@ class WorkoutGenerator {
       if (intensity == IntensityLevel.high) {
         selectedMovements.addAll(
           remainingMovements
-              .where((m) =>
-                  m.categories.contains(MovementCategory.compoundLift) ||
-                  m.categories.contains(MovementCategory.cardio))
+              .where(
+                (m) =>
+                    m.categories.contains(MovementCategory.compoundLift) ||
+                    m.categories.contains(MovementCategory.cardio),
+              )
               .take(remainingSlots),
         );
       }
       // For medium intensity, mix movement types
       else if (intensity == IntensityLevel.medium) {
-        selectedMovements.addAll(
-          remainingMovements.take(remainingSlots),
-        );
+        selectedMovements.addAll(remainingMovements.take(remainingSlots));
       }
       // For low intensity, include more accessory and skill work
       else {
         selectedMovements.addAll(
           remainingMovements
-              .where((m) =>
-                  m.categories.contains(MovementCategory.accessory) ||
-                  m.categories.contains(MovementCategory.skill))
+              .where(
+                (m) =>
+                    m.categories.contains(MovementCategory.accessory) ||
+                    m.categories.contains(MovementCategory.skill),
+              )
               .take(remainingSlots),
         );
       }
@@ -286,8 +289,11 @@ class WorkoutGenerator {
       final baseReps = _calculateBaseReps(movement, intensity);
 
       // Calculate time in seconds for timed movements
-      final timeInSeconds =
-          _calculateTimeInSeconds(movement, format, intensity);
+      final timeInSeconds = _calculateTimeInSeconds(
+        movement,
+        format,
+        intensity,
+      );
 
       // Calculate weight if applicable
       final weight = _calculateWeight(movement, intensity);
@@ -464,26 +470,28 @@ Focus on maintaining proper form throughout the workout. Scale movements as need
   String _getMovementDescription(List<WorkoutMovement> movements) {
     if (movements.isEmpty) return 'No movements specified.';
 
-    final movementDescriptions = movements.map((movement) {
-      final reps = movement.reps;
-      final time = movement.timeInSeconds;
-      final weight = movement.weight;
-      final scaling = movement.scalingOption;
+    final movementDescriptions = movements
+        .map((movement) {
+          final reps = movement.reps;
+          final time = movement.timeInSeconds;
+          final weight = movement.weight;
+          final scaling = movement.scalingOption;
 
-      final repsStr = reps > 0 ? '$reps reps' : '';
-      final timeStr = time != null ? '$time seconds' : '';
-      final weightStr = weight != null ? '${weight}kg' : '';
-      final scalingStr = scaling != null ? '($scaling)' : '';
+          final repsStr = reps > 0 ? '$reps reps' : '';
+          final timeStr = time != null ? '$time seconds' : '';
+          final weightStr = weight != null ? '${weight}kg' : '';
+          final scalingStr = scaling != null ? '($scaling)' : '';
 
-      final parts = [
-        repsStr,
-        timeStr,
-        weightStr,
-        scalingStr,
-      ].where((s) => s.isNotEmpty).join(' ');
+          final parts = [
+            repsStr,
+            timeStr,
+            weightStr,
+            scalingStr,
+          ].where((s) => s.isNotEmpty).join(' ');
 
-      return '• $parts';
-    }).join('\n');
+          return '• $parts';
+        })
+        .join('\n');
 
     return 'Movements:\n$movementDescriptions';
   }
@@ -559,47 +567,24 @@ Focus on maintaining proper form throughout the workout. Scale movements as need
   Map<String, dynamic>? _getFormatSpecificSettings(WorkoutFormat format) {
     switch (format) {
       case WorkoutFormat.emom:
-        return {
-          'intervalMinutes': 1,
-          'restBetweenMovements': 0,
-        };
+        return {'intervalMinutes': 1, 'restBetweenMovements': 0};
       case WorkoutFormat.amrap:
-        return {
-          'restBetweenRounds': 0,
-          'allowMovementSubstitution': true,
-        };
+        return {'restBetweenRounds': 0, 'allowMovementSubstitution': true};
       case WorkoutFormat.tabata:
-        return {
-          'workSeconds': 20,
-          'restSeconds': 10,
-          'rounds': 8,
-        };
+        return {'workSeconds': 20, 'restSeconds': 10, 'rounds': 8};
       case WorkoutFormat.forTime:
-        return {
-          'allowMovementSubstitution': true,
-          'allowRest': true,
-        };
+        return {'allowMovementSubstitution': true, 'allowRest': true};
       case WorkoutFormat.forReps:
-        return {
-          'allowMovementSubstitution': true,
-          'focusOnForm': true,
-        };
+        return {'allowMovementSubstitution': true, 'focusOnForm': true};
       case WorkoutFormat.roundsForTime:
         return {
           'restBetweenRounds': 60, // 1 minute rest between rounds
           'allowMovementSubstitution': true,
         };
       case WorkoutFormat.deathBy:
-        return {
-          'startingReps': 1,
-          'repIncrement': 1,
-          'maxRounds': 10,
-        };
+        return {'startingReps': 1, 'repIncrement': 1, 'maxRounds': 10};
       case WorkoutFormat.chipper:
-        return {
-          'allowMovementSubstitution': true,
-          'allowRest': true,
-        };
+        return {'allowMovementSubstitution': true, 'allowRest': true};
       case WorkoutFormat.ladder:
         return {
           'startingReps': 1,
@@ -607,10 +592,7 @@ Focus on maintaining proper form throughout the workout. Scale movements as need
           'restBetweenRounds': 30, // 30 seconds rest between rounds
         };
       case WorkoutFormat.partner:
-        return {
-          'partnerRest': true,
-          'allowMovementSubstitution': true,
-        };
+        return {'partnerRest': true, 'allowMovementSubstitution': true};
     }
   }
 }

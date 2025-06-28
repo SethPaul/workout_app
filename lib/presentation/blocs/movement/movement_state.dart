@@ -54,13 +54,13 @@ class MovementLoaded extends MovementState {
 
   @override
   List<Object?> get props => [
-        movements,
-        selectedMovement,
-        filterQuery,
-        selectedCategories,
-        selectedEquipmentTypes,
-        isMainMovementFilter,
-      ];
+    movements,
+    selectedMovement,
+    filterQuery,
+    selectedCategories,
+    selectedEquipmentTypes,
+    isMainMovementFilter,
+  ];
 }
 
 class MovementError extends MovementState {

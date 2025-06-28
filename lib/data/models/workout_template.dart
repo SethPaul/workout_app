@@ -38,18 +38,26 @@ class WorkoutTemplate extends Equatable {
       id: json['id'] as String,
       name: json['name'] as String,
       description: json['description'] as String,
-      format: WorkoutFormat.values
-          .firstWhere((f) => f.toString() == 'WorkoutFormat.${json['format']}'),
+      format: WorkoutFormat.values.firstWhere(
+        (f) => f.toString() == 'WorkoutFormat.${json['format']}',
+      ),
       intensity: IntensityLevel.values.firstWhere(
-          (i) => i.toString() == 'IntensityLevel.${json['intensity']}'),
+        (i) => i.toString() == 'IntensityLevel.${json['intensity']}',
+      ),
       targetDuration: json['targetDuration'] as int,
       preferredCategories: (json['preferredCategories'] as List?)
-          ?.map((c) => MovementCategory.values
-              .firstWhere((mc) => mc.toString() == 'MovementCategory.$c'))
+          ?.map(
+            (c) => MovementCategory.values.firstWhere(
+              (mc) => mc.toString() == 'MovementCategory.$c',
+            ),
+          )
           .toList(),
       availableEquipment: (json['availableEquipment'] as List?)
-          ?.map((e) => EquipmentType.values
-              .firstWhere((et) => et.toString() == 'EquipmentType.$e'))
+          ?.map(
+            (e) => EquipmentType.values.firstWhere(
+              (et) => et.toString() == 'EquipmentType.$e',
+            ),
+          )
           .toList(),
       isMainMovementOnly: json['isMainMovementOnly'] as bool?,
       createdAt: DateTime.parse(json['createdAt'] as String),
@@ -72,8 +80,9 @@ class WorkoutTemplate extends Equatable {
       'preferredCategories': preferredCategories
           ?.map((c) => c.toString().split('.').last)
           .toList(),
-      'availableEquipment':
-          availableEquipment?.map((e) => e.toString().split('.').last).toList(),
+      'availableEquipment': availableEquipment
+          ?.map((e) => e.toString().split('.').last)
+          .toList(),
       'isMainMovementOnly': isMainMovementOnly,
       'createdAt': createdAt.toIso8601String(),
       'lastUsed': lastUsed?.toIso8601String(),
@@ -116,18 +125,18 @@ class WorkoutTemplate extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        description,
-        format,
-        intensity,
-        targetDuration,
-        preferredCategories,
-        availableEquipment,
-        isMainMovementOnly,
-        createdAt,
-        lastUsed,
-        timesUsed,
-        metadata,
-      ];
+    id,
+    name,
+    description,
+    format,
+    intensity,
+    targetDuration,
+    preferredCategories,
+    availableEquipment,
+    isMainMovementOnly,
+    createdAt,
+    lastUsed,
+    timesUsed,
+    metadata,
+  ];
 }

@@ -84,8 +84,10 @@ class Workout extends Equatable {
     this.notes,
   });
 
-  factory Workout.fromMap(Map<String, dynamic> map,
-      {List<WorkoutMovement>? movements}) {
+  factory Workout.fromMap(
+    Map<String, dynamic> map, {
+    List<WorkoutMovement>? movements,
+  }) {
     return Workout(
       id: map['id'] as String,
       name: map['name'] as String,
@@ -102,7 +104,7 @@ class Workout extends Equatable {
       timeCapInMinutes: map['time_cap_in_minutes'] as int?,
       formatSpecificSettings: map['format_specific_settings'] != null
           ? jsonDecode(map['format_specific_settings'] as String)
-              as Map<String, dynamic>
+                as Map<String, dynamic>
           : null,
       completedAt: map['completed_at'] != null
           ? DateTime.parse(map['completed_at'] as String)
@@ -166,18 +168,18 @@ class Workout extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        description,
-        format,
-        intensity,
-        movements,
-        rounds,
-        timeCapInMinutes,
-        formatSpecificSettings,
-        createdAt,
-        completedAt,
-        notes,
-        duration,
-      ];
+    id,
+    name,
+    description,
+    format,
+    intensity,
+    movements,
+    rounds,
+    timeCapInMinutes,
+    formatSpecificSettings,
+    createdAt,
+    completedAt,
+    notes,
+    duration,
+  ];
 }

@@ -8,9 +8,8 @@ class MovementDataService {
   final MovementRepository _repository;
   final Logger _logger = Logger();
 
-  MovementDataService({
-    required MovementRepository repository,
-  }) : _repository = repository;
+  MovementDataService({required MovementRepository repository})
+    : _repository = repository;
 
   /// Initialize movement library from JSON file
   Future<void> initializeMovementLibrary({bool forceReload = false}) async {
@@ -22,7 +21,8 @@ class MovementDataService {
         final existingMovements = await _repository.getAllMovements();
         if (existingMovements.isNotEmpty) {
           _logger.i(
-              'Movement library already initialized with ${existingMovements.length} movements');
+            'Movement library already initialized with ${existingMovements.length} movements',
+          );
           return;
         }
       }
@@ -48,8 +48,9 @@ class MovementDataService {
       // Convert JSON data to Movement objects and save to database
       for (final movementJson in movementsData) {
         try {
-          final movement =
-              _convertJsonToMovement(movementJson as Map<String, dynamic>);
+          final movement = _convertJsonToMovement(
+            movementJson as Map<String, dynamic>,
+          );
           await _repository.createMovement(movement);
           _logger.d('Loaded movement: ${movement.name}');
         } catch (e) {
@@ -59,7 +60,8 @@ class MovementDataService {
       }
 
       _logger.i(
-          'Successfully loaded ${movementsData.length} movements into database');
+        'Successfully loaded ${movementsData.length} movements into database',
+      );
     } catch (e) {
       _logger.e('Error loading movements from JSON: $e');
       rethrow;
@@ -169,7 +171,8 @@ class MovementDataService {
 
   List<MuscleGroup> _parseMuscleGroups(Map<String, dynamic> json) {
     // Handle different possible muscle group field names
-    dynamic muscleGroups = json['muscleGroups'] ??
+    dynamic muscleGroups =
+        json['muscleGroups'] ??
         json['primaryMuscleGroups'] ??
         json['grossMuscleGroups'];
 

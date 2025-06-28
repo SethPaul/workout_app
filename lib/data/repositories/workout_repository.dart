@@ -85,19 +85,15 @@ class SQLiteWorkoutRepository implements WorkoutRepository {
 
       // Save individual movements
       for (final movement in workout.movements) {
-        await txn.insert(
-          'workout_movements',
-          {
-            'id': '${workout.id}_${workout.movements.indexOf(movement)}',
-            'workout_id': workout.id,
-            'movement_id': movement.movementId,
-            'reps': movement.reps,
-            'time_in_seconds': movement.timeInSeconds,
-            'weight': movement.weight,
-            'scaling_option': movement.scalingOption,
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        await txn.insert('workout_movements', {
+          'id': '${workout.id}_${workout.movements.indexOf(movement)}',
+          'workout_id': workout.id,
+          'movement_id': movement.movementId,
+          'reps': movement.reps,
+          'time_in_seconds': movement.timeInSeconds,
+          'weight': movement.weight,
+          'scaling_option': movement.scalingOption,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
     });
 
@@ -126,19 +122,15 @@ class SQLiteWorkoutRepository implements WorkoutRepository {
 
       // Insert updated movements
       for (final movement in workout.movements) {
-        await txn.insert(
-          'workout_movements',
-          {
-            'id': '${workout.id}_${workout.movements.indexOf(movement)}',
-            'workout_id': workout.id,
-            'movement_id': movement.movementId,
-            'reps': movement.reps,
-            'time_in_seconds': movement.timeInSeconds,
-            'weight': movement.weight,
-            'scaling_option': movement.scalingOption,
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        await txn.insert('workout_movements', {
+          'id': '${workout.id}_${workout.movements.indexOf(movement)}',
+          'workout_id': workout.id,
+          'movement_id': movement.movementId,
+          'reps': movement.reps,
+          'time_in_seconds': movement.timeInSeconds,
+          'weight': movement.weight,
+          'scaling_option': movement.scalingOption,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
     });
   }
@@ -156,11 +148,7 @@ class SQLiteWorkoutRepository implements WorkoutRepository {
       );
 
       // Then delete workout
-      await txn.delete(
-        'workouts',
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+      await txn.delete('workouts', where: 'id = ?', whereArgs: [id]);
     });
   }
 
@@ -204,13 +192,15 @@ class SQLiteWorkoutRepository implements WorkoutRepository {
     );
 
     final movements = movementMaps
-        .map((movementMap) => WorkoutMovement(
-              movementId: movementMap['movement_id'] as String,
-              reps: movementMap['reps'] as int,
-              weight: movementMap['weight'] as double?,
-              scalingOption: movementMap['scaling_option'] as String?,
-              timeInSeconds: movementMap['time_in_seconds'] as int?,
-            ))
+        .map(
+          (movementMap) => WorkoutMovement(
+            movementId: movementMap['movement_id'] as String,
+            reps: movementMap['reps'] as int,
+            weight: movementMap['weight'] as double?,
+            scalingOption: movementMap['scaling_option'] as String?,
+            timeInSeconds: movementMap['time_in_seconds'] as int?,
+          ),
+        )
         .toList();
 
     return Workout.fromMap(map, movements: movements);

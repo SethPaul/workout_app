@@ -133,14 +133,17 @@ void main() {
       // Mock services are now set up with direct implementations
     });
 
-    testWidgets('App launches and shows home screen',
-        (WidgetTester tester) async {
+    testWidgets('App launches and shows home screen', (
+      WidgetTester tester,
+    ) async {
       // Launch the app with mock services
-      await tester.pumpWidget(WorkoutApp(
-        workoutService: mockWorkoutService,
-        userProgressService: mockUserProgressService,
-        defaultWorkoutService: mockDefaultWorkoutService,
-      ));
+      await tester.pumpWidget(
+        WorkoutApp(
+          workoutService: mockWorkoutService,
+          userProgressService: mockUserProgressService,
+          defaultWorkoutService: mockDefaultWorkoutService,
+        ),
+      );
 
       // Wait for async operations to complete
       await tester.pumpAndSettle();
@@ -153,11 +156,13 @@ void main() {
     });
 
     testWidgets('Navigate between tabs', (WidgetTester tester) async {
-      await tester.pumpWidget(WorkoutApp(
-        workoutService: mockWorkoutService,
-        userProgressService: mockUserProgressService,
-        defaultWorkoutService: mockDefaultWorkoutService,
-      ));
+      await tester.pumpWidget(
+        WorkoutApp(
+          workoutService: mockWorkoutService,
+          userProgressService: mockUserProgressService,
+          defaultWorkoutService: mockDefaultWorkoutService,
+        ),
+      );
       await tester.pumpAndSettle();
 
       // Test: Navigate to Templates tab
@@ -166,8 +171,9 @@ void main() {
       await tester.pumpAndSettle();
 
       // Should be on templates tab (index 1)
-      final bottomNav =
-          tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar));
+      final bottomNav = tester.widget<BottomNavigationBar>(
+        find.byType(BottomNavigationBar),
+      );
       expect(bottomNav.currentIndex, 1);
 
       // Test: Navigate to History tab
@@ -176,8 +182,9 @@ void main() {
       await tester.pumpAndSettle();
 
       // Should be on history tab (index 2)
-      final bottomNavAfterHistory =
-          tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar));
+      final bottomNavAfterHistory = tester.widget<BottomNavigationBar>(
+        find.byType(BottomNavigationBar),
+      );
       expect(bottomNavAfterHistory.currentIndex, 2);
 
       // Test: Navigate back to Workouts tab
@@ -186,18 +193,22 @@ void main() {
       await tester.pumpAndSettle();
 
       // Should be back on workouts tab (index 0)
-      final bottomNavAfterWorkouts =
-          tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar));
+      final bottomNavAfterWorkouts = tester.widget<BottomNavigationBar>(
+        find.byType(BottomNavigationBar),
+      );
       expect(bottomNavAfterWorkouts.currentIndex, 0);
     });
 
-    testWidgets('App handles initialization gracefully',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(WorkoutApp(
-        workoutService: mockWorkoutService,
-        userProgressService: mockUserProgressService,
-        defaultWorkoutService: mockDefaultWorkoutService,
-      ));
+    testWidgets('App handles initialization gracefully', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        WorkoutApp(
+          workoutService: mockWorkoutService,
+          userProgressService: mockUserProgressService,
+          defaultWorkoutService: mockDefaultWorkoutService,
+        ),
+      );
       await tester.pumpAndSettle();
 
       // App should start without crashing
@@ -211,11 +222,13 @@ void main() {
     });
 
     testWidgets('UI elements are responsive', (WidgetTester tester) async {
-      await tester.pumpWidget(WorkoutApp(
-        workoutService: mockWorkoutService,
-        userProgressService: mockUserProgressService,
-        defaultWorkoutService: mockDefaultWorkoutService,
-      ));
+      await tester.pumpWidget(
+        WorkoutApp(
+          workoutService: mockWorkoutService,
+          userProgressService: mockUserProgressService,
+          defaultWorkoutService: mockDefaultWorkoutService,
+        ),
+      );
       await tester.pumpAndSettle();
 
       // Test tab interactions
@@ -242,13 +255,16 @@ void main() {
       expect(find.byType(BottomNavigationBar), findsOneWidget);
     });
 
-    testWidgets('Home screen displays correct layout',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(WorkoutApp(
-        workoutService: mockWorkoutService,
-        userProgressService: mockUserProgressService,
-        defaultWorkoutService: mockDefaultWorkoutService,
-      ));
+    testWidgets('Home screen displays correct layout', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        WorkoutApp(
+          workoutService: mockWorkoutService,
+          userProgressService: mockUserProgressService,
+          defaultWorkoutService: mockDefaultWorkoutService,
+        ),
+      );
       await tester.pumpAndSettle();
 
       // Check that the app structure is correct
@@ -256,8 +272,9 @@ void main() {
       expect(find.byType(BottomNavigationBar), findsOneWidget);
 
       // Check that bottom navigation has 3 tabs
-      final bottomNav =
-          tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar));
+      final bottomNav = tester.widget<BottomNavigationBar>(
+        find.byType(BottomNavigationBar),
+      );
       expect(bottomNav.items.length, 3);
     });
 
@@ -265,11 +282,13 @@ void main() {
       // Create a special mock service for first run
       final firstRunMockService = FirstRunMockUserProgressService();
 
-      await tester.pumpWidget(WorkoutApp(
-        workoutService: mockWorkoutService,
-        userProgressService: firstRunMockService,
-        defaultWorkoutService: mockDefaultWorkoutService,
-      ));
+      await tester.pumpWidget(
+        WorkoutApp(
+          workoutService: mockWorkoutService,
+          userProgressService: firstRunMockService,
+          defaultWorkoutService: mockDefaultWorkoutService,
+        ),
+      );
       await tester.pumpAndSettle();
 
       // Should show onboarding screen for first run

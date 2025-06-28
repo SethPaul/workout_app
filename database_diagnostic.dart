@@ -53,12 +53,16 @@ Map<String, dynamic> templateToMap(MockWorkoutTemplate template) {
     'format': template.format.toString().split('.').last,
     'intensity': template.intensity.toString().split('.').last,
     'targetDuration': template.targetDuration,
-    'preferredCategories': jsonEncode(template.preferredCategories
-        ?.map((c) => c.toString().split('.').last)
-        .toList()),
-    'availableEquipment': jsonEncode(template.availableEquipment
-        ?.map((e) => e.toString().split('.').last)
-        .toList()),
+    'preferredCategories': jsonEncode(
+      template.preferredCategories
+          ?.map((c) => c.toString().split('.').last)
+          .toList(),
+    ),
+    'availableEquipment': jsonEncode(
+      template.availableEquipment
+          ?.map((e) => e.toString().split('.').last)
+          .toList(),
+    ),
     'isMainMovementOnly': template.isMainMovementOnly,
     'created_at': template.createdAt.toIso8601String(), // Using snake_case now
     'lastUsed': template.lastUsed?.toIso8601String(),
@@ -81,17 +85,24 @@ MockWorkoutTemplate templateFromMap(Map<String, dynamic> map) {
     targetDuration: map['targetDuration'] as int,
     preferredCategories:
         (jsonDecode(map['preferredCategories'] as String) as List?)
-            ?.map((c) => MovementCategory.values
-                .firstWhere((mc) => mc.toString() == 'MovementCategory.$c'))
+            ?.map(
+              (c) => MovementCategory.values.firstWhere(
+                (mc) => mc.toString() == 'MovementCategory.$c',
+              ),
+            )
             .toList(),
     availableEquipment:
         (jsonDecode(map['availableEquipment'] as String) as List?)
-            ?.map((e) => EquipmentType.values
-                .firstWhere((et) => et.toString() == 'EquipmentType.$e'))
+            ?.map(
+              (e) => EquipmentType.values.firstWhere(
+                (et) => et.toString() == 'EquipmentType.$e',
+              ),
+            )
             .toList(),
     isMainMovementOnly: map['isMainMovementOnly'] as bool?,
-    createdAt:
-        DateTime.parse(map['created_at'] as String), // Using snake_case now
+    createdAt: DateTime.parse(
+      map['created_at'] as String,
+    ), // Using snake_case now
     lastUsed: map['lastUsed'] != null
         ? DateTime.parse(map['lastUsed'] as String)
         : null,

@@ -67,17 +67,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.fitness_center,
-            size: 100,
-            color: Colors.deepPurple,
-          ),
+          const Icon(Icons.fitness_center, size: 100, color: Colors.deepPurple),
           const SizedBox(height: 32),
           Text(
             'Welcome to Workout App!',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -112,9 +108,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 32),
           Text(
             'What\'s your fitness focus?',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -194,7 +190,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     Color color,
   ) {
     final isSelected = _selectedPreference == preference;
-    
+
     return Card(
       elevation: isSelected ? 4 : 1,
       color: isSelected ? color.withOpacity(0.1) : null,
@@ -207,7 +203,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
         ),
         subtitle: Text(description),
-        trailing: isSelected 
+        trailing: isSelected
             ? Icon(Icons.check_circle, color: color)
             : const Icon(Icons.radio_button_unchecked),
         onTap: () {
@@ -230,9 +226,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 16),
           Text(
             'Choose Your Starter Workouts',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
@@ -249,7 +245,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 final workout = recommendedWorkouts[index];
                 final workoutName = workout['name'] as String;
                 final isSelected = _selectedWorkouts.contains(workoutName);
-                
+
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
                   child: CheckboxListTile(
@@ -280,15 +276,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 '${workout['targetDuration']} min',
                                 style: const TextStyle(fontSize: 12),
                               ),
-                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
                             ),
                             const SizedBox(width: 8),
                             Chip(
                               label: Text(
-                                '${workout['intensity']}'.split('.').last.toUpperCase(),
+                                '${workout['intensity']}'
+                                    .split('.')
+                                    .last
+                                    .toUpperCase(),
                                 style: const TextStyle(fontSize: 12),
                               ),
-                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
                             ),
                           ],
                         ),
@@ -335,7 +336,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         width: 16,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Text(_selectedWorkouts.isNotEmpty ? 'Add Workouts' : 'Continue'),
+                    : Text(
+                        _selectedWorkouts.isNotEmpty
+                            ? 'Add Workouts'
+                            : 'Continue',
+                      ),
               ),
             ],
           ),
@@ -352,11 +357,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     try {
       // Add selected workouts if any were chosen
       if (_selectedWorkouts.isNotEmpty) {
-        await widget.defaultWorkoutService.addSelectedDefaultWorkouts(_selectedWorkouts);
+        await widget.defaultWorkoutService.addSelectedDefaultWorkouts(
+          _selectedWorkouts,
+        );
       }
 
       // Update user progress to mark onboarding as complete
-      final userProgress = await widget.userProgressService.getCurrentUserProgress();
+      final userProgress = await widget.userProgressService
+          .getCurrentUserProgress();
       if (userProgress != null) {
         final updatedProgress = userProgress.copyWith(
           isFirstRun: false,
@@ -370,7 +378,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (mounted && _selectedWorkouts.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Added ${_selectedWorkouts.length} starter workouts!'),
+            content: Text(
+              'Added ${_selectedWorkouts.length} starter workouts!',
+            ),
             backgroundColor: Colors.green,
           ),
         );

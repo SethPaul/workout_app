@@ -30,23 +30,13 @@ import 'package:workout_app/services/workout_template_service.dart' as _i7;
 // ignore_for_file: subtype_of_sealed_class
 
 class _FakeWorkout_0 extends _i1.SmartFake implements _i2.Workout {
-  _FakeWorkout_0(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeWorkout_0(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeDatabase_1 extends _i1.SmartFake implements _i3.Database {
-  _FakeDatabase_1(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeDatabase_1(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 /// A class which mocks [WorkoutRepository].
@@ -58,89 +48,80 @@ class MockWorkoutRepository extends _i1.Mock implements _i4.WorkoutRepository {
   }
 
   @override
-  _i5.Future<List<_i2.Workout>> getAllWorkouts() => (super.noSuchMethod(
-        Invocation.method(
-          #getAllWorkouts,
-          [],
-        ),
-        returnValue: _i5.Future<List<_i2.Workout>>.value(<_i2.Workout>[]),
-      ) as _i5.Future<List<_i2.Workout>>);
+  _i5.Future<List<_i2.Workout>> getAllWorkouts() =>
+      (super.noSuchMethod(
+            Invocation.method(#getAllWorkouts, []),
+            returnValue: _i5.Future<List<_i2.Workout>>.value(<_i2.Workout>[]),
+          )
+          as _i5.Future<List<_i2.Workout>>);
 
   @override
-  _i5.Future<_i2.Workout?> getWorkoutById(String? id) => (super.noSuchMethod(
-        Invocation.method(
-          #getWorkoutById,
-          [id],
-        ),
-        returnValue: _i5.Future<_i2.Workout?>.value(),
-      ) as _i5.Future<_i2.Workout?>);
+  _i5.Future<_i2.Workout?> getWorkoutById(String? id) =>
+      (super.noSuchMethod(
+            Invocation.method(#getWorkoutById, [id]),
+            returnValue: _i5.Future<_i2.Workout?>.value(),
+          )
+          as _i5.Future<_i2.Workout?>);
 
   @override
   _i5.Future<List<_i2.Workout>> getWorkoutsByFormat(
-          _i2.WorkoutFormat? format) =>
+    _i2.WorkoutFormat? format,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getWorkoutsByFormat,
-          [format],
-        ),
-        returnValue: _i5.Future<List<_i2.Workout>>.value(<_i2.Workout>[]),
-      ) as _i5.Future<List<_i2.Workout>>);
+            Invocation.method(#getWorkoutsByFormat, [format]),
+            returnValue: _i5.Future<List<_i2.Workout>>.value(<_i2.Workout>[]),
+          )
+          as _i5.Future<List<_i2.Workout>>);
 
   @override
   _i5.Future<List<_i2.Workout>> getWorkoutsByIntensity(
-          _i2.IntensityLevel? intensity) =>
+    _i2.IntensityLevel? intensity,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getWorkoutsByIntensity,
-          [intensity],
-        ),
-        returnValue: _i5.Future<List<_i2.Workout>>.value(<_i2.Workout>[]),
-      ) as _i5.Future<List<_i2.Workout>>);
+            Invocation.method(#getWorkoutsByIntensity, [intensity]),
+            returnValue: _i5.Future<List<_i2.Workout>>.value(<_i2.Workout>[]),
+          )
+          as _i5.Future<List<_i2.Workout>>);
 
   @override
-  _i5.Future<String> createWorkout(_i2.Workout? workout) => (super.noSuchMethod(
-        Invocation.method(
-          #createWorkout,
-          [workout],
-        ),
-        returnValue: _i5.Future<String>.value(_i6.dummyValue<String>(
-          this,
-          Invocation.method(
-            #createWorkout,
-            [workout],
-          ),
-        )),
-      ) as _i5.Future<String>);
+  _i5.Future<String> createWorkout(_i2.Workout? workout) =>
+      (super.noSuchMethod(
+            Invocation.method(#createWorkout, [workout]),
+            returnValue: _i5.Future<String>.value(
+              _i6.dummyValue<String>(
+                this,
+                Invocation.method(#createWorkout, [workout]),
+              ),
+            ),
+          )
+          as _i5.Future<String>);
 
   @override
-  _i5.Future<void> updateWorkout(_i2.Workout? workout) => (super.noSuchMethod(
-        Invocation.method(
-          #updateWorkout,
-          [workout],
-        ),
-        returnValue: _i5.Future<void>.value(),
-        returnValueForMissingStub: _i5.Future<void>.value(),
-      ) as _i5.Future<void>);
+  _i5.Future<void> updateWorkout(_i2.Workout? workout) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateWorkout, [workout]),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
 
   @override
-  _i5.Future<void> deleteWorkout(String? id) => (super.noSuchMethod(
-        Invocation.method(
-          #deleteWorkout,
-          [id],
-        ),
-        returnValue: _i5.Future<void>.value(),
-        returnValueForMissingStub: _i5.Future<void>.value(),
-      ) as _i5.Future<void>);
+  _i5.Future<void> deleteWorkout(String? id) =>
+      (super.noSuchMethod(
+            Invocation.method(#deleteWorkout, [id]),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
 
   @override
-  _i5.Future<void> markWorkoutAsCompleted(String? id) => (super.noSuchMethod(
-        Invocation.method(
-          #markWorkoutAsCompleted,
-          [id],
-        ),
-        returnValue: _i5.Future<void>.value(),
-        returnValueForMissingStub: _i5.Future<void>.value(),
-      ) as _i5.Future<void>);
+  _i5.Future<void> markWorkoutAsCompleted(String? id) =>
+      (super.noSuchMethod(
+            Invocation.method(#markWorkoutAsCompleted, [id]),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
 }
 
 /// A class which mocks [WorkoutTemplateService].
@@ -155,71 +136,68 @@ class MockWorkoutTemplateService extends _i1.Mock
   @override
   _i5.Future<List<_i8.WorkoutTemplate>> getAllTemplates() =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getAllTemplates,
-          [],
-        ),
-        returnValue: _i5.Future<List<_i8.WorkoutTemplate>>.value(
-            <_i8.WorkoutTemplate>[]),
-      ) as _i5.Future<List<_i8.WorkoutTemplate>>);
+            Invocation.method(#getAllTemplates, []),
+            returnValue: _i5.Future<List<_i8.WorkoutTemplate>>.value(
+              <_i8.WorkoutTemplate>[],
+            ),
+          )
+          as _i5.Future<List<_i8.WorkoutTemplate>>);
 
   @override
   _i5.Future<_i8.WorkoutTemplate?> getTemplateById(String? id) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getTemplateById,
-          [id],
-        ),
-        returnValue: _i5.Future<_i8.WorkoutTemplate?>.value(),
-      ) as _i5.Future<_i8.WorkoutTemplate?>);
+            Invocation.method(#getTemplateById, [id]),
+            returnValue: _i5.Future<_i8.WorkoutTemplate?>.value(),
+          )
+          as _i5.Future<_i8.WorkoutTemplate?>);
 
   @override
   _i5.Future<List<_i8.WorkoutTemplate>> getTemplatesByFormat(
-          _i2.WorkoutFormat? format) =>
+    _i2.WorkoutFormat? format,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getTemplatesByFormat,
-          [format],
-        ),
-        returnValue: _i5.Future<List<_i8.WorkoutTemplate>>.value(
-            <_i8.WorkoutTemplate>[]),
-      ) as _i5.Future<List<_i8.WorkoutTemplate>>);
+            Invocation.method(#getTemplatesByFormat, [format]),
+            returnValue: _i5.Future<List<_i8.WorkoutTemplate>>.value(
+              <_i8.WorkoutTemplate>[],
+            ),
+          )
+          as _i5.Future<List<_i8.WorkoutTemplate>>);
 
   @override
   _i5.Future<List<_i8.WorkoutTemplate>> getTemplatesByIntensity(
-          _i2.IntensityLevel? intensity) =>
+    _i2.IntensityLevel? intensity,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getTemplatesByIntensity,
-          [intensity],
-        ),
-        returnValue: _i5.Future<List<_i8.WorkoutTemplate>>.value(
-            <_i8.WorkoutTemplate>[]),
-      ) as _i5.Future<List<_i8.WorkoutTemplate>>);
+            Invocation.method(#getTemplatesByIntensity, [intensity]),
+            returnValue: _i5.Future<List<_i8.WorkoutTemplate>>.value(
+              <_i8.WorkoutTemplate>[],
+            ),
+          )
+          as _i5.Future<List<_i8.WorkoutTemplate>>);
 
   @override
   _i5.Future<List<_i8.WorkoutTemplate>> getTemplatesByEquipment(
-          List<_i9.EquipmentType>? equipment) =>
+    List<_i9.EquipmentType>? equipment,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getTemplatesByEquipment,
-          [equipment],
-        ),
-        returnValue: _i5.Future<List<_i8.WorkoutTemplate>>.value(
-            <_i8.WorkoutTemplate>[]),
-      ) as _i5.Future<List<_i8.WorkoutTemplate>>);
+            Invocation.method(#getTemplatesByEquipment, [equipment]),
+            returnValue: _i5.Future<List<_i8.WorkoutTemplate>>.value(
+              <_i8.WorkoutTemplate>[],
+            ),
+          )
+          as _i5.Future<List<_i8.WorkoutTemplate>>);
 
   @override
   _i5.Future<List<_i8.WorkoutTemplate>> getTemplatesByCategory(
-          List<_i9.MovementCategory>? categories) =>
+    List<_i9.MovementCategory>? categories,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getTemplatesByCategory,
-          [categories],
-        ),
-        returnValue: _i5.Future<List<_i8.WorkoutTemplate>>.value(
-            <_i8.WorkoutTemplate>[]),
-      ) as _i5.Future<List<_i8.WorkoutTemplate>>);
+            Invocation.method(#getTemplatesByCategory, [categories]),
+            returnValue: _i5.Future<List<_i8.WorkoutTemplate>>.value(
+              <_i8.WorkoutTemplate>[],
+            ),
+          )
+          as _i5.Future<List<_i8.WorkoutTemplate>>);
 
   @override
   _i5.Future<String> createTemplate({
@@ -234,27 +212,7 @@ class MockWorkoutTemplateService extends _i1.Mock
     Map<String, dynamic>? metadata,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #createTemplate,
-          [],
-          {
-            #name: name,
-            #description: description,
-            #format: format,
-            #intensity: intensity,
-            #targetDuration: targetDuration,
-            #preferredCategories: preferredCategories,
-            #availableEquipment: availableEquipment,
-            #isMainMovementOnly: isMainMovementOnly,
-            #metadata: metadata,
-          },
-        ),
-        returnValue: _i5.Future<String>.value(_i6.dummyValue<String>(
-          this,
-          Invocation.method(
-            #createTemplate,
-            [],
-            {
+            Invocation.method(#createTemplate, [], {
               #name: name,
               #description: description,
               #format: format,
@@ -264,47 +222,56 @@ class MockWorkoutTemplateService extends _i1.Mock
               #availableEquipment: availableEquipment,
               #isMainMovementOnly: isMainMovementOnly,
               #metadata: metadata,
-            },
-          ),
-        )),
-      ) as _i5.Future<String>);
+            }),
+            returnValue: _i5.Future<String>.value(
+              _i6.dummyValue<String>(
+                this,
+                Invocation.method(#createTemplate, [], {
+                  #name: name,
+                  #description: description,
+                  #format: format,
+                  #intensity: intensity,
+                  #targetDuration: targetDuration,
+                  #preferredCategories: preferredCategories,
+                  #availableEquipment: availableEquipment,
+                  #isMainMovementOnly: isMainMovementOnly,
+                  #metadata: metadata,
+                }),
+              ),
+            ),
+          )
+          as _i5.Future<String>);
 
   @override
   _i5.Future<void> updateTemplate(_i8.WorkoutTemplate? template) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #updateTemplate,
-          [template],
-        ),
-        returnValue: _i5.Future<void>.value(),
-        returnValueForMissingStub: _i5.Future<void>.value(),
-      ) as _i5.Future<void>);
+            Invocation.method(#updateTemplate, [template]),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
 
   @override
-  _i5.Future<void> deleteTemplate(String? id) => (super.noSuchMethod(
-        Invocation.method(
-          #deleteTemplate,
-          [id],
-        ),
-        returnValue: _i5.Future<void>.value(),
-        returnValueForMissingStub: _i5.Future<void>.value(),
-      ) as _i5.Future<void>);
+  _i5.Future<void> deleteTemplate(String? id) =>
+      (super.noSuchMethod(
+            Invocation.method(#deleteTemplate, [id]),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
 
   @override
   _i5.Future<_i2.Workout> generateWorkoutFromTemplate(String? templateId) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #generateWorkoutFromTemplate,
-          [templateId],
-        ),
-        returnValue: _i5.Future<_i2.Workout>.value(_FakeWorkout_0(
-          this,
-          Invocation.method(
-            #generateWorkoutFromTemplate,
-            [templateId],
-          ),
-        )),
-      ) as _i5.Future<_i2.Workout>);
+            Invocation.method(#generateWorkoutFromTemplate, [templateId]),
+            returnValue: _i5.Future<_i2.Workout>.value(
+              _FakeWorkout_0(
+                this,
+                Invocation.method(#generateWorkoutFromTemplate, [templateId]),
+              ),
+            ),
+          )
+          as _i5.Future<_i2.Workout>);
 
   @override
   _i5.Future<_i2.Workout> generateWorkoutFromTemplateWithModifications(
@@ -317,34 +284,37 @@ class MockWorkoutTemplateService extends _i1.Mock
     bool? isMainMovementOnly,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #generateWorkoutFromTemplateWithModifications,
-          [templateId],
-          {
-            #format: format,
-            #intensity: intensity,
-            #targetDuration: targetDuration,
-            #preferredCategories: preferredCategories,
-            #availableEquipment: availableEquipment,
-            #isMainMovementOnly: isMainMovementOnly,
-          },
-        ),
-        returnValue: _i5.Future<_i2.Workout>.value(_FakeWorkout_0(
-          this,
-          Invocation.method(
-            #generateWorkoutFromTemplateWithModifications,
-            [templateId],
-            {
-              #format: format,
-              #intensity: intensity,
-              #targetDuration: targetDuration,
-              #preferredCategories: preferredCategories,
-              #availableEquipment: availableEquipment,
-              #isMainMovementOnly: isMainMovementOnly,
-            },
-          ),
-        )),
-      ) as _i5.Future<_i2.Workout>);
+            Invocation.method(
+              #generateWorkoutFromTemplateWithModifications,
+              [templateId],
+              {
+                #format: format,
+                #intensity: intensity,
+                #targetDuration: targetDuration,
+                #preferredCategories: preferredCategories,
+                #availableEquipment: availableEquipment,
+                #isMainMovementOnly: isMainMovementOnly,
+              },
+            ),
+            returnValue: _i5.Future<_i2.Workout>.value(
+              _FakeWorkout_0(
+                this,
+                Invocation.method(
+                  #generateWorkoutFromTemplateWithModifications,
+                  [templateId],
+                  {
+                    #format: format,
+                    #intensity: intensity,
+                    #targetDuration: targetDuration,
+                    #preferredCategories: preferredCategories,
+                    #availableEquipment: availableEquipment,
+                    #isMainMovementOnly: isMainMovementOnly,
+                  },
+                ),
+              ),
+            ),
+          )
+          as _i5.Future<_i2.Workout>);
 }
 
 /// A class which mocks [DatabaseHelper].
@@ -356,21 +326,21 @@ class MockDatabaseHelper extends _i1.Mock implements _i10.DatabaseHelper {
   }
 
   @override
-  _i5.Future<_i3.Database> get database => (super.noSuchMethod(
-        Invocation.getter(#database),
-        returnValue: _i5.Future<_i3.Database>.value(_FakeDatabase_1(
-          this,
-          Invocation.getter(#database),
-        )),
-      ) as _i5.Future<_i3.Database>);
+  _i5.Future<_i3.Database> get database =>
+      (super.noSuchMethod(
+            Invocation.getter(#database),
+            returnValue: _i5.Future<_i3.Database>.value(
+              _FakeDatabase_1(this, Invocation.getter(#database)),
+            ),
+          )
+          as _i5.Future<_i3.Database>);
 
   @override
-  _i5.Future<void> close() => (super.noSuchMethod(
-        Invocation.method(
-          #close,
-          [],
-        ),
-        returnValue: _i5.Future<void>.value(),
-        returnValueForMissingStub: _i5.Future<void>.value(),
-      ) as _i5.Future<void>);
+  _i5.Future<void> close() =>
+      (super.noSuchMethod(
+            Invocation.method(#close, []),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
 }

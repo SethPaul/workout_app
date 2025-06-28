@@ -11,8 +11,8 @@ class WorkoutTemplateService {
   WorkoutTemplateService({
     required WorkoutTemplateRepository repository,
     required WorkoutGenerator workoutGenerator,
-  })  : _repository = repository,
-        _workoutGenerator = workoutGenerator;
+  }) : _repository = repository,
+       _workoutGenerator = workoutGenerator;
 
   Future<List<WorkoutTemplate>> getAllTemplates() async {
     return _repository.getAllTemplates();
@@ -23,22 +23,26 @@ class WorkoutTemplateService {
   }
 
   Future<List<WorkoutTemplate>> getTemplatesByFormat(
-      WorkoutFormat format) async {
+    WorkoutFormat format,
+  ) async {
     return _repository.getTemplatesByFormat(format);
   }
 
   Future<List<WorkoutTemplate>> getTemplatesByIntensity(
-      IntensityLevel intensity) async {
+    IntensityLevel intensity,
+  ) async {
     return _repository.getTemplatesByIntensity(intensity);
   }
 
   Future<List<WorkoutTemplate>> getTemplatesByEquipment(
-      List<EquipmentType> equipment) async {
+    List<EquipmentType> equipment,
+  ) async {
     return _repository.getTemplatesByEquipment(equipment);
   }
 
   Future<List<WorkoutTemplate>> getTemplatesByCategory(
-      List<MovementCategory> categories) async {
+    List<MovementCategory> categories,
+  ) async {
     return _repository.getTemplatesByCategories(categories);
   }
 

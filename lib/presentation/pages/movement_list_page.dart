@@ -44,9 +44,7 @@ class MovementListPage extends StatelessWidget {
 
           if (state is MovementLoaded) {
             if (state.movements.isEmpty) {
-              return const Center(
-                child: Text('No movements found'),
-              );
+              return const Center(child: Text('No movements found'));
             }
 
             return Column(
@@ -61,13 +59,13 @@ class MovementListPage extends StatelessWidget {
                     ),
                     onChanged: (query) {
                       context.read<MovementBloc>().add(
-                            FilterMovements(
-                              query: query,
-                              categories: state.selectedCategories,
-                              equipmentTypes: state.selectedEquipmentTypes,
-                              isMainMovement: state.isMainMovementFilter,
-                            ),
-                          );
+                        FilterMovements(
+                          query: query,
+                          categories: state.selectedCategories,
+                          equipmentTypes: state.selectedEquipmentTypes,
+                          isMainMovement: state.isMainMovementFilter,
+                        ),
+                      );
                     },
                   ),
                 ),

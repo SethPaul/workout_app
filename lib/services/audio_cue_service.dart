@@ -83,7 +83,9 @@ class AudioCueService {
   }
 
   Future<void> playFormatSpecificCue(
-      WorkoutFormat format, int secondsRemaining) async {
+    WorkoutFormat format,
+    int secondsRemaining,
+  ) async {
     if (_isMuted || !_isInitialized) return;
 
     switch (format) {

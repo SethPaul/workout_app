@@ -48,8 +48,9 @@ void main() {
     );
 
     test('getAllTemplates returns all templates', () async {
-      when(mockRepository.getAllTemplates())
-          .thenAnswer((_) async => [testTemplate]);
+      when(
+        mockRepository.getAllTemplates(),
+      ).thenAnswer((_) async => [testTemplate]);
 
       final templates = await service.getAllTemplates();
       expect(templates, [testTemplate]);
@@ -57,8 +58,9 @@ void main() {
     });
 
     test('getTemplateById returns template when found', () async {
-      when(mockRepository.getTemplateById('1'))
-          .thenAnswer((_) async => testTemplate);
+      when(
+        mockRepository.getTemplateById('1'),
+      ).thenAnswer((_) async => testTemplate);
 
       final template = await service.getTemplateById('1');
       expect(template, testTemplate);
@@ -88,87 +90,101 @@ void main() {
       verify(mockRepository.createTemplate(any)).called(1);
     });
 
-    test('generateWorkoutFromTemplate generates workout and increments usage',
-        () async {
-      when(mockRepository.getTemplateById('1'))
-          .thenAnswer((_) async => testTemplate);
-      when(mockGenerator.generateWorkout(
-        format: anyNamed('format'),
-        intensity: anyNamed('intensity'),
-        targetDuration: anyNamed('targetDuration'),
-        preferredCategories: anyNamed('preferredCategories'),
-        availableEquipment: anyNamed('availableEquipment'),
-        isMainMovementOnly: anyNamed('isMainMovementOnly'),
-      )).thenAnswer((_) => testWorkout);
+    test(
+      'generateWorkoutFromTemplate generates workout and increments usage',
+      () async {
+        when(
+          mockRepository.getTemplateById('1'),
+        ).thenAnswer((_) async => testTemplate);
+        when(
+          mockGenerator.generateWorkout(
+            format: anyNamed('format'),
+            intensity: anyNamed('intensity'),
+            targetDuration: anyNamed('targetDuration'),
+            preferredCategories: anyNamed('preferredCategories'),
+            availableEquipment: anyNamed('availableEquipment'),
+            isMainMovementOnly: anyNamed('isMainMovementOnly'),
+          ),
+        ).thenAnswer((_) => testWorkout);
 
-      final workout = await service.generateWorkoutFromTemplate('1');
+        final workout = await service.generateWorkoutFromTemplate('1');
 
-      expect(workout, testWorkout);
-      verify(mockRepository.getTemplateById('1')).called(1);
-      verify(mockGenerator.generateWorkout(
-        format: testTemplate.format,
-        intensity: testTemplate.intensity,
-        targetDuration: testTemplate.targetDuration,
-        preferredCategories: testTemplate.preferredCategories,
-        availableEquipment: testTemplate.availableEquipment,
-        isMainMovementOnly: testTemplate.isMainMovementOnly,
-      )).called(1);
-      verify(mockRepository.incrementUsage('1')).called(1);
-    });
-
-    test('generateWorkoutFromTemplate throws when template not found',
-        () async {
-      when(mockRepository.getTemplateById('2')).thenAnswer((_) async => null);
-
-      expect(
-        () => service.generateWorkoutFromTemplate('2'),
-        throwsException,
-      );
-      verify(mockRepository.getTemplateById('2')).called(1);
-      verifyNever(mockGenerator.generateWorkout(
-        format: anyNamed('format'),
-        intensity: anyNamed('intensity'),
-        targetDuration: anyNamed('targetDuration'),
-        preferredCategories: anyNamed('preferredCategories'),
-        availableEquipment: anyNamed('availableEquipment'),
-        isMainMovementOnly: anyNamed('isMainMovementOnly'),
-      ));
-      verifyNever(mockRepository.incrementUsage('2'));
-    });
+        expect(workout, testWorkout);
+        verify(mockRepository.getTemplateById('1')).called(1);
+        verify(
+          mockGenerator.generateWorkout(
+            format: testTemplate.format,
+            intensity: testTemplate.intensity,
+            targetDuration: testTemplate.targetDuration,
+            preferredCategories: testTemplate.preferredCategories,
+            availableEquipment: testTemplate.availableEquipment,
+            isMainMovementOnly: testTemplate.isMainMovementOnly,
+          ),
+        ).called(1);
+        verify(mockRepository.incrementUsage('1')).called(1);
+      },
+    );
 
     test(
-        'generateWorkoutFromTemplateWithModifications uses modified parameters',
-        () async {
-      when(mockRepository.getTemplateById('1'))
-          .thenAnswer((_) async => testTemplate);
-      when(mockGenerator.generateWorkout(
-        format: anyNamed('format'),
-        intensity: anyNamed('intensity'),
-        targetDuration: anyNamed('targetDuration'),
-        preferredCategories: anyNamed('preferredCategories'),
-        availableEquipment: anyNamed('availableEquipment'),
-        isMainMovementOnly: anyNamed('isMainMovementOnly'),
-      )).thenAnswer((_) => testWorkout);
+      'generateWorkoutFromTemplate throws when template not found',
+      () async {
+        when(mockRepository.getTemplateById('2')).thenAnswer((_) async => null);
 
-      final workout =
-          await service.generateWorkoutFromTemplateWithModifications(
-        '1',
-        format: WorkoutFormat.amrap,
-        intensity: IntensityLevel.high,
-        targetDuration: 30,
-      );
+        expect(() => service.generateWorkoutFromTemplate('2'), throwsException);
+        verify(mockRepository.getTemplateById('2')).called(1);
+        verifyNever(
+          mockGenerator.generateWorkout(
+            format: anyNamed('format'),
+            intensity: anyNamed('intensity'),
+            targetDuration: anyNamed('targetDuration'),
+            preferredCategories: anyNamed('preferredCategories'),
+            availableEquipment: anyNamed('availableEquipment'),
+            isMainMovementOnly: anyNamed('isMainMovementOnly'),
+          ),
+        );
+        verifyNever(mockRepository.incrementUsage('2'));
+      },
+    );
 
-      expect(workout, testWorkout);
-      verify(mockRepository.getTemplateById('1')).called(1);
-      verify(mockGenerator.generateWorkout(
-        format: WorkoutFormat.amrap,
-        intensity: IntensityLevel.high,
-        targetDuration: 30,
-        preferredCategories: testTemplate.preferredCategories,
-        availableEquipment: testTemplate.availableEquipment,
-        isMainMovementOnly: testTemplate.isMainMovementOnly,
-      )).called(1);
-      verify(mockRepository.incrementUsage('1')).called(1);
-    });
+    test(
+      'generateWorkoutFromTemplateWithModifications uses modified parameters',
+      () async {
+        when(
+          mockRepository.getTemplateById('1'),
+        ).thenAnswer((_) async => testTemplate);
+        when(
+          mockGenerator.generateWorkout(
+            format: anyNamed('format'),
+            intensity: anyNamed('intensity'),
+            targetDuration: anyNamed('targetDuration'),
+            preferredCategories: anyNamed('preferredCategories'),
+            availableEquipment: anyNamed('availableEquipment'),
+            isMainMovementOnly: anyNamed('isMainMovementOnly'),
+          ),
+        ).thenAnswer((_) => testWorkout);
+
+        final workout = await service
+            .generateWorkoutFromTemplateWithModifications(
+              '1',
+              format: WorkoutFormat.amrap,
+              intensity: IntensityLevel.high,
+              targetDuration: 30,
+            );
+
+        expect(workout, testWorkout);
+        verify(mockRepository.getTemplateById('1')).called(1);
+        verify(
+          mockGenerator.generateWorkout(
+            format: WorkoutFormat.amrap,
+            intensity: IntensityLevel.high,
+            targetDuration: 30,
+            preferredCategories: testTemplate.preferredCategories,
+            availableEquipment: testTemplate.availableEquipment,
+            isMainMovementOnly: testTemplate.isMainMovementOnly,
+          ),
+        ).called(1);
+        verify(mockRepository.incrementUsage('1')).called(1);
+      },
+    );
   });
 }
