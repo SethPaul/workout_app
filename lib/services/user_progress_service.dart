@@ -25,6 +25,8 @@ class UserProgressService {
         movementProgress: {},
         lastWorkoutDate: DateTime.now(),
         totalWorkoutsCompleted: 0,
+        isFirstRun: true,
+        hasAcceptedDefaultWorkouts: false,
       );
       await _repository.saveUserProgress(newProgress);
     }
@@ -63,8 +65,9 @@ class UserProgressService {
     Map<String, dynamic>? personalRecords,
   }) async {
     // Get existing progress or create new
-    final existingProgress = await _repository.getMovementProgress(_defaultUserId, movementId);
-    
+    final existingProgress =
+        await _repository.getMovementProgress(_defaultUserId, movementId);
+
     final updatedProgress = MovementProgress(
       movementId: movementId,
       maxWeight: maxWeight ?? existingProgress?.maxWeight,
@@ -74,7 +77,8 @@ class UserProgressService {
       personalRecords: personalRecords ?? existingProgress?.personalRecords,
     );
 
-    await _repository.updateMovementProgress(_defaultUserId, movementId, updatedProgress);
+    await _repository.updateMovementProgress(
+        _defaultUserId, movementId, updatedProgress);
   }
 
   /// Get workout history with optional limit
@@ -101,9 +105,9 @@ class UserProgressService {
         .where((w) => w.totalTimeInSeconds != null)
         .map((w) => w.totalTimeInSeconds!)
         .fold(0, (a, b) => a + b);
-    
+
     final averageWorkoutTime = totalTimeInSeconds / totalWorkouts;
-    
+
     final totalReps = workoutHistory
         .where((w) => w.totalReps != null)
         .map((w) => w.totalReps!)
@@ -118,7 +122,8 @@ class UserProgressService {
     final firstWorkout = workoutHistory.last.completedAt;
     final lastWorkout = workoutHistory.first.completedAt;
     final daysBetween = lastWorkout.difference(firstWorkout).inDays;
-    final workoutsPerWeek = daysBetween > 0 ? (totalWorkouts * 7) / daysBetween : 0.0;
+    final workoutsPerWeek =
+        daysBetween > 0 ? (totalWorkouts * 7) / daysBetween : 0.0;
 
     return {
       'totalWorkouts': totalWorkouts,
@@ -148,15 +153,21 @@ class UserProgressService {
   }) {
     if (existingProgress == null) return true;
 
-    if (newWeight != null && (existingProgress.maxWeight == null || newWeight > existingProgress.maxWeight!)) {
+    if (newWeight != null &&
+        (existingProgress.maxWeight == null ||
+            newWeight > existingProgress.maxWeight!)) {
       return true;
     }
 
-    if (newReps != null && (existingProgress.maxReps == null || newReps > existingProgress.maxReps!)) {
+    if (newReps != null &&
+        (existingProgress.maxReps == null ||
+            newReps > existingProgress.maxReps!)) {
       return true;
     }
 
-    if (newTimeInSeconds != null && (existingProgress.maxTimeInSeconds == null || newTimeInSeconds > existingProgress.maxTimeInSeconds!)) {
+    if (newTimeInSeconds != null &&
+        (existingProgress.maxTimeInSeconds == null ||
+            newTimeInSeconds > existingProgress.maxTimeInSeconds!)) {
       return true;
     }
 
@@ -173,10 +184,12 @@ class UserProgressService {
   }
 
   /// Add achievement
-  Future<void> addAchievement(String achievementKey, Map<String, dynamic> achievementData) async {
+  Future<void> addAchievement(
+      String achievementKey, Map<String, dynamic> achievementData) async {
     final progress = await getCurrentUserProgress();
     if (progress != null) {
-      final achievements = Map<String, dynamic>.from(progress.achievements ?? {});
+      final achievements =
+          Map<String, dynamic>.from(progress.achievements ?? {});
       achievements[achievementKey] = achievementData;
       final updatedProgress = progress.copyWith(achievements: achievements);
       await _repository.saveUserProgress(updatedProgress);
@@ -192,4 +205,4 @@ class UserProgressService {
   Future<void> clearUserProgress() async {
     await _repository.deleteUserProgress(_defaultUserId);
   }
-} 
+}

@@ -7,15 +7,17 @@ import 'package:workout_app/screens/workout_detail_screen.dart';
 import 'package:workout_app/services/workout_service.dart';
 
 class WorkoutTemplateDetailScreen extends StatefulWidget {
-  final WorkoutTemplateService templateService;
   final String templateId;
+  final WorkoutTemplateService templateService;
   final WorkoutService? workoutService;
+  final VoidCallback? onWorkoutGenerated;
 
   const WorkoutTemplateDetailScreen({
     super.key,
-    required this.templateService,
     required this.templateId,
+    required this.templateService,
     this.workoutService,
+    this.onWorkoutGenerated,
   });
 
   @override
@@ -77,16 +79,27 @@ class _WorkoutTemplateDetailScreenState
       }
 
       if (mounted) {
-        // Navigate back to workout list and show success message
-        Navigator.pop(context); // Pop template detail screen
-        Navigator.pop(context); // Pop templates screen
+        // Navigate back to the home screen completely and show success
+        Navigator.popUntil(context, (route) => route.isFirst);
 
+        // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content:
-                Text('Workout generated and saved! Check your workout list.'),
+          SnackBar(
+            content: const Text(
+                'Workout generated and saved! Switching to your workout list...'),
+            duration: const Duration(seconds: 2),
+            action: SnackBarAction(
+              label: 'View',
+              onPressed: () {
+                // This will be handled by the main app to switch to workouts tab
+              },
+            ),
           ),
         );
+
+        // Notify the parent to switch to workouts tab
+        // We'll do this by sending a custom notification
+        _notifyWorkoutGenerated(context);
       }
     } catch (e) {
       setState(() {
@@ -111,6 +124,14 @@ class _WorkoutTemplateDetailScreenState
 
     if (result == true) {
       _loadTemplate();
+    }
+  }
+
+  void _notifyWorkoutGenerated(BuildContext context) {
+    if (widget.onWorkoutGenerated != null) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        widget.onWorkoutGenerated!();
+      });
     }
   }
 

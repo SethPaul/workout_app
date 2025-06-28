@@ -8,11 +8,13 @@ import 'package:workout_app/screens/workout_template_detail_screen.dart';
 class WorkoutTemplatesScreen extends StatefulWidget {
   final WorkoutTemplateService templateService;
   final WorkoutService? workoutService;
+  final VoidCallback? onWorkoutGenerated;
 
   const WorkoutTemplatesScreen({
     super.key,
     required this.templateService,
     this.workoutService,
+    this.onWorkoutGenerated,
   });
 
   @override
@@ -161,6 +163,7 @@ class _WorkoutTemplatesScreenState extends State<WorkoutTemplatesScreen> {
                     templateService: widget.templateService,
                     templateId: template.id,
                     workoutService: widget.workoutService,
+                    onWorkoutGenerated: widget.onWorkoutGenerated,
                   ),
                 ),
               );

@@ -22,7 +22,11 @@ class SQLiteWorkoutRepository implements WorkoutRepository {
   Future<List<Workout>> getAllWorkouts() async {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query('workouts');
-    return List.generate(maps.length, (i) => _workoutFromMap(maps[i]));
+    final List<Workout> workouts = [];
+    for (final map in maps) {
+      workouts.add(await _workoutFromMap(map));
+    }
+    return workouts;
   }
 
   @override
@@ -34,7 +38,7 @@ class SQLiteWorkoutRepository implements WorkoutRepository {
       whereArgs: [id],
     );
     if (maps.isEmpty) return null;
-    return _workoutFromMap(maps.first);
+    return await _workoutFromMap(maps.first);
   }
 
   @override
@@ -43,9 +47,13 @@ class SQLiteWorkoutRepository implements WorkoutRepository {
     final List<Map<String, dynamic>> maps = await db.query(
       'workouts',
       where: 'format = ?',
-      whereArgs: [format.toString()],
+      whereArgs: [format.toString().split('.').last],
     );
-    return List.generate(maps.length, (i) => _workoutFromMap(maps[i]));
+    final List<Workout> workouts = [];
+    for (final map in maps) {
+      workouts.add(await _workoutFromMap(map));
+    }
+    return workouts;
   }
 
   @override
@@ -54,41 +62,106 @@ class SQLiteWorkoutRepository implements WorkoutRepository {
     final List<Map<String, dynamic>> maps = await db.query(
       'workouts',
       where: 'intensity = ?',
-      whereArgs: [intensity.toString()],
+      whereArgs: [intensity.toString().split('.').last],
     );
-    return List.generate(maps.length, (i) => _workoutFromMap(maps[i]));
+    final List<Workout> workouts = [];
+    for (final map in maps) {
+      workouts.add(await _workoutFromMap(map));
+    }
+    return workouts;
   }
 
   @override
   Future<String> createWorkout(Workout workout) async {
     final db = await _dbHelper.database;
-    await db.insert(
-      'workouts',
-      _workoutToMap(workout),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+
+    await db.transaction((txn) async {
+      // Save workout metadata
+      await txn.insert(
+        'workouts',
+        _workoutToMap(workout),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+
+      // Save individual movements
+      for (final movement in workout.movements) {
+        await txn.insert(
+          'workout_movements',
+          {
+            'id': '${workout.id}_${workout.movements.indexOf(movement)}',
+            'workout_id': workout.id,
+            'movement_id': movement.movementId,
+            'reps': movement.reps,
+            'time_in_seconds': movement.timeInSeconds,
+            'weight': movement.weight,
+            'scaling_option': movement.scalingOption,
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    });
+
     return workout.id;
   }
 
   @override
   Future<void> updateWorkout(Workout workout) async {
     final db = await _dbHelper.database;
-    await db.update(
-      'workouts',
-      _workoutToMap(workout),
-      where: 'id = ?',
-      whereArgs: [workout.id],
-    );
+
+    await db.transaction((txn) async {
+      // Update workout metadata
+      await txn.update(
+        'workouts',
+        _workoutToMap(workout),
+        where: 'id = ?',
+        whereArgs: [workout.id],
+      );
+
+      // Delete existing movements
+      await txn.delete(
+        'workout_movements',
+        where: 'workout_id = ?',
+        whereArgs: [workout.id],
+      );
+
+      // Insert updated movements
+      for (final movement in workout.movements) {
+        await txn.insert(
+          'workout_movements',
+          {
+            'id': '${workout.id}_${workout.movements.indexOf(movement)}',
+            'workout_id': workout.id,
+            'movement_id': movement.movementId,
+            'reps': movement.reps,
+            'time_in_seconds': movement.timeInSeconds,
+            'weight': movement.weight,
+            'scaling_option': movement.scalingOption,
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    });
   }
 
   @override
   Future<void> deleteWorkout(String id) async {
     final db = await _dbHelper.database;
-    await db.delete(
-      'workouts',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+
+    await db.transaction((txn) async {
+      // Delete movements first
+      await txn.delete(
+        'workout_movements',
+        where: 'workout_id = ?',
+        whereArgs: [id],
+      );
+
+      // Then delete workout
+      await txn.delete(
+        'workouts',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    });
   }
 
   @override
@@ -107,46 +180,39 @@ class SQLiteWorkoutRepository implements WorkoutRepository {
       'id': workout.id,
       'name': workout.name,
       'description': workout.description,
-      'format': workout.format.toString(),
-      'intensity': workout.intensity.toString(),
-      'movements':
-          jsonEncode(workout.movements.map((m) => m.toJson()).toList()),
+      'format': workout.format.toString().split('.').last,
+      'intensity': workout.intensity.toString().split('.').last,
       'rounds': workout.rounds,
       'duration': workout.duration,
       'time_cap_in_minutes': workout.timeCapInMinutes,
-      'format_specific_settings': jsonEncode(workout.formatSpecificSettings),
+      'format_specific_settings': workout.formatSpecificSettings != null
+          ? jsonEncode(workout.formatSpecificSettings!)
+          : null,
       'created_at': workout.createdAt.toIso8601String(),
       'completed_at': workout.completedAt?.toIso8601String(),
       'notes': workout.notes,
     };
   }
 
-  Workout _workoutFromMap(Map<String, dynamic> map) {
-    return Workout(
-      id: map['id'] as String,
-      name: map['name'] as String,
-      description: map['description'] as String?,
-      format: WorkoutFormat.values.firstWhere(
-        (e) => e.toString() == 'WorkoutFormat.${map['format']}',
-      ),
-      intensity: IntensityLevel.values.firstWhere(
-        (e) => e.toString() == 'IntensityLevel.${map['intensity']}',
-      ),
-      movements: (jsonDecode(map['movements'] as String) as List)
-          .map((m) => WorkoutMovement.fromJson(m as Map<String, dynamic>))
-          .toList(),
-      rounds: map['rounds'] as int?,
-      duration: map['duration'] as int? ?? 30,
-      timeCapInMinutes: map['time_cap_in_minutes'] as int?,
-      formatSpecificSettings: map['format_specific_settings'] != null
-          ? jsonDecode(map['format_specific_settings'] as String)
-              as Map<String, dynamic>
-          : null,
-      completedAt: map['completed_at'] != null
-          ? DateTime.parse(map['completed_at'] as String)
-          : null,
-      createdAt: DateTime.parse(map['created_at'] as String),
-      notes: map['notes'] as String?,
+  Future<Workout> _workoutFromMap(Map<String, dynamic> map) async {
+    // Load movements from separate table
+    final db = await _dbHelper.database;
+    final movementMaps = await db.query(
+      'workout_movements',
+      where: 'workout_id = ?',
+      whereArgs: [map['id']],
     );
+
+    final movements = movementMaps
+        .map((movementMap) => WorkoutMovement(
+              movementId: movementMap['movement_id'] as String,
+              reps: movementMap['reps'] as int,
+              weight: movementMap['weight'] as double?,
+              scalingOption: movementMap['scaling_option'] as String?,
+              timeInSeconds: movementMap['time_in_seconds'] as int?,
+            ))
+        .toList();
+
+    return Workout.fromMap(map, movements: movements);
   }
 }
