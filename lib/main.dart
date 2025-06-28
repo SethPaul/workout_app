@@ -3,9 +3,7 @@ import 'package:workout_app/data/repositories/movement_repository.dart';
 import 'package:workout_app/data/repositories/workout_repository.dart';
 import 'package:workout_app/data/repositories/workout_template_repository.dart';
 import 'package:workout_app/data/repositories/user_progress_repository.dart';
-import 'package:workout_app/data/models/workout_template.dart';
-import 'package:workout_app/data/models/workout.dart';
-import 'package:workout_app/data/models/movement.dart';
+// Removed unused imports: workout_template.dart, workout.dart, movement.dart
 import 'package:workout_app/screens/workout_list_screen.dart';
 import 'package:workout_app/screens/workout_history_screen.dart';
 import 'package:workout_app/screens/workout_templates_screen.dart';
@@ -18,7 +16,7 @@ import 'package:workout_app/services/movement_data_service.dart';
 import 'package:workout_app/data/database/database_helper.dart';
 import 'package:workout_app/screens/onboarding_screen.dart';
 import 'package:logger/logger.dart';
-import 'package:mcp_toolkit/mcp_toolkit.dart';
+// import 'package:mcp_toolkit/mcp_toolkit.dart'; // Temporarily disabled due to dependency conflicts
 import 'dart:async';
 
 void main() async {
@@ -27,9 +25,10 @@ void main() async {
       WidgetsFlutterBinding.ensureInitialized();
 
       // Initialize MCP Toolkit for AI-powered debugging and development
-      MCPToolkitBinding.instance
-        ..initialize() // Initializes the Toolkit
-        ..initializeFlutterToolkit(); // Adds Flutter related methods to the MCP server
+      // TODO: Re-enable when mcp_toolkit dependency issues are resolved
+      // MCPToolkitBinding.instance
+      //   ..initialize() // Initializes the Toolkit
+      //   ..initializeFlutterToolkit(); // Adds Flutter related methods to the MCP server
 
       try {
         final logger = Logger();
@@ -118,7 +117,10 @@ void main() async {
     },
     (error, stack) {
       // Critical for MCP error capturing - ensures errors are captured and available to MCP server
-      MCPToolkitBinding.instance.handleZoneError(error, stack);
+      // TODO: Re-enable when mcp_toolkit dependency issues are resolved
+      // MCPToolkitBinding.instance.handleZoneError(error, stack);
+      final logger = Logger();
+      logger.e('Unhandled error in zone', error: error, stackTrace: stack);
     },
   );
 }
