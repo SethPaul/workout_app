@@ -71,6 +71,10 @@ class FilterMovements extends MovementEvent {
   });
 
   @override
-  List<Object?> get props =>
-      [query, categories, equipmentTypes, isMainMovement];
+  List<Object?> get props => [
+    query,
+    categories,
+    equipmentTypes,
+    isMainMovement,
+  ];
 }

@@ -13,9 +13,9 @@ class WorkoutService {
     required WorkoutRepository repository,
     required WorkoutTemplateService templateService,
     required DatabaseHelper databaseHelper,
-  })  : _repository = repository,
-        _templateService = templateService,
-        _databaseHelper = databaseHelper;
+  }) : _repository = repository,
+       _templateService = templateService,
+       _databaseHelper = databaseHelper;
 
   // Expose template service for UI access
   WorkoutTemplateService get templateService => _templateService;
@@ -37,8 +37,9 @@ class WorkoutService {
   }
 
   Future<String> createWorkoutFromTemplate(String templateId) async {
-    final workout =
-        await _templateService.generateWorkoutFromTemplate(templateId);
+    final workout = await _templateService.generateWorkoutFromTemplate(
+      templateId,
+    );
     return _repository.createWorkout(workout);
   }
 
@@ -51,16 +52,16 @@ class WorkoutService {
     List<EquipmentType>? availableEquipment,
     bool? isMainMovementOnly,
   }) async {
-    final workout =
-        await _templateService.generateWorkoutFromTemplateWithModifications(
-      templateId,
-      format: format,
-      intensity: intensity,
-      targetDuration: targetDuration,
-      preferredCategories: preferredCategories,
-      availableEquipment: availableEquipment,
-      isMainMovementOnly: isMainMovementOnly,
-    );
+    final workout = await _templateService
+        .generateWorkoutFromTemplateWithModifications(
+          templateId,
+          format: format,
+          intensity: intensity,
+          targetDuration: targetDuration,
+          preferredCategories: preferredCategories,
+          availableEquipment: availableEquipment,
+          isMainMovementOnly: isMainMovementOnly,
+        );
     return _repository.createWorkout(workout);
   }
 

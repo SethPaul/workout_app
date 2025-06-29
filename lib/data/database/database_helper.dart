@@ -328,7 +328,8 @@ class DatabaseHelper {
         await db.execute('''DROP TABLE workout_movements_backup''');
 
         _logger.i(
-            'Successfully separated movement library from workout movements');
+          'Successfully separated movement library from workout movements',
+        );
       }
 
       _logger.i('Database upgrade completed successfully');

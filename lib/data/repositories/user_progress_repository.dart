@@ -8,10 +8,15 @@ abstract class UserProgressRepository {
   Future<void> saveUserProgress(UserProgress userProgress);
   Future<void> addWorkoutResult(String userId, WorkoutResult workoutResult);
   Future<void> updateMovementProgress(
-      String userId, String movementId, MovementProgress progress);
+    String userId,
+    String movementId,
+    MovementProgress progress,
+  );
   Future<List<WorkoutResult>> getWorkoutHistory(String userId, {int? limit});
   Future<MovementProgress?> getMovementProgress(
-      String userId, String movementId);
+    String userId,
+    String movementId,
+  );
   Future<void> deleteUserProgress(String userId);
 }
 
@@ -41,8 +46,9 @@ class SQLiteUserProgressRepository implements UserProgressRepository {
       orderBy: 'completed_at DESC',
     );
 
-    final workoutHistory =
-        workoutMaps.map((map) => _workoutResultFromMap(map)).toList();
+    final workoutHistory = workoutMaps
+        .map((map) => _workoutResultFromMap(map))
+        .toList();
 
     // Get movement progress
     final List<Map<String, dynamic>> movementMaps = await db.query(
@@ -68,7 +74,7 @@ class SQLiteUserProgressRepository implements UserProgressRepository {
           : null,
       achievements: userMap['achievements'] != null
           ? jsonDecode(userMap['achievements'] as String)
-              as Map<String, dynamic>
+                as Map<String, dynamic>
           : null,
       isFirstRun: (userMap['is_first_run'] as int? ?? 1) == 1,
       hasAcceptedDefaultWorkouts:
@@ -124,7 +130,9 @@ class SQLiteUserProgressRepository implements UserProgressRepository {
 
   @override
   Future<void> addWorkoutResult(
-      String userId, WorkoutResult workoutResult) async {
+    String userId,
+    WorkoutResult workoutResult,
+  ) async {
     final db = await _dbHelper.database;
 
     await db.transaction((txn) async {
@@ -159,17 +167,17 @@ class SQLiteUserProgressRepository implements UserProgressRepository {
           totalWorkoutsCompleted: 1,
         );
 
-        await txn.insert(
-          'user_progress',
-          _userProgressToMap(newProgress),
-        );
+        await txn.insert('user_progress', _userProgressToMap(newProgress));
       }
     });
   }
 
   @override
   Future<void> updateMovementProgress(
-      String userId, String movementId, MovementProgress progress) async {
+    String userId,
+    String movementId,
+    MovementProgress progress,
+  ) async {
     final db = await _dbHelper.database;
 
     await db.insert(
@@ -180,8 +188,10 @@ class SQLiteUserProgressRepository implements UserProgressRepository {
   }
 
   @override
-  Future<List<WorkoutResult>> getWorkoutHistory(String userId,
-      {int? limit}) async {
+  Future<List<WorkoutResult>> getWorkoutHistory(
+    String userId, {
+    int? limit,
+  }) async {
     final db = await _dbHelper.database;
 
     final List<Map<String, dynamic>> maps = await db.query(
@@ -197,7 +207,9 @@ class SQLiteUserProgressRepository implements UserProgressRepository {
 
   @override
   Future<MovementProgress?> getMovementProgress(
-      String userId, String movementId) async {
+    String userId,
+    String movementId,
+  ) async {
     final db = await _dbHelper.database;
 
     final List<Map<String, dynamic>> maps = await db.query(
@@ -241,21 +253,25 @@ class SQLiteUserProgressRepository implements UserProgressRepository {
       'user_id': userProgress.userId,
       'last_workout_date': userProgress.lastWorkoutDate.toIso8601String(),
       'total_workouts_completed': userProgress.totalWorkoutsCompleted,
-      'goals':
-          userProgress.goals != null ? jsonEncode(userProgress.goals) : null,
+      'goals': userProgress.goals != null
+          ? jsonEncode(userProgress.goals)
+          : null,
       'achievements': userProgress.achievements != null
           ? jsonEncode(userProgress.achievements)
           : null,
       'is_first_run': userProgress.isFirstRun ? 1 : 0,
-      'has_accepted_default_workouts':
-          userProgress.hasAcceptedDefaultWorkouts ? 1 : 0,
-      'onboarding_completed_at':
-          userProgress.onboardingCompletedAt?.toIso8601String(),
+      'has_accepted_default_workouts': userProgress.hasAcceptedDefaultWorkouts
+          ? 1
+          : 0,
+      'onboarding_completed_at': userProgress.onboardingCompletedAt
+          ?.toIso8601String(),
     };
   }
 
   Map<String, dynamic> _workoutResultToMap(
-      String userId, WorkoutResult result) {
+    String userId,
+    WorkoutResult result,
+  ) {
     return {
       'user_id': userId,
       'workout_id': result.workoutId,
@@ -281,14 +297,16 @@ class SQLiteUserProgressRepository implements UserProgressRepository {
       maxWeight: map['max_weight'] as double?,
       performanceMetrics: map['performance_metrics'] != null
           ? jsonDecode(map['performance_metrics'] as String)
-              as Map<String, dynamic>
+                as Map<String, dynamic>
           : null,
       notes: map['notes'] as String?,
     );
   }
 
   Map<String, dynamic> _movementProgressToMap(
-      String userId, MovementProgress progress) {
+    String userId,
+    MovementProgress progress,
+  ) {
     return {
       'user_id': userId,
       'movement_id': progress.movementId,
@@ -311,7 +329,7 @@ class SQLiteUserProgressRepository implements UserProgressRepository {
       lastUpdated: DateTime.parse(map['last_updated'] as String),
       personalRecords: map['personal_records'] != null
           ? jsonDecode(map['personal_records'] as String)
-              as Map<String, dynamic>
+                as Map<String, dynamic>
           : null,
     );
   }

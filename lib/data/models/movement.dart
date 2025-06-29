@@ -31,11 +31,7 @@ enum MuscleGroup {
   fullBody,
 }
 
-enum DifficultyLevel {
-  beginner,
-  intermediate,
-  advanced,
-}
+enum DifficultyLevel { beginner, intermediate, advanced }
 
 class Movement extends Equatable {
   final String id;
@@ -68,19 +64,19 @@ class Movement extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        description,
-        categories,
-        requiredEquipment,
-        muscleGroups,
-        difficultyLevel,
-        isMainMovement,
-        scalingOptions,
-        guidelines,
-        videoUrl,
-        imageUrl,
-      ];
+    id,
+    name,
+    description,
+    categories,
+    requiredEquipment,
+    muscleGroups,
+    difficultyLevel,
+    isMainMovement,
+    scalingOptions,
+    guidelines,
+    videoUrl,
+    imageUrl,
+  ];
 
   factory Movement.fromJson(Map<String, dynamic> json) {
     return Movement(
@@ -88,19 +84,30 @@ class Movement extends Equatable {
       name: json['name'] as String,
       description: json['description'] as String,
       categories: (json['categories'] as List)
-          .map((e) => MovementCategory.values
-              .firstWhere((type) => type.toString() == 'MovementCategory.$e'))
+          .map(
+            (e) => MovementCategory.values.firstWhere(
+              (type) => type.toString() == 'MovementCategory.$e',
+            ),
+          )
           .toList(),
       requiredEquipment: (json['requiredEquipment'] as List)
-          .map((e) => EquipmentType.values
-              .firstWhere((type) => type.toString() == 'EquipmentType.$e'))
+          .map(
+            (e) => EquipmentType.values.firstWhere(
+              (type) => type.toString() == 'EquipmentType.$e',
+            ),
+          )
           .toList(),
       muscleGroups: (json['muscleGroups'] as List)
-          .map((e) => MuscleGroup.values
-              .firstWhere((group) => group.toString() == 'MuscleGroup.$e'))
+          .map(
+            (e) => MuscleGroup.values.firstWhere(
+              (group) => group.toString() == 'MuscleGroup.$e',
+            ),
+          )
           .toList(),
-      difficultyLevel: DifficultyLevel.values.firstWhere((level) =>
-          level.toString() == 'DifficultyLevel.${json['difficultyLevel']}'),
+      difficultyLevel: DifficultyLevel.values.firstWhere(
+        (level) =>
+            level.toString() == 'DifficultyLevel.${json['difficultyLevel']}',
+      ),
       scalingOptions: Map<String, String>.from(json['scalingOptions'] as Map),
       guidelines: json['guidelines'] as Map<String, dynamic>,
       isMainMovement: json['isMainMovement'] as bool? ?? false,
@@ -114,12 +121,15 @@ class Movement extends Equatable {
       'id': id,
       'name': name,
       'description': description,
-      'categories':
-          categories.map((e) => e.toString().split('.').last).toList(),
-      'requiredEquipment':
-          requiredEquipment.map((e) => e.toString().split('.').last).toList(),
-      'muscleGroups':
-          muscleGroups.map((e) => e.toString().split('.').last).toList(),
+      'categories': categories
+          .map((e) => e.toString().split('.').last)
+          .toList(),
+      'requiredEquipment': requiredEquipment
+          .map((e) => e.toString().split('.').last)
+          .toList(),
+      'muscleGroups': muscleGroups
+          .map((e) => e.toString().split('.').last)
+          .toList(),
       'difficultyLevel': difficultyLevel.toString().split('.').last,
       'scalingOptions': scalingOptions,
       'guidelines': guidelines,

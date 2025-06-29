@@ -1,8 +1,8 @@
-import 'package:audioplayers/audioplayers.dart';
+// import 'package:audioplayers/audioplayers.dart'; // Temporarily disabled due to dependency conflicts
 import 'package:workout_app/data/models/workout.dart';
 
 class AudioCueService {
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  // final AudioPlayer _audioPlayer = AudioPlayer(); // Temporarily disabled
   bool _isMuted = false;
   bool _isInitialized = false;
 
@@ -13,9 +13,11 @@ class AudioCueService {
   static const String _countdownSound = 'audio/countdown.mp3';
 
   Future<void> initialize() async {
+    // TODO: Re-enable when audioplayers dependency issues are resolved
     try {
-      await _audioPlayer.setSource(AssetSource(_beepSound));
-      _isInitialized = true;
+      // await _audioPlayer.setSource(AssetSource(_beepSound));
+      _isInitialized = false; // Disabled until dependency is restored
+      _isMuted = true; // Auto-mute since audio is disabled
     } catch (e) {
       // Audio initialization failed, disable audio features
       print('AudioCueService: Failed to initialize audio - $e');
@@ -35,7 +37,9 @@ class AudioCueService {
     if (_isMuted || !_isInitialized) return;
 
     try {
-      await _audioPlayer.play(AssetSource(soundPath));
+      // TODO: Re-enable when audioplayers dependency issues are resolved
+      // await _audioPlayer.play(AssetSource(soundPath));
+      print('AudioCueService: Would play $soundPath (audio disabled)');
     } catch (e) {
       // Silently handle audio playback errors
       print('AudioCueService: Failed to play $soundPath - $e');
@@ -83,7 +87,9 @@ class AudioCueService {
   }
 
   Future<void> playFormatSpecificCue(
-      WorkoutFormat format, int secondsRemaining) async {
+    WorkoutFormat format,
+    int secondsRemaining,
+  ) async {
     if (_isMuted || !_isInitialized) return;
 
     switch (format) {
@@ -138,7 +144,9 @@ class AudioCueService {
 
   void dispose() {
     try {
-      _audioPlayer.dispose();
+      // TODO: Re-enable when audioplayers dependency issues are resolved
+      // _audioPlayer.dispose();
+      print('AudioCueService: Audio player disposal skipped (audio disabled)');
     } catch (e) {
       print('AudioCueService: Error disposing audio player - $e');
     }

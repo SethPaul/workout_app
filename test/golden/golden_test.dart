@@ -25,10 +25,7 @@ void main() {
 
       // Build widget
       await tester.pumpWidgetBuilder(
-        MovementCard(
-          movement: movement,
-          onTap: () {},
-        ),
+        MovementCard(movement: movement, onTap: () {}),
         surfaceSize: const Size(400, 200),
       );
 
@@ -63,10 +60,7 @@ void main() {
 
       for (int i = 0; i < movements.length; i++) {
         await tester.pumpWidgetBuilder(
-          MovementCard(
-            movement: movements[i],
-            onTap: () {},
-          ),
+          MovementCard(movement: movements[i], onTap: () {}),
           surfaceSize: const Size(400, 200),
         );
 
@@ -85,10 +79,8 @@ void main() {
           key: const Key('movement_list'),
           child: ListView.builder(
             itemCount: movements.length,
-            itemBuilder: (context, index) => MovementCard(
-              movement: movements[index],
-              onTap: () {},
-            ),
+            itemBuilder: (context, index) =>
+                MovementCard(movement: movements[index], onTap: () {}),
           ),
         ),
         surfaceSize: const Size(400, 600),
@@ -106,26 +98,16 @@ void main() {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.fitness_center,
-                size: 64,
-                color: Colors.grey,
-              ),
+              Icon(Icons.fitness_center, size: 64, color: Colors.grey),
               SizedBox(height: 16),
               Text(
                 'No movements found',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.grey,
-                ),
+                style: TextStyle(fontSize: 18, color: Colors.grey),
               ),
               SizedBox(height: 8),
               Text(
                 'Try adjusting your filters',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey),
               ),
             ],
           ),
@@ -166,32 +148,19 @@ void main() {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.red,
-              ),
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: 16),
               const Text(
                 'Something went wrong',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.red,
-                ),
+                style: TextStyle(fontSize: 18, color: Colors.red),
               ),
               const SizedBox(height: 8),
               const Text(
                 'Please try again',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey),
               ),
               const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {},
-                child: const Text('Retry'),
-              ),
+              ElevatedButton(onPressed: () {}, child: const Text('Retry')),
             ],
           ),
         ),

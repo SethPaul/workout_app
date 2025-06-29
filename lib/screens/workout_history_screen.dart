@@ -6,10 +6,7 @@ import 'package:intl/intl.dart';
 class WorkoutHistoryScreen extends StatefulWidget {
   final WorkoutService workoutService;
 
-  const WorkoutHistoryScreen({
-    super.key,
-    required this.workoutService,
-  });
+  const WorkoutHistoryScreen({super.key, required this.workoutService});
 
   @override
   State<WorkoutHistoryScreen> createState() => _WorkoutHistoryScreenState();
@@ -61,12 +58,14 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
     // Apply sort
     switch (_selectedSort) {
       case 'Newest':
-        filteredWorkouts
-            .sort((a, b) => b.completedAt!.compareTo(a.completedAt!));
+        filteredWorkouts.sort(
+          (a, b) => b.completedAt!.compareTo(a.completedAt!),
+        );
         break;
       case 'Oldest':
-        filteredWorkouts
-            .sort((a, b) => a.completedAt!.compareTo(b.completedAt!));
+        filteredWorkouts.sort(
+          (a, b) => a.completedAt!.compareTo(b.completedAt!),
+        );
         break;
       case 'Duration':
         filteredWorkouts.sort((a, b) => b.duration.compareTo(a.duration));
@@ -107,10 +106,7 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
-            Text(
-              _error!,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            Text(_error!, style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadWorkoutHistory,
@@ -128,11 +124,7 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.fitness_center,
-              size: 64,
-              color: Colors.grey,
-            ),
+            const Icon(Icons.fitness_center, size: 64, color: Colors.grey),
             const SizedBox(height: 16),
             Text(
               'No completed workouts yet',
@@ -162,12 +154,8 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                 Text(
                   'Completed: ${DateFormat('MMM d, y').format(workout.completedAt!)}',
                 ),
-                Text(
-                  'Duration: ${workout.duration} minutes',
-                ),
-                Text(
-                  'Format: ${workout.format.toString().split('.').last}',
-                ),
+                Text('Duration: ${workout.duration} minutes'),
+                Text('Format: ${workout.format.toString().split('.').last}'),
               ],
             ),
             trailing: const Icon(Icons.chevron_right),
@@ -191,16 +179,18 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
             const Text('Filter by Format'),
             DropdownButton<String>(
               value: _selectedFilter,
-              items: [
-                'All',
-                ...WorkoutFormat.values
-                    .map((f) => f.toString().split('.').last),
-              ].map((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
+              items:
+                  [
+                    'All',
+                    ...WorkoutFormat.values.map(
+                      (f) => f.toString().split('.').last,
+                    ),
+                  ].map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
               onChanged: (String? newValue) {
                 if (newValue != null) {
                   setState(() {

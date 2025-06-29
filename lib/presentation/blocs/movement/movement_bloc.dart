@@ -35,12 +35,15 @@ class MovementBloc extends Bloc<MovementEvent, MovementState> {
   ) async {
     try {
       emit(const MovementLoading());
-      final movements =
-          await _movementRepository.getMovementsByCategory(event.category);
-      emit(MovementLoaded(
-        movements: movements,
-        selectedCategories: [event.category],
-      ));
+      final movements = await _movementRepository.getMovementsByCategory(
+        event.category,
+      );
+      emit(
+        MovementLoaded(
+          movements: movements,
+          selectedCategories: [event.category],
+        ),
+      );
     } catch (e) {
       emit(MovementError(e.toString()));
     }
@@ -59,10 +62,9 @@ class MovementBloc extends Bloc<MovementEvent, MovementState> {
           emit(currentState.copyWith(selectedMovement: movement));
         } else {
           final movements = await _movementRepository.getAllMovements();
-          emit(MovementLoaded(
-            movements: movements,
-            selectedMovement: movement,
-          ));
+          emit(
+            MovementLoaded(movements: movements, selectedMovement: movement),
+          );
         }
       } else {
         emit(const MovementError('Movement not found'));
@@ -122,23 +124,29 @@ class MovementBloc extends Bloc<MovementEvent, MovementState> {
       final currentState = state;
       if (currentState is MovementLoaded) {
         final filteredMovements = currentState.movements.where((movement) {
-          final matchesQuery = event.query.isEmpty ||
+          final matchesQuery =
+              event.query.isEmpty ||
               movement.name.toLowerCase().contains(event.query.toLowerCase()) ||
-              movement.description
-                  .toLowerCase()
-                  .contains(event.query.toLowerCase());
+              movement.description.toLowerCase().contains(
+                event.query.toLowerCase(),
+              );
 
-          final matchesCategories = event.categories == null ||
+          final matchesCategories =
+              event.categories == null ||
               event.categories!.isEmpty ||
-              movement.categories
-                  .any((category) => event.categories!.contains(category));
+              movement.categories.any(
+                (category) => event.categories!.contains(category),
+              );
 
-          final matchesEquipment = event.equipmentTypes == null ||
+          final matchesEquipment =
+              event.equipmentTypes == null ||
               event.equipmentTypes!.isEmpty ||
               movement.requiredEquipment.any(
-                  (equipment) => event.equipmentTypes!.contains(equipment));
+                (equipment) => event.equipmentTypes!.contains(equipment),
+              );
 
-          final matchesMainMovement = event.isMainMovement == null ||
+          final matchesMainMovement =
+              event.isMainMovement == null ||
               movement.isMainMovement == event.isMainMovement;
 
           return matchesQuery &&
@@ -147,13 +155,15 @@ class MovementBloc extends Bloc<MovementEvent, MovementState> {
               matchesMainMovement;
         }).toList();
 
-        emit(currentState.copyWith(
-          movements: filteredMovements,
-          filterQuery: event.query,
-          selectedCategories: event.categories,
-          selectedEquipmentTypes: event.equipmentTypes,
-          isMainMovementFilter: event.isMainMovement,
-        ));
+        emit(
+          currentState.copyWith(
+            movements: filteredMovements,
+            filterQuery: event.query,
+            selectedCategories: event.categories,
+            selectedEquipmentTypes: event.equipmentTypes,
+            isMainMovementFilter: event.isMainMovement,
+          ),
+        );
       }
     } catch (e) {
       emit(MovementError(e.toString()));

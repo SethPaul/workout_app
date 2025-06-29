@@ -35,8 +35,9 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
     });
 
     try {
-      final workout =
-          await widget.workoutService.getWorkoutById(widget.workoutId);
+      final workout = await widget.workoutService.getWorkoutById(
+        widget.workoutId,
+      );
       setState(() {
         _workout = workout;
         _isLoading = false;
@@ -92,11 +93,9 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error deleting workout: $e'),
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error deleting workout: $e')));
         }
       }
     }
@@ -108,10 +107,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
       appBar: AppBar(
         title: const Text('Workout Details'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: _deleteWorkout,
-          ),
+          IconButton(icon: const Icon(Icons.delete), onPressed: _deleteWorkout),
         ],
       ),
       body: _buildBody(),
@@ -140,24 +136,16 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
-            Text(
-              _error!,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            Text(_error!, style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadWorkout,
-              child: const Text('Retry'),
-            ),
+            ElevatedButton(onPressed: _loadWorkout, child: const Text('Retry')),
           ],
         ),
       );
     }
 
     if (_workout == null) {
-      return const Center(
-        child: Text('Workout not found'),
-      );
+      return const Center(child: Text('Workout not found'));
     }
 
     return SingleChildScrollView(
@@ -186,11 +174,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
             Icons.fitness_center,
           ),
           if (_workout!.rounds != null)
-            _buildInfoSection(
-              'Rounds',
-              '${_workout!.rounds}',
-              Icons.repeat,
-            ),
+            _buildInfoSection('Rounds', '${_workout!.rounds}', Icons.repeat),
           if (_workout!.timeCapInMinutes != null)
             _buildInfoSection(
               'Time Cap',
@@ -198,10 +182,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
               Icons.access_time,
             ),
           const SizedBox(height: 24),
-          Text(
-            'Movements',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text('Movements', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
           ListView.builder(
             shrinkWrap: true,
@@ -231,10 +212,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
           ),
           if (_workout!.notes != null) ...[
             const SizedBox(height: 24),
-            Text(
-              'Notes',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
+            Text('Notes', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             Text(
               _workout!.notes!,
@@ -258,15 +236,9 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
+                Text(title, style: Theme.of(context).textTheme.titleSmall),
                 const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
+                Text(value, style: Theme.of(context).textTheme.bodyLarge),
               ],
             ),
           ),

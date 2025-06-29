@@ -40,7 +40,8 @@ class SQLiteMovementRepository implements MovementRepository {
 
   @override
   Future<List<Movement>> getMovementsByCategory(
-      MovementCategory category) async {
+    MovementCategory category,
+  ) async {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query('movement_library');
     return maps
@@ -51,7 +52,8 @@ class SQLiteMovementRepository implements MovementRepository {
 
   @override
   Future<List<Movement>> getMovementsByEquipment(
-      EquipmentType equipment) async {
+    EquipmentType equipment,
+  ) async {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query('movement_library');
     return maps
@@ -62,7 +64,8 @@ class SQLiteMovementRepository implements MovementRepository {
 
   @override
   Future<List<Movement>> getMovementsByDifficulty(
-      DifficultyLevel difficulty) async {
+    DifficultyLevel difficulty,
+  ) async {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
       'movement_library',
@@ -108,11 +111,7 @@ class SQLiteMovementRepository implements MovementRepository {
   @override
   Future<void> deleteMovement(String id) async {
     final db = await _dbHelper.database;
-    await db.delete(
-      'movement_library',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await db.delete('movement_library', where: 'id = ?', whereArgs: [id]);
   }
 
   Map<String, dynamic> _movementToMap(Movement movement) {
@@ -120,15 +119,17 @@ class SQLiteMovementRepository implements MovementRepository {
       'id': movement.id,
       'name': movement.name,
       'description': movement.description,
-      'categories': jsonEncode(movement.categories
-          .map((c) => c.toString().split('.').last)
-          .toList()),
-      'requiredEquipment': jsonEncode(movement.requiredEquipment
-          .map((e) => e.toString().split('.').last)
-          .toList()),
-      'muscleGroups': jsonEncode(movement.muscleGroups
-          .map((m) => m.toString().split('.').last)
-          .toList()),
+      'categories': jsonEncode(
+        movement.categories.map((c) => c.toString().split('.').last).toList(),
+      ),
+      'requiredEquipment': jsonEncode(
+        movement.requiredEquipment
+            .map((e) => e.toString().split('.').last)
+            .toList(),
+      ),
+      'muscleGroups': jsonEncode(
+        movement.muscleGroups.map((m) => m.toString().split('.').last).toList(),
+      ),
       'difficultyLevel': movement.difficultyLevel.toString().split('.').last,
       'isMainMovement': movement.isMainMovement ? 1 : 0,
       'scalingOptions': jsonEncode(movement.scalingOptions),
@@ -144,24 +145,34 @@ class SQLiteMovementRepository implements MovementRepository {
       name: map['name'] as String,
       description: map['description'] as String,
       categories: (jsonDecode(map['categories'] as String) as List)
-          .map((c) => MovementCategory.values
-              .firstWhere((mc) => mc.toString() == 'MovementCategory.$c'))
+          .map(
+            (c) => MovementCategory.values.firstWhere(
+              (mc) => mc.toString() == 'MovementCategory.$c',
+            ),
+          )
           .toList(),
       requiredEquipment:
           (jsonDecode(map['requiredEquipment'] as String) as List)
-              .map((e) => EquipmentType.values
-                  .firstWhere((et) => et.toString() == 'EquipmentType.$e'))
+              .map(
+                (e) => EquipmentType.values.firstWhere(
+                  (et) => et.toString() == 'EquipmentType.$e',
+                ),
+              )
               .toList(),
       muscleGroups: (jsonDecode(map['muscleGroups'] as String) as List)
-          .map((m) => MuscleGroup.values
-              .firstWhere((mg) => mg.toString() == 'MuscleGroup.$m'))
+          .map(
+            (m) => MuscleGroup.values.firstWhere(
+              (mg) => mg.toString() == 'MuscleGroup.$m',
+            ),
+          )
           .toList(),
       difficultyLevel: DifficultyLevel.values.firstWhere(
         (e) => e.toString() == 'DifficultyLevel.${map['difficultyLevel']}',
       ),
       isMainMovement: map['isMainMovement'] == 1,
-      scalingOptions:
-          Map<String, String>.from(jsonDecode(map['scalingOptions'] as String)),
+      scalingOptions: Map<String, String>.from(
+        jsonDecode(map['scalingOptions'] as String),
+      ),
       guidelines:
           jsonDecode(map['guidelines'] as String) as Map<String, dynamic>,
       videoUrl: map['videoUrl'] as String?,

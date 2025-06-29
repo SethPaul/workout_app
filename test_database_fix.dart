@@ -15,10 +15,12 @@ void main() async {
 
   try {
     // Create an in-memory database for testing
-    final db = await openDatabase(':memory:', version: 1,
-        onCreate: (db, version) async {
-      // Create workout templates table with snake_case column names
-      await db.execute('''
+    final db = await openDatabase(
+      ':memory:',
+      version: 1,
+      onCreate: (db, version) async {
+        // Create workout templates table with snake_case column names
+        await db.execute('''
         CREATE TABLE workout_templates(
           id TEXT PRIMARY KEY,
           name TEXT NOT NULL,
@@ -35,8 +37,9 @@ void main() async {
           metadata TEXT
         )
       ''');
-      print('Database table created successfully');
-    });
+        print('Database table created successfully');
+      },
+    );
 
     // Create a test template
     final template = WorkoutTemplate(
@@ -77,8 +80,11 @@ void main() async {
     print('Template inserted successfully!');
 
     // Try to query it back
-    final result =
-        await db.query('workout_templates', where: 'id = ?', whereArgs: ['1']);
+    final result = await db.query(
+      'workout_templates',
+      where: 'id = ?',
+      whereArgs: ['1'],
+    );
     print('Template retrieved: $result');
 
     if (result.isNotEmpty) {

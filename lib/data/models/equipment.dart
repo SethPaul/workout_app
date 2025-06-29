@@ -7,7 +7,7 @@ enum EquipmentCategory {
   machine,
   cardio,
   bodyweight,
-  other
+  other,
 }
 
 class Equipment extends Equatable {
@@ -42,7 +42,8 @@ class Equipment extends Equatable {
       id: json['id'] as String,
       name: json['name'] as String,
       category: EquipmentCategory.values.firstWhere(
-          (c) => c.toString() == 'EquipmentCategory.${json['category']}'),
+        (c) => c.toString() == 'EquipmentCategory.${json['category']}',
+      ),
       description: json['description'] as String?,
       weight: json['weight'] as double?,
       unit: json['unit'] as String?,
@@ -102,16 +103,16 @@ class Equipment extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        category,
-        description,
-        weight,
-        unit,
-        isAvailable,
-        location,
-        lastMaintenance,
-        nextMaintenance,
-        specifications,
-      ];
+    id,
+    name,
+    category,
+    description,
+    weight,
+    unit,
+    isAvailable,
+    location,
+    lastMaintenance,
+    nextMaintenance,
+    specifications,
+  ];
 }

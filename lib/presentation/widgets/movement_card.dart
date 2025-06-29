@@ -5,11 +5,7 @@ class MovementCard extends StatelessWidget {
   final Movement movement;
   final VoidCallback onTap;
 
-  const MovementCard({
-    super.key,
-    required this.movement,
-    required this.onTap,
-  });
+  const MovementCard({super.key, required this.movement, required this.onTap});
 
   @override
   Widget build(BuildContext context) {

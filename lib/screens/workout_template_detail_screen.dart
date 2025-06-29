@@ -44,8 +44,9 @@ class _WorkoutTemplateDetailScreenState
     });
 
     try {
-      final template =
-          await widget.templateService.getTemplateById(widget.templateId);
+      final template = await widget.templateService.getTemplateById(
+        widget.templateId,
+      );
       setState(() {
         _template = template;
         _isLoading = false;
@@ -86,7 +87,8 @@ class _WorkoutTemplateDetailScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text(
-                'Workout generated and saved! Switching to your workout list...'),
+              'Workout generated and saved! Switching to your workout list...',
+            ),
             duration: const Duration(seconds: 2),
             action: SnackBarAction(
               label: 'View',
@@ -141,10 +143,7 @@ class _WorkoutTemplateDetailScreenState
       appBar: AppBar(
         title: const Text('Template Details'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: _editTemplate,
-          ),
+          IconButton(icon: const Icon(Icons.edit), onPressed: _editTemplate),
         ],
       ),
       body: _buildBody(),
@@ -166,10 +165,7 @@ class _WorkoutTemplateDetailScreenState
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
-            Text(
-              _error!,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            Text(_error!, style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadTemplate,
@@ -181,9 +177,7 @@ class _WorkoutTemplateDetailScreenState
     }
 
     if (_template == null) {
-      return const Center(
-        child: Text('Template not found'),
-      );
+      return const Center(child: Text('Template not found'));
     }
 
     return SingleChildScrollView(
@@ -272,15 +266,9 @@ class _WorkoutTemplateDetailScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
+                Text(title, style: Theme.of(context).textTheme.titleSmall),
                 const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
+                Text(value, style: Theme.of(context).textTheme.bodyLarge),
               ],
             ),
           ),

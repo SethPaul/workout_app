@@ -8,10 +8,7 @@ import '../../data/models/movement.dart';
 class MovementDetailPage extends StatelessWidget {
   final String movementId;
 
-  const MovementDetailPage({
-    super.key,
-    required this.movementId,
-  });
+  const MovementDetailPage({super.key, required this.movementId});
 
   @override
   Widget build(BuildContext context) {
@@ -19,27 +16,19 @@ class MovementDetailPage extends StatelessWidget {
       builder: (context, state) {
         if (state is MovementLoading) {
           return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
+            body: Center(child: CircularProgressIndicator()),
           );
         }
 
         if (state is MovementError) {
-          return Scaffold(
-            body: Center(
-              child: Text(state.message),
-            ),
-          );
+          return Scaffold(body: Center(child: Text(state.message)));
         }
 
         if (state is MovementLoaded) {
           final movement = state.selectedMovement;
           if (movement == null) {
             return const Scaffold(
-              body: Center(
-                child: Text('Movement not found'),
-              ),
+              body: Center(child: Text('Movement not found')),
             );
           }
 
@@ -138,9 +127,7 @@ class MovementDetailPage extends StatelessWidget {
         }
 
         return const Scaffold(
-          body: Center(
-            child: Text('Something went wrong'),
-          ),
+          body: Center(child: Text('Something went wrong')),
         );
       },
     );

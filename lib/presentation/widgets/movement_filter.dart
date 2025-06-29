@@ -30,10 +30,7 @@ class _MovementFilterState extends State<MovementFilter> {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 16),
-          Text(
-            'Categories',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          Text('Categories', style: Theme.of(context).textTheme.titleMedium),
           Wrap(
             spacing: 8,
             children: MovementCategory.values.map((category) {
@@ -54,10 +51,7 @@ class _MovementFilterState extends State<MovementFilter> {
             }).toList(),
           ),
           const SizedBox(height: 16),
-          Text(
-            'Equipment',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          Text('Equipment', style: Theme.of(context).textTheme.titleMedium),
           Wrap(
             spacing: 8,
             children: EquipmentType.values.map((equipment) {
@@ -78,10 +72,7 @@ class _MovementFilterState extends State<MovementFilter> {
             }).toList(),
           ),
           const SizedBox(height: 16),
-          Text(
-            'Movement Type',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          Text('Movement Type', style: Theme.of(context).textTheme.titleMedium),
           Wrap(
             spacing: 8,
             children: [
@@ -125,13 +116,13 @@ class _MovementFilterState extends State<MovementFilter> {
                   final state = context.read<MovementBloc>().state;
                   if (state is MovementLoaded) {
                     context.read<MovementBloc>().add(
-                          FilterMovements(
-                            query: state.filterQuery ?? '',
-                            categories: _selectedCategories,
-                            equipmentTypes: _selectedEquipmentTypes,
-                            isMainMovement: _isMainMovement,
-                          ),
-                        );
+                      FilterMovements(
+                        query: state.filterQuery ?? '',
+                        categories: _selectedCategories,
+                        equipmentTypes: _selectedEquipmentTypes,
+                        isMainMovement: _isMainMovement,
+                      ),
+                    );
                   }
                   Navigator.pop(context);
                 },

@@ -24,18 +24,14 @@ void main() {
       );
     });
 
-    testWidgets('renders correctly with all required data',
-        (WidgetTester tester) async {
+    testWidgets('renders correctly with all required data', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData(
-            useMaterial3: true,
-          ),
+          theme: ThemeData(useMaterial3: true),
           home: Scaffold(
-            body: MovementCard(
-              movement: testMovement,
-              onTap: () {},
-            ),
+            body: MovementCard(movement: testMovement, onTap: () {}),
           ),
         ),
       );
@@ -56,13 +52,12 @@ void main() {
       expect(find.text('barbell'), findsOneWidget);
     });
 
-    testWidgets('triggers onTap callback when tapped',
-        (WidgetTester tester) async {
+    testWidgets('triggers onTap callback when tapped', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData(
-            useMaterial3: true,
-          ),
+          theme: ThemeData(useMaterial3: true),
           home: Scaffold(
             body: MovementCard(
               movement: testMovement,
@@ -80,43 +75,39 @@ void main() {
       expect(onTapCalled, true);
     });
 
-    testWidgets('does not show main movement chip when isMainMovement is false',
-        (WidgetTester tester) async {
-      final nonMainMovement = testMovement.copyWith(isMainMovement: false);
+    testWidgets(
+      'does not show main movement chip when isMainMovement is false',
+      (WidgetTester tester) async {
+        final nonMainMovement = testMovement.copyWith(isMainMovement: false);
 
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData(
-            useMaterial3: true,
-          ),
-          home: Scaffold(
-            body: MovementCard(
-              movement: nonMainMovement,
-              onTap: () {},
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: ThemeData(useMaterial3: true),
+            home: Scaffold(
+              body: MovementCard(movement: nonMainMovement, onTap: () {}),
             ),
           ),
-        ),
-      );
+        );
 
-      // Verify main movement chip is not displayed
-      expect(find.text('Main'), findsNothing);
-    });
+        // Verify main movement chip is not displayed
+        expect(find.text('Main'), findsNothing);
+      },
+    );
 
-    testWidgets('displays multiple categories and equipment correctly',
-        (WidgetTester tester) async {
+    testWidgets('displays multiple categories and equipment correctly', (
+      WidgetTester tester,
+    ) async {
       final movementWithMultipleItems = testMovement.copyWith(
         categories: [
           MovementCategory.compoundLift,
-          MovementCategory.bodyweight
+          MovementCategory.bodyweight,
         ],
         requiredEquipment: [EquipmentType.barbell, EquipmentType.dumbbell],
       );
 
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData(
-            useMaterial3: true,
-          ),
+          theme: ThemeData(useMaterial3: true),
           home: Scaffold(
             body: MovementCard(
               movement: movementWithMultipleItems,

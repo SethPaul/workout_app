@@ -41,8 +41,9 @@ void main() {
     );
 
     test('getAllWorkouts returns all workouts', () async {
-      when(mockRepository.getAllWorkouts())
-          .thenAnswer((_) async => [testWorkout]);
+      when(
+        mockRepository.getAllWorkouts(),
+      ).thenAnswer((_) async => [testWorkout]);
 
       final workouts = await service.getAllWorkouts();
       expect(workouts, [testWorkout]);
@@ -50,8 +51,9 @@ void main() {
     });
 
     test('getWorkoutById returns workout when found', () async {
-      when(mockRepository.getWorkoutById('1'))
-          .thenAnswer((_) async => testWorkout);
+      when(
+        mockRepository.getWorkoutById('1'),
+      ).thenAnswer((_) async => testWorkout);
 
       final workout = await service.getWorkoutById('1');
       expect(workout, testWorkout);
@@ -67,8 +69,9 @@ void main() {
     });
 
     test('getWorkoutsByFormat returns filtered workouts', () async {
-      when(mockRepository.getWorkoutsByFormat(WorkoutFormat.emom))
-          .thenAnswer((_) async => [testWorkout]);
+      when(
+        mockRepository.getWorkoutsByFormat(WorkoutFormat.emom),
+      ).thenAnswer((_) async => [testWorkout]);
 
       final workouts = await service.getWorkoutsByFormat(WorkoutFormat.emom);
       expect(workouts, [testWorkout]);
@@ -76,21 +79,26 @@ void main() {
     });
 
     test('getWorkoutsByIntensity returns filtered workouts', () async {
-      when(mockRepository.getWorkoutsByIntensity(IntensityLevel.medium))
-          .thenAnswer((_) async => [testWorkout]);
+      when(
+        mockRepository.getWorkoutsByIntensity(IntensityLevel.medium),
+      ).thenAnswer((_) async => [testWorkout]);
 
-      final workouts =
-          await service.getWorkoutsByIntensity(IntensityLevel.medium);
+      final workouts = await service.getWorkoutsByIntensity(
+        IntensityLevel.medium,
+      );
       expect(workouts, [testWorkout]);
-      verify(mockRepository.getWorkoutsByIntensity(IntensityLevel.medium))
-          .called(1);
+      verify(
+        mockRepository.getWorkoutsByIntensity(IntensityLevel.medium),
+      ).called(1);
     });
 
     test('createWorkoutFromTemplate creates and returns workout id', () async {
-      when(mockTemplateService.generateWorkoutFromTemplate('1'))
-          .thenAnswer((_) async => testWorkout);
-      when(mockRepository.createWorkout(testWorkout))
-          .thenAnswer((_) async => '1');
+      when(
+        mockTemplateService.generateWorkoutFromTemplate('1'),
+      ).thenAnswer((_) async => testWorkout);
+      when(
+        mockRepository.createWorkout(testWorkout),
+      ).thenAnswer((_) async => '1');
 
       final id = await service.createWorkoutFromTemplate('1');
       expect(id, '1');
@@ -99,32 +107,38 @@ void main() {
     });
 
     test(
-        'createWorkoutFromTemplateWithModifications creates workout with modifications',
-        () async {
-      when(mockTemplateService.generateWorkoutFromTemplateWithModifications(
-        '1',
-        format: WorkoutFormat.amrap,
-        intensity: IntensityLevel.high,
-        targetDuration: 30,
-      )).thenAnswer((_) async => testWorkout);
-      when(mockRepository.createWorkout(testWorkout))
-          .thenAnswer((_) async => '1');
+      'createWorkoutFromTemplateWithModifications creates workout with modifications',
+      () async {
+        when(
+          mockTemplateService.generateWorkoutFromTemplateWithModifications(
+            '1',
+            format: WorkoutFormat.amrap,
+            intensity: IntensityLevel.high,
+            targetDuration: 30,
+          ),
+        ).thenAnswer((_) async => testWorkout);
+        when(
+          mockRepository.createWorkout(testWorkout),
+        ).thenAnswer((_) async => '1');
 
-      final id = await service.createWorkoutFromTemplateWithModifications(
-        '1',
-        format: WorkoutFormat.amrap,
-        intensity: IntensityLevel.high,
-        targetDuration: 30,
-      );
-      expect(id, '1');
-      verify(mockTemplateService.generateWorkoutFromTemplateWithModifications(
-        '1',
-        format: WorkoutFormat.amrap,
-        intensity: IntensityLevel.high,
-        targetDuration: 30,
-      )).called(1);
-      verify(mockRepository.createWorkout(testWorkout)).called(1);
-    });
+        final id = await service.createWorkoutFromTemplateWithModifications(
+          '1',
+          format: WorkoutFormat.amrap,
+          intensity: IntensityLevel.high,
+          targetDuration: 30,
+        );
+        expect(id, '1');
+        verify(
+          mockTemplateService.generateWorkoutFromTemplateWithModifications(
+            '1',
+            format: WorkoutFormat.amrap,
+            intensity: IntensityLevel.high,
+            targetDuration: 30,
+          ),
+        ).called(1);
+        verify(mockRepository.createWorkout(testWorkout)).called(1);
+      },
+    );
 
     test('updateWorkout updates workout', () async {
       await service.updateWorkout(testWorkout);

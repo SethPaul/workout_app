@@ -36,8 +36,9 @@ class _WorkoutTemplateFormScreenState extends State<WorkoutTemplateFormScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.template?.name);
-    _descriptionController =
-        TextEditingController(text: widget.template?.description);
+    _descriptionController = TextEditingController(
+      text: widget.template?.description,
+    );
     _format = widget.template?.format ?? WorkoutFormat.emom;
     _intensity = widget.template?.intensity ?? IntensityLevel.medium;
     _targetDuration = widget.template?.targetDuration ?? 20;
@@ -102,8 +103,9 @@ class _WorkoutTemplateFormScreenState extends State<WorkoutTemplateFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:
-            Text(widget.template == null ? 'Create Template' : 'Edit Template'),
+        title: Text(
+          widget.template == null ? 'Create Template' : 'Edit Template',
+        ),
         actions: [
           if (_isLoading)
             const Center(
@@ -117,10 +119,7 @@ class _WorkoutTemplateFormScreenState extends State<WorkoutTemplateFormScreen> {
               ),
             )
           else
-            IconButton(
-              icon: const Icon(Icons.save),
-              onPressed: _saveTemplate,
-            ),
+            IconButton(icon: const Icon(Icons.save), onPressed: _saveTemplate),
         ],
       ),
       body: _error != null
@@ -133,10 +132,7 @@ class _WorkoutTemplateFormScreenState extends State<WorkoutTemplateFormScreen> {
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    _error!,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
+                  Text(_error!, style: Theme.of(context).textTheme.bodyMedium),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
@@ -186,9 +182,7 @@ class _WorkoutTemplateFormScreenState extends State<WorkoutTemplateFormScreen> {
                   const SizedBox(height: 16),
                   DropdownButtonFormField<WorkoutFormat>(
                     value: _format,
-                    decoration: const InputDecoration(
-                      labelText: 'Format',
-                    ),
+                    decoration: const InputDecoration(labelText: 'Format'),
                     items: WorkoutFormat.values.map((format) {
                       return DropdownMenuItem(
                         value: format,
@@ -206,9 +200,7 @@ class _WorkoutTemplateFormScreenState extends State<WorkoutTemplateFormScreen> {
                   const SizedBox(height: 16),
                   DropdownButtonFormField<IntensityLevel>(
                     value: _intensity,
-                    decoration: const InputDecoration(
-                      labelText: 'Intensity',
-                    ),
+                    decoration: const InputDecoration(labelText: 'Intensity'),
                     items: IntensityLevel.values.map((intensity) {
                       return DropdownMenuItem(
                         value: intensity,

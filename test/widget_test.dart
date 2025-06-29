@@ -30,23 +30,23 @@ class TestWorkoutTemplateService implements WorkoutTemplateService {
 
   @override
   Future<List<WorkoutTemplate>> getTemplatesByFormat(
-          WorkoutFormat format) async =>
-      [];
+    WorkoutFormat format,
+  ) async => [];
 
   @override
   Future<List<WorkoutTemplate>> getTemplatesByIntensity(
-          IntensityLevel intensity) async =>
-      [];
+    IntensityLevel intensity,
+  ) async => [];
 
   @override
   Future<List<WorkoutTemplate>> getTemplatesByEquipment(
-          List<EquipmentType> equipment) async =>
-      [];
+    List<EquipmentType> equipment,
+  ) async => [];
 
   @override
   Future<List<WorkoutTemplate>> getTemplatesByCategory(
-          List<MovementCategory> categories) async =>
-      [];
+    List<MovementCategory> categories,
+  ) async => [];
 
   @override
   Future<String> createTemplate({
@@ -59,8 +59,7 @@ class TestWorkoutTemplateService implements WorkoutTemplateService {
     List<EquipmentType>? availableEquipment,
     bool? isMainMovementOnly,
     Map<String, dynamic>? metadata,
-  }) async =>
-      'test_id';
+  }) async => 'test_id';
 
   @override
   Future<void> updateTemplate(WorkoutTemplate template) async {}
@@ -114,8 +113,8 @@ class TestWorkoutService implements WorkoutService {
 
   @override
   Future<List<Workout>> getWorkoutsByIntensity(
-          IntensityLevel intensity) async =>
-      [];
+    IntensityLevel intensity,
+  ) async => [];
 
   @override
   Future<String> createWorkoutFromTemplate(String templateId) async =>
@@ -130,8 +129,7 @@ class TestWorkoutService implements WorkoutService {
     List<MovementCategory>? preferredCategories,
     List<EquipmentType>? availableEquipment,
     bool? isMainMovementOnly,
-  }) async =>
-      'test_id';
+  }) async => 'test_id';
 
   @override
   Future<String> createWorkout(Workout workout) async => 'test_id';
@@ -153,13 +151,13 @@ class TestWorkoutService implements WorkoutService {
 class TestUserProgressService implements UserProgressService {
   @override
   Future<UserProgress?> getCurrentUserProgress() async => UserProgress(
-        userId: 'test_user',
-        workoutHistory: [],
-        movementProgress: {},
-        lastWorkoutDate: DateTime.now(),
-        totalWorkoutsCompleted: 0,
-        isFirstRun: false, // Set to false to skip onboarding
-      );
+    userId: 'test_user',
+    workoutHistory: [],
+    movementProgress: {},
+    lastWorkoutDate: DateTime.now(),
+    totalWorkoutsCompleted: 0,
+    isFirstRun: false, // Set to false to skip onboarding
+  );
 
   @override
   Future<void> initializeUserProgress() async {}
@@ -204,15 +202,16 @@ class TestUserProgressService implements UserProgressService {
     double? newWeight,
     int? newReps,
     int? newTimeInSeconds,
-  }) =>
-      false;
+  }) => false;
 
   @override
   Future<void> setUserGoals(Map<String, dynamic> goals) async {}
 
   @override
   Future<void> addAchievement(
-      String achievementKey, Map<String, dynamic> achievementData) async {}
+    String achievementKey,
+    Map<String, dynamic> achievementData,
+  ) async {}
 
   @override
   Future<void> updateUserProgress(UserProgress updatedProgress) async {}
@@ -233,8 +232,8 @@ class TestDefaultWorkoutService implements DefaultWorkoutService {
 
   @override
   Future<List<String>> addSelectedDefaultWorkouts(
-          List<String> selectedWorkoutNames) async =>
-      [];
+    List<String> selectedWorkoutNames,
+  ) async => [];
 
   @override
   Future<List<String>> addAllDefaultWorkouts() async => [];
@@ -244,8 +243,9 @@ class TestDefaultWorkoutService implements DefaultWorkoutService {
 }
 
 void main() {
-  testWidgets('Workout App home screen displays correct UI elements',
-      (WidgetTester tester) async {
+  testWidgets('Workout App home screen displays correct UI elements', (
+    WidgetTester tester,
+  ) async {
     // Create test services
     final testWorkoutService = TestWorkoutService();
     final testUserProgressService = TestUserProgressService();
@@ -264,8 +264,10 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify that our home screen shows the correct UI elements.
-    expect(find.text('Workouts'),
-        findsNWidgets(2)); // App bar title and bottom nav
+    expect(
+      find.text('Workouts'),
+      findsNWidgets(2),
+    ); // App bar title and bottom nav
     expect(find.text('No workouts yet'), findsOneWidget);
     expect(find.text('Generate Workout'), findsOneWidget);
 
@@ -276,19 +278,22 @@ void main() {
     expect(find.byType(BottomNavigationBar), findsOneWidget);
   });
 
-  testWidgets('App handles initialization gracefully',
-      (WidgetTester tester) async {
+  testWidgets('App handles initialization gracefully', (
+    WidgetTester tester,
+  ) async {
     // Create test services
     final testWorkoutService = TestWorkoutService();
     final testUserProgressService = TestUserProgressService();
     final testDefaultWorkoutService = TestDefaultWorkoutService();
 
     // Build the full WorkoutApp widget
-    await tester.pumpWidget(WorkoutApp(
-      workoutService: testWorkoutService,
-      userProgressService: testUserProgressService,
-      defaultWorkoutService: testDefaultWorkoutService,
-    ));
+    await tester.pumpWidget(
+      WorkoutApp(
+        workoutService: testWorkoutService,
+        userProgressService: testUserProgressService,
+        defaultWorkoutService: testDefaultWorkoutService,
+      ),
+    );
 
     // Wait for the async loading to complete
     await tester.pumpAndSettle();

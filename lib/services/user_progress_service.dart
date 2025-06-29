@@ -6,9 +6,8 @@ class UserProgressService {
   final UserProgressRepository _repository;
   static const String _defaultUserId = 'default_user'; // For single-user app
 
-  UserProgressService({
-    required UserProgressRepository repository,
-  }) : _repository = repository;
+  UserProgressService({required UserProgressRepository repository})
+    : _repository = repository;
 
   /// Get the current user's progress
   Future<UserProgress?> getCurrentUserProgress() async {
@@ -65,8 +64,10 @@ class UserProgressService {
     Map<String, dynamic>? personalRecords,
   }) async {
     // Get existing progress or create new
-    final existingProgress =
-        await _repository.getMovementProgress(_defaultUserId, movementId);
+    final existingProgress = await _repository.getMovementProgress(
+      _defaultUserId,
+      movementId,
+    );
 
     final updatedProgress = MovementProgress(
       movementId: movementId,
@@ -78,7 +79,10 @@ class UserProgressService {
     );
 
     await _repository.updateMovementProgress(
-        _defaultUserId, movementId, updatedProgress);
+      _defaultUserId,
+      movementId,
+      updatedProgress,
+    );
   }
 
   /// Get workout history with optional limit
@@ -122,8 +126,9 @@ class UserProgressService {
     final firstWorkout = workoutHistory.last.completedAt;
     final lastWorkout = workoutHistory.first.completedAt;
     final daysBetween = lastWorkout.difference(firstWorkout).inDays;
-    final workoutsPerWeek =
-        daysBetween > 0 ? (totalWorkouts * 7) / daysBetween : 0.0;
+    final workoutsPerWeek = daysBetween > 0
+        ? (totalWorkouts * 7) / daysBetween
+        : 0.0;
 
     return {
       'totalWorkouts': totalWorkouts,
@@ -185,11 +190,14 @@ class UserProgressService {
 
   /// Add achievement
   Future<void> addAchievement(
-      String achievementKey, Map<String, dynamic> achievementData) async {
+    String achievementKey,
+    Map<String, dynamic> achievementData,
+  ) async {
     final progress = await getCurrentUserProgress();
     if (progress != null) {
-      final achievements =
-          Map<String, dynamic>.from(progress.achievements ?? {});
+      final achievements = Map<String, dynamic>.from(
+        progress.achievements ?? {},
+      );
       achievements[achievementKey] = achievementData;
       final updatedProgress = progress.copyWith(achievements: achievements);
       await _repository.saveUserProgress(updatedProgress);

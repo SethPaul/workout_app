@@ -37,23 +37,23 @@ class TestWorkoutTemplateService implements WorkoutTemplateService {
 
   @override
   Future<List<WorkoutTemplate>> getTemplatesByFormat(
-          WorkoutFormat format) async =>
-      _templates.where((t) => t.format == format).toList();
+    WorkoutFormat format,
+  ) async => _templates.where((t) => t.format == format).toList();
 
   @override
   Future<List<WorkoutTemplate>> getTemplatesByIntensity(
-          IntensityLevel intensity) async =>
-      _templates.where((t) => t.intensity == intensity).toList();
+    IntensityLevel intensity,
+  ) async => _templates.where((t) => t.intensity == intensity).toList();
 
   @override
   Future<List<WorkoutTemplate>> getTemplatesByEquipment(
-          List<EquipmentType> equipment) async =>
-      [];
+    List<EquipmentType> equipment,
+  ) async => [];
 
   @override
   Future<List<WorkoutTemplate>> getTemplatesByCategory(
-          List<MovementCategory> categories) async =>
-      [];
+    List<MovementCategory> categories,
+  ) async => [];
 
   @override
   Future<String> createTemplate({
@@ -109,14 +109,8 @@ class TestWorkoutTemplateService implements WorkoutTemplateService {
       format: template.format,
       intensity: template.intensity,
       movements: [
-        WorkoutMovement(
-          movementId: 'movement_1',
-          reps: 10,
-        ),
-        WorkoutMovement(
-          movementId: 'movement_2',
-          reps: 15,
-        ),
+        WorkoutMovement(movementId: 'movement_1', reps: 10),
+        WorkoutMovement(movementId: 'movement_2', reps: 15),
       ],
       duration: template.targetDuration,
       createdAt: DateTime.now(),
@@ -189,13 +183,14 @@ class TestWorkoutService implements WorkoutService {
 
   @override
   Future<List<Workout>> getWorkoutsByIntensity(
-          IntensityLevel intensity) async =>
-      _workouts.where((w) => w.intensity == intensity).toList();
+    IntensityLevel intensity,
+  ) async => _workouts.where((w) => w.intensity == intensity).toList();
 
   @override
   Future<String> createWorkoutFromTemplate(String templateId) async {
-    final workout =
-        await _templateService.generateWorkoutFromTemplate(templateId);
+    final workout = await _templateService.generateWorkoutFromTemplate(
+      templateId,
+    );
     return createWorkout(workout);
   }
 
@@ -209,16 +204,16 @@ class TestWorkoutService implements WorkoutService {
     List<EquipmentType>? availableEquipment,
     bool? isMainMovementOnly,
   }) async {
-    final workout =
-        await _templateService.generateWorkoutFromTemplateWithModifications(
-      templateId,
-      format: format,
-      intensity: intensity,
-      targetDuration: targetDuration,
-      preferredCategories: preferredCategories,
-      availableEquipment: availableEquipment,
-      isMainMovementOnly: isMainMovementOnly,
-    );
+    final workout = await _templateService
+        .generateWorkoutFromTemplateWithModifications(
+          templateId,
+          format: format,
+          intensity: intensity,
+          targetDuration: targetDuration,
+          preferredCategories: preferredCategories,
+          availableEquipment: availableEquipment,
+          isMainMovementOnly: isMainMovementOnly,
+        );
     return createWorkout(workout);
   }
 
@@ -245,9 +240,7 @@ class TestWorkoutService implements WorkoutService {
   Future<void> markWorkoutAsCompleted(String id) async {
     final workout = await getWorkoutById(id);
     if (workout != null) {
-      final completedWorkout = workout.copyWith(
-        completedAt: DateTime.now(),
-      );
+      final completedWorkout = workout.copyWith(completedAt: DateTime.now());
       _completedWorkouts.add(completedWorkout);
       _workouts.removeWhere((w) => w.id == id);
     }
@@ -338,10 +331,10 @@ class TestUserProgressService implements UserProgressService {
 
   @override
   Future<Map<String, dynamic>> getWorkoutStatistics() async => {
-        'totalWorkouts': _workoutHistory.length,
-        'totalTimeInSeconds': 3600,
-        'averageWorkoutTimeInSeconds': 1200,
-      };
+    'totalWorkouts': _workoutHistory.length,
+    'totalTimeInSeconds': 3600,
+    'averageWorkoutTimeInSeconds': 1200,
+  };
 
   @override
   Future<Map<String, MovementProgress>> getAllMovementProgress() async => {};
@@ -353,15 +346,16 @@ class TestUserProgressService implements UserProgressService {
     double? newWeight,
     int? newReps,
     int? newTimeInSeconds,
-  }) =>
-      false;
+  }) => false;
 
   @override
   Future<void> setUserGoals(Map<String, dynamic> goals) async {}
 
   @override
   Future<void> addAchievement(
-      String achievementKey, Map<String, dynamic> achievementData) async {}
+    String achievementKey,
+    Map<String, dynamic> achievementData,
+  ) async {}
 
   @override
   Future<void> updateUserProgress(UserProgress updatedProgress) async {
@@ -378,7 +372,7 @@ class TestUserProgressService implements UserProgressService {
 // Test implementation of DefaultWorkoutService
 class TestDefaultWorkoutService extends DefaultWorkoutService {
   TestDefaultWorkoutService()
-      : super(templateService: TestWorkoutTemplateService());
+    : super(templateService: TestWorkoutTemplateService());
 
   @override
   List<Map<String, dynamic>> getDefaultWorkoutConfigurations() => [];
@@ -388,8 +382,8 @@ class TestDefaultWorkoutService extends DefaultWorkoutService {
 
   @override
   Future<List<String>> addSelectedDefaultWorkouts(
-          List<String> selectedWorkoutNames) async =>
-      [];
+    List<String> selectedWorkoutNames,
+  ) async => [];
 
   @override
   Future<List<String>> addAllDefaultWorkouts() async => [];
@@ -416,13 +410,16 @@ void main() {
     });
 
     group('Navigation Flow Tests', () {
-      testWidgets('Bottom navigation works correctly',
-          (WidgetTester tester) async {
-        await tester.pumpWidget(WorkoutApp(
-          workoutService: testWorkoutService,
-          userProgressService: testUserProgressService,
-          defaultWorkoutService: testDefaultWorkoutService,
-        ));
+      testWidgets('Bottom navigation works correctly', (
+        WidgetTester tester,
+      ) async {
+        await tester.pumpWidget(
+          WorkoutApp(
+            workoutService: testWorkoutService,
+            userProgressService: testUserProgressService,
+            defaultWorkoutService: testDefaultWorkoutService,
+          ),
+        );
         await tester.pumpAndSettle();
 
         // Verify we start on workouts tab
@@ -447,13 +444,16 @@ void main() {
     });
 
     group('Template Management Flow', () {
-      testWidgets('Create new workout template flow',
-          (WidgetTester tester) async {
-        await tester.pumpWidget(WorkoutApp(
-          workoutService: testWorkoutService,
-          userProgressService: testUserProgressService,
-          defaultWorkoutService: testDefaultWorkoutService,
-        ));
+      testWidgets('Create new workout template flow', (
+        WidgetTester tester,
+      ) async {
+        await tester.pumpWidget(
+          WorkoutApp(
+            workoutService: testWorkoutService,
+            userProgressService: testUserProgressService,
+            defaultWorkoutService: testDefaultWorkoutService,
+          ),
+        );
         await tester.pumpAndSettle();
 
         // Navigate to templates tab
@@ -474,15 +474,23 @@ void main() {
 
         // Fill in template details
         await tester.enterText(
-            find.byType(TextFormField).first, 'Test Template');
+          find.byType(TextFormField).first,
+          'Test Template',
+        );
         await tester.enterText(
-            find.byType(TextFormField).at(1), 'Test description');
+          find.byType(TextFormField).at(1),
+          'Test description',
+        );
 
         // Select format and intensity (they should have default values)
-        expect(find.byType(DropdownButtonFormField<WorkoutFormat>),
-            findsOneWidget);
-        expect(find.byType(DropdownButtonFormField<IntensityLevel>),
-            findsOneWidget);
+        expect(
+          find.byType(DropdownButtonFormField<WorkoutFormat>),
+          findsOneWidget,
+        );
+        expect(
+          find.byType(DropdownButtonFormField<IntensityLevel>),
+          findsOneWidget,
+        );
 
         // Save template (it's an IconButton with save icon, not text)
         await tester.tap(find.byIcon(Icons.save));
@@ -494,11 +502,13 @@ void main() {
       });
 
       testWidgets('Delete template flow', (WidgetTester tester) async {
-        await tester.pumpWidget(WorkoutApp(
-          workoutService: testWorkoutService,
-          userProgressService: testUserProgressService,
-          defaultWorkoutService: testDefaultWorkoutService,
-        ));
+        await tester.pumpWidget(
+          WorkoutApp(
+            workoutService: testWorkoutService,
+            userProgressService: testUserProgressService,
+            defaultWorkoutService: testDefaultWorkoutService,
+          ),
+        );
         await tester.pumpAndSettle();
 
         // Navigate to templates tab
@@ -514,8 +524,10 @@ void main() {
 
         // Verify confirmation dialog
         expect(find.text('Delete Template'), findsOneWidget);
-        expect(find.textContaining('Are you sure you want to delete'),
-            findsOneWidget);
+        expect(
+          find.textContaining('Are you sure you want to delete'),
+          findsOneWidget,
+        );
 
         // Confirm deletion
         await tester.tap(find.text('Delete'));
@@ -527,13 +539,16 @@ void main() {
     });
 
     group('Workout Generation Flow', () {
-      testWidgets('Generate workout from template',
-          (WidgetTester tester) async {
-        await tester.pumpWidget(WorkoutApp(
-          workoutService: testWorkoutService,
-          userProgressService: testUserProgressService,
-          defaultWorkoutService: testDefaultWorkoutService,
-        ));
+      testWidgets('Generate workout from template', (
+        WidgetTester tester,
+      ) async {
+        await tester.pumpWidget(
+          WorkoutApp(
+            workoutService: testWorkoutService,
+            userProgressService: testUserProgressService,
+            defaultWorkoutService: testDefaultWorkoutService,
+          ),
+        );
         await tester.pumpAndSettle();
 
         // Navigate to templates tab
@@ -555,7 +570,9 @@ void main() {
         // Verify success message is shown (the generate workflow navigates back to main screen)
         expect(find.byType(SnackBar), findsOneWidget);
         expect(
-            find.textContaining('Workout generated and saved'), findsOneWidget);
+          find.textContaining('Workout generated and saved'),
+          findsOneWidget,
+        );
 
         // Navigate to workouts tab to verify workout was created
         await tester.tap(find.text('Workouts').first);
@@ -565,13 +582,16 @@ void main() {
         expect(find.text('Quick HIIT Workout'), findsOneWidget);
       });
 
-      testWidgets('No workouts state shows generate button',
-          (WidgetTester tester) async {
-        await tester.pumpWidget(WorkoutApp(
-          workoutService: testWorkoutService,
-          userProgressService: testUserProgressService,
-          defaultWorkoutService: testDefaultWorkoutService,
-        ));
+      testWidgets('No workouts state shows generate button', (
+        WidgetTester tester,
+      ) async {
+        await tester.pumpWidget(
+          WorkoutApp(
+            workoutService: testWorkoutService,
+            userProgressService: testUserProgressService,
+            defaultWorkoutService: testDefaultWorkoutService,
+          ),
+        );
         await tester.pumpAndSettle();
 
         // Verify empty state
@@ -588,18 +608,22 @@ void main() {
     });
 
     group('Workout Details and Execution Flow', () {
-      testWidgets('View workout details and start execution',
-          (WidgetTester tester) async {
+      testWidgets('View workout details and start execution', (
+        WidgetTester tester,
+      ) async {
         // First generate a workout
-        final workout =
-            await testTemplateService.generateWorkoutFromTemplate('sample_1');
+        final workout = await testTemplateService.generateWorkoutFromTemplate(
+          'sample_1',
+        );
         await testWorkoutService.createWorkout(workout);
 
-        await tester.pumpWidget(WorkoutApp(
-          workoutService: testWorkoutService,
-          userProgressService: testUserProgressService,
-          defaultWorkoutService: testDefaultWorkoutService,
-        ));
+        await tester.pumpWidget(
+          WorkoutApp(
+            workoutService: testWorkoutService,
+            userProgressService: testUserProgressService,
+            defaultWorkoutService: testDefaultWorkoutService,
+          ),
+        );
         await tester.pumpAndSettle();
 
         // Find and tap on workout card
@@ -623,16 +647,19 @@ void main() {
     group('Workout History Flow', () {
       testWidgets('View workout history', (WidgetTester tester) async {
         // Create and complete a workout to have history data
-        final workout =
-            await testTemplateService.generateWorkoutFromTemplate('sample_1');
+        final workout = await testTemplateService.generateWorkoutFromTemplate(
+          'sample_1',
+        );
         final workoutId = await testWorkoutService.createWorkout(workout);
         await testWorkoutService.markWorkoutAsCompleted(workoutId);
 
-        await tester.pumpWidget(WorkoutApp(
-          workoutService: testWorkoutService,
-          userProgressService: testUserProgressService,
-          defaultWorkoutService: testDefaultWorkoutService,
-        ));
+        await tester.pumpWidget(
+          WorkoutApp(
+            workoutService: testWorkoutService,
+            userProgressService: testUserProgressService,
+            defaultWorkoutService: testDefaultWorkoutService,
+          ),
+        );
         await tester.pumpAndSettle();
 
         // Navigate to history tab
@@ -648,17 +675,20 @@ void main() {
     });
 
     group('Error Handling Tests', () {
-      testWidgets('Handles empty templates gracefully',
-          (WidgetTester tester) async {
+      testWidgets('Handles empty templates gracefully', (
+        WidgetTester tester,
+      ) async {
         // Create service with no templates
         final emptyTemplateService = TestWorkoutTemplateService();
         final emptyWorkoutService = TestWorkoutService(emptyTemplateService);
 
-        await tester.pumpWidget(WorkoutApp(
-          workoutService: emptyWorkoutService,
-          userProgressService: testUserProgressService,
-          defaultWorkoutService: testDefaultWorkoutService,
-        ));
+        await tester.pumpWidget(
+          WorkoutApp(
+            workoutService: emptyWorkoutService,
+            userProgressService: testUserProgressService,
+            defaultWorkoutService: testDefaultWorkoutService,
+          ),
+        );
         await tester.pumpAndSettle();
 
         // Navigate to templates tab
@@ -670,13 +700,16 @@ void main() {
         expect(find.text('Create Template'), findsOneWidget);
       });
 
-      testWidgets('Form validation works correctly',
-          (WidgetTester tester) async {
-        await tester.pumpWidget(WorkoutApp(
-          workoutService: testWorkoutService,
-          userProgressService: testUserProgressService,
-          defaultWorkoutService: testDefaultWorkoutService,
-        ));
+      testWidgets('Form validation works correctly', (
+        WidgetTester tester,
+      ) async {
+        await tester.pumpWidget(
+          WorkoutApp(
+            workoutService: testWorkoutService,
+            userProgressService: testUserProgressService,
+            defaultWorkoutService: testDefaultWorkoutService,
+          ),
+        );
         await tester.pumpAndSettle();
 
         // Navigate to templates and create new template
@@ -698,19 +731,21 @@ void main() {
     group('Filter and Search Tests', () {
       testWidgets('Workout filtering works', (WidgetTester tester) async {
         // Generate multiple workouts with different formats
-        final tabataWorkout =
-            await testTemplateService.generateWorkoutFromTemplate('sample_1');
-        final forTimeWorkout =
-            await testTemplateService.generateWorkoutFromTemplate('sample_2');
+        final tabataWorkout = await testTemplateService
+            .generateWorkoutFromTemplate('sample_1');
+        final forTimeWorkout = await testTemplateService
+            .generateWorkoutFromTemplate('sample_2');
 
         await testWorkoutService.createWorkout(tabataWorkout);
         await testWorkoutService.createWorkout(forTimeWorkout);
 
-        await tester.pumpWidget(WorkoutApp(
-          workoutService: testWorkoutService,
-          userProgressService: testUserProgressService,
-          defaultWorkoutService: testDefaultWorkoutService,
-        ));
+        await tester.pumpWidget(
+          WorkoutApp(
+            workoutService: testWorkoutService,
+            userProgressService: testUserProgressService,
+            defaultWorkoutService: testDefaultWorkoutService,
+          ),
+        );
         await tester.pumpAndSettle();
 
         // Verify both workouts are shown
@@ -727,13 +762,16 @@ void main() {
     });
 
     group('Loading States Tests', () {
-      testWidgets('Shows loading states correctly',
-          (WidgetTester tester) async {
-        await tester.pumpWidget(WorkoutApp(
-          workoutService: testWorkoutService,
-          userProgressService: testUserProgressService,
-          defaultWorkoutService: testDefaultWorkoutService,
-        ));
+      testWidgets('Shows loading states correctly', (
+        WidgetTester tester,
+      ) async {
+        await tester.pumpWidget(
+          WorkoutApp(
+            workoutService: testWorkoutService,
+            userProgressService: testUserProgressService,
+            defaultWorkoutService: testDefaultWorkoutService,
+          ),
+        );
 
         // Initially should show loading state briefly
         expect(find.byType(CircularProgressIndicator), findsOneWidget);

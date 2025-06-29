@@ -18,7 +18,8 @@ class TestDatabaseHelper {
   Future<Database> get database async {
     if (_testDatabase == null) {
       throw Exception(
-          'Test database not initialized. Call TestHelpers.initTestDatabase() first.');
+        'Test database not initialized. Call TestHelpers.initTestDatabase() first.',
+      );
     }
     return _testDatabase!;
   }
@@ -124,10 +125,7 @@ class TestHelpers {
 
   /// Create a test widget wrapped with MaterialApp and necessary providers
   static Widget createTestWidget(Widget child) {
-    return MaterialApp(
-      home: child,
-      theme: ThemeData.light(),
-    );
+    return MaterialApp(home: child, theme: ThemeData.light());
   }
 
   /// Wait for animations and pumps to complete
@@ -200,24 +198,32 @@ class MockDataFactory {
       id: id ?? faker.guid.guid(),
       name: name ?? faker.sport.name(),
       description: faker.lorem.sentence(),
-      categories: categories ??
+      categories:
+          categories ??
           [
-            MovementCategory.values[
-                faker.randomGenerator.integer(MovementCategory.values.length)]
+            MovementCategory.values[faker.randomGenerator.integer(
+              MovementCategory.values.length,
+            )],
           ],
-      requiredEquipment: equipment ??
+      requiredEquipment:
+          equipment ??
           [
-            EquipmentType.values[
-                faker.randomGenerator.integer(EquipmentType.values.length)]
+            EquipmentType.values[faker.randomGenerator.integer(
+              EquipmentType.values.length,
+            )],
           ],
-      muscleGroups: muscleGroups ??
+      muscleGroups:
+          muscleGroups ??
           [
-            MuscleGroup.values[
-                faker.randomGenerator.integer(MuscleGroup.values.length)]
+            MuscleGroup.values[faker.randomGenerator.integer(
+              MuscleGroup.values.length,
+            )],
           ],
-      difficultyLevel: difficulty ??
-          DifficultyLevel.values[
-              faker.randomGenerator.integer(DifficultyLevel.values.length)],
+      difficultyLevel:
+          difficulty ??
+          DifficultyLevel.values[faker.randomGenerator.integer(
+            DifficultyLevel.values.length,
+          )],
       isMainMovement: isMainMovement ?? faker.randomGenerator.boolean(),
       scalingOptions: {
         'beginner': faker.lorem.sentence(),
@@ -248,12 +254,16 @@ class MockDataFactory {
       id: id ?? faker.guid.guid(),
       name: name ?? faker.company.name(),
       description: faker.lorem.sentence(),
-      format: format ??
-          WorkoutFormat.values[
-              faker.randomGenerator.integer(WorkoutFormat.values.length)],
-      intensity: intensity ??
-          IntensityLevel.values[
-              faker.randomGenerator.integer(IntensityLevel.values.length)],
+      format:
+          format ??
+          WorkoutFormat.values[faker.randomGenerator.integer(
+            WorkoutFormat.values.length,
+          )],
+      intensity:
+          intensity ??
+          IntensityLevel.values[faker.randomGenerator.integer(
+            IntensityLevel.values.length,
+          )],
       targetDuration: faker.randomGenerator.integer(60, min: 5),
       createdAt: DateTime.now(),
     );

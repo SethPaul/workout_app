@@ -54,11 +54,13 @@ class _WorkoutListScreenState extends State<WorkoutListScreen> {
     try {
       List<Workout> workouts;
       if (_selectedFormat != null) {
-        workouts =
-            await widget.workoutService.getWorkoutsByFormat(_selectedFormat!);
+        workouts = await widget.workoutService.getWorkoutsByFormat(
+          _selectedFormat!,
+        );
       } else if (_selectedIntensity != null) {
-        workouts = await widget.workoutService
-            .getWorkoutsByIntensity(_selectedIntensity!);
+        workouts = await widget.workoutService.getWorkoutsByIntensity(
+          _selectedIntensity!,
+        );
       } else {
         workouts = await widget.workoutService.getAllWorkouts();
       }
@@ -84,14 +86,9 @@ class _WorkoutListScreenState extends State<WorkoutListScreen> {
           children: [
             DropdownButtonFormField<WorkoutFormat?>(
               value: _selectedFormat,
-              decoration: const InputDecoration(
-                labelText: 'Format',
-              ),
+              decoration: const InputDecoration(labelText: 'Format'),
               items: [
-                const DropdownMenuItem(
-                  value: null,
-                  child: Text('All Formats'),
-                ),
+                const DropdownMenuItem(value: null, child: Text('All Formats')),
                 ...WorkoutFormat.values.map((format) {
                   return DropdownMenuItem(
                     value: format,
@@ -111,9 +108,7 @@ class _WorkoutListScreenState extends State<WorkoutListScreen> {
             const SizedBox(height: 16),
             DropdownButtonFormField<IntensityLevel?>(
               value: _selectedIntensity,
-              decoration: const InputDecoration(
-                labelText: 'Intensity',
-              ),
+              decoration: const InputDecoration(labelText: 'Intensity'),
               items: [
                 const DropdownMenuItem(
                   value: null,
@@ -203,10 +198,7 @@ class _WorkoutListScreenState extends State<WorkoutListScreen> {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
-            Text(
-              _error!,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            Text(_error!, style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadWorkouts,
@@ -281,10 +273,7 @@ class _WorkoutCard extends StatelessWidget {
   final Workout workout;
   final VoidCallback onTap;
 
-  const _WorkoutCard({
-    required this.workout,
-    required this.onTap,
-  });
+  const _WorkoutCard({required this.workout, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -297,10 +286,7 @@ class _WorkoutCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                workout.name,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              Text(workout.name, style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 8),
               Text(
                 workout.description ?? 'No description available',

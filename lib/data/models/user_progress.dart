@@ -130,7 +130,8 @@ class UserProgress extends Equatable {
       goals: json['goals'] as Map<String, dynamic>?,
       achievements: json['achievements'] as Map<String, dynamic>?,
       isFirstRun: json['isFirstRun'] as bool? ?? true,
-      hasAcceptedDefaultWorkouts: json['hasAcceptedDefaultWorkouts'] as bool? ?? false,
+      hasAcceptedDefaultWorkouts:
+          json['hasAcceptedDefaultWorkouts'] as bool? ?? false,
       onboardingCompletedAt: json['onboardingCompletedAt'] == null
           ? null
           : DateTime.parse(json['onboardingCompletedAt'] as String),
@@ -141,8 +142,9 @@ class UserProgress extends Equatable {
     return {
       'userId': userId,
       'workoutHistory': workoutHistory.map((w) => w.toJson()).toList(),
-      'movementProgress':
-          movementProgress.map((key, value) => MapEntry(key, value.toJson())),
+      'movementProgress': movementProgress.map(
+        (key, value) => MapEntry(key, value.toJson()),
+      ),
       'lastWorkoutDate': lastWorkoutDate.toIso8601String(),
       'totalWorkoutsCompleted': totalWorkoutsCompleted,
       'goals': goals,
@@ -177,21 +179,22 @@ class UserProgress extends Equatable {
       isFirstRun: isFirstRun ?? this.isFirstRun,
       hasAcceptedDefaultWorkouts:
           hasAcceptedDefaultWorkouts ?? this.hasAcceptedDefaultWorkouts,
-      onboardingCompletedAt: onboardingCompletedAt ?? this.onboardingCompletedAt,
+      onboardingCompletedAt:
+          onboardingCompletedAt ?? this.onboardingCompletedAt,
     );
   }
 
   @override
   List<Object?> get props => [
-        userId,
-        workoutHistory,
-        movementProgress,
-        lastWorkoutDate,
-        totalWorkoutsCompleted,
-        goals,
-        achievements,
-        isFirstRun,
-        hasAcceptedDefaultWorkouts,
-        onboardingCompletedAt,
-      ];
+    userId,
+    workoutHistory,
+    movementProgress,
+    lastWorkoutDate,
+    totalWorkoutsCompleted,
+    goals,
+    achievements,
+    isFirstRun,
+    hasAcceptedDefaultWorkouts,
+    onboardingCompletedAt,
+  ];
 }

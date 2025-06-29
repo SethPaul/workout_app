@@ -10,11 +10,14 @@ abstract class WorkoutTemplateRepository {
   Future<WorkoutTemplate?> getTemplateById(String id);
   Future<List<WorkoutTemplate>> getTemplatesByFormat(WorkoutFormat format);
   Future<List<WorkoutTemplate>> getTemplatesByIntensity(
-      IntensityLevel intensity);
+    IntensityLevel intensity,
+  );
   Future<List<WorkoutTemplate>> getTemplatesByEquipment(
-      List<EquipmentType> equipment);
+    List<EquipmentType> equipment,
+  );
   Future<List<WorkoutTemplate>> getTemplatesByCategories(
-      List<MovementCategory> categories);
+    List<MovementCategory> categories,
+  );
   Future<String> createTemplate(WorkoutTemplate template);
   Future<void> updateTemplate(WorkoutTemplate template);
   Future<void> deleteTemplate(String id);
@@ -45,7 +48,8 @@ class SQLiteWorkoutTemplateRepository implements WorkoutTemplateRepository {
 
   @override
   Future<List<WorkoutTemplate>> getTemplatesByFormat(
-      WorkoutFormat format) async {
+    WorkoutFormat format,
+  ) async {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
       'workout_templates',
@@ -57,7 +61,8 @@ class SQLiteWorkoutTemplateRepository implements WorkoutTemplateRepository {
 
   @override
   Future<List<WorkoutTemplate>> getTemplatesByIntensity(
-      IntensityLevel intensity) async {
+    IntensityLevel intensity,
+  ) async {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
       'workout_templates',
@@ -69,27 +74,35 @@ class SQLiteWorkoutTemplateRepository implements WorkoutTemplateRepository {
 
   @override
   Future<List<WorkoutTemplate>> getTemplatesByEquipment(
-      List<EquipmentType> equipment) async {
+    List<EquipmentType> equipment,
+  ) async {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query('workout_templates');
     return maps
         .map((map) => _templateFromMap(map))
-        .where((template) =>
-            template.availableEquipment?.any((e) => equipment.contains(e)) ??
-            false)
+        .where(
+          (template) =>
+              template.availableEquipment?.any((e) => equipment.contains(e)) ??
+              false,
+        )
         .toList();
   }
 
   @override
   Future<List<WorkoutTemplate>> getTemplatesByCategories(
-      List<MovementCategory> categories) async {
+    List<MovementCategory> categories,
+  ) async {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query('workout_templates');
     return maps
         .map((map) => _templateFromMap(map))
-        .where((template) =>
-            template.preferredCategories?.any((c) => categories.contains(c)) ??
-            false)
+        .where(
+          (template) =>
+              template.preferredCategories?.any(
+                (c) => categories.contains(c),
+              ) ??
+              false,
+        )
         .toList();
   }
 
@@ -118,11 +131,7 @@ class SQLiteWorkoutTemplateRepository implements WorkoutTemplateRepository {
   @override
   Future<void> deleteTemplate(String id) async {
     final db = await _dbHelper.database;
-    await db.delete(
-      'workout_templates',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await db.delete('workout_templates', where: 'id = ?', whereArgs: [id]);
   }
 
   @override
@@ -154,14 +163,18 @@ class SQLiteWorkoutTemplateRepository implements WorkoutTemplateRepository {
       'intensity': template.intensity.toString().split('.').last,
       'targetDuration': template.targetDuration,
       'preferredCategories': template.preferredCategories != null
-          ? jsonEncode(template.preferredCategories!
-              .map((c) => c.toString().split('.').last)
-              .toList())
+          ? jsonEncode(
+              template.preferredCategories!
+                  .map((c) => c.toString().split('.').last)
+                  .toList(),
+            )
           : null,
       'availableEquipment': template.availableEquipment != null
-          ? jsonEncode(template.availableEquipment!
-              .map((e) => e.toString().split('.').last)
-              .toList())
+          ? jsonEncode(
+              template.availableEquipment!
+                  .map((e) => e.toString().split('.').last)
+                  .toList(),
+            )
           : null,
       'isMainMovementOnly': template.isMainMovementOnly != null
           ? (template.isMainMovementOnly! ? 1 : 0)
@@ -169,19 +182,23 @@ class SQLiteWorkoutTemplateRepository implements WorkoutTemplateRepository {
       'created_at': template.createdAt.toIso8601String(),
       'lastUsed': template.lastUsed?.toIso8601String(),
       'timesUsed': template.timesUsed,
-      'metadata':
-          template.metadata != null ? jsonEncode(template.metadata!) : null,
+      'metadata': template.metadata != null
+          ? jsonEncode(template.metadata!)
+          : null,
     };
   }
 
   WorkoutTemplate _templateFromMap(Map<String, dynamic> map) {
     print('DEBUG: Processing template from map: ${map.keys}');
     print(
-        'DEBUG: preferredCategories value: ${map['preferredCategories']} (type: ${map['preferredCategories'].runtimeType})');
+      'DEBUG: preferredCategories value: ${map['preferredCategories']} (type: ${map['preferredCategories'].runtimeType})',
+    );
     print(
-        'DEBUG: availableEquipment value: ${map['availableEquipment']} (type: ${map['availableEquipment'].runtimeType})');
+      'DEBUG: availableEquipment value: ${map['availableEquipment']} (type: ${map['availableEquipment'].runtimeType})',
+    );
     print(
-        'DEBUG: metadata value: ${map['metadata']} (type: ${map['metadata'].runtimeType})');
+      'DEBUG: metadata value: ${map['metadata']} (type: ${map['metadata'].runtimeType})',
+    );
 
     return WorkoutTemplate(
       id: map['id'] as String,
@@ -198,14 +215,19 @@ class SQLiteWorkoutTemplateRepository implements WorkoutTemplateRepository {
           ? () {
               try {
                 print(
-                    'DEBUG: Attempting to decode preferredCategories: ${map['preferredCategories']}');
+                  'DEBUG: Attempting to decode preferredCategories: ${map['preferredCategories']}',
+                );
                 final decoded =
                     jsonDecode(map['preferredCategories']!) as List?;
                 print(
-                    'DEBUG: Successfully decoded preferredCategories: $decoded');
+                  'DEBUG: Successfully decoded preferredCategories: $decoded',
+                );
                 return decoded
-                    ?.map((c) => MovementCategory.values.firstWhere(
-                        (mc) => mc.toString() == 'MovementCategory.$c'))
+                    ?.map(
+                      (c) => MovementCategory.values.firstWhere(
+                        (mc) => mc.toString() == 'MovementCategory.$c',
+                      ),
+                    )
                     .toList();
               } catch (e) {
                 print('ERROR: Failed to decode preferredCategories: $e');
@@ -217,13 +239,18 @@ class SQLiteWorkoutTemplateRepository implements WorkoutTemplateRepository {
           ? () {
               try {
                 print(
-                    'DEBUG: Attempting to decode availableEquipment: ${map['availableEquipment']}');
+                  'DEBUG: Attempting to decode availableEquipment: ${map['availableEquipment']}',
+                );
                 final decoded = jsonDecode(map['availableEquipment']!) as List?;
                 print(
-                    'DEBUG: Successfully decoded availableEquipment: $decoded');
+                  'DEBUG: Successfully decoded availableEquipment: $decoded',
+                );
                 return decoded
-                    ?.map((e) => EquipmentType.values.firstWhere(
-                        (et) => et.toString() == 'EquipmentType.$e'))
+                    ?.map(
+                      (e) => EquipmentType.values.firstWhere(
+                        (et) => et.toString() == 'EquipmentType.$e',
+                      ),
+                    )
                     .toList();
               } catch (e) {
                 print('ERROR: Failed to decode availableEquipment: $e');
@@ -243,7 +270,8 @@ class SQLiteWorkoutTemplateRepository implements WorkoutTemplateRepository {
           ? () {
               try {
                 print(
-                    'DEBUG: Attempting to decode metadata: ${map['metadata']}');
+                  'DEBUG: Attempting to decode metadata: ${map['metadata']}',
+                );
                 final decoded = jsonDecode(map['metadata']!);
                 // Safely cast only if it's actually a Map
                 final result = decoded is Map<String, dynamic> ? decoded : null;

@@ -96,10 +96,7 @@ class _WorkoutTemplatesScreenState extends State<WorkoutTemplatesScreen> {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
-            Text(
-              _error!,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            Text(_error!, style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadTemplates,
@@ -196,9 +193,7 @@ class _WorkoutTemplatesScreenState extends State<WorkoutTemplatesScreen> {
                 } catch (e) {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Error deleting template: $e'),
-                      ),
+                      SnackBar(content: Text('Error deleting template: $e')),
                     );
                   }
                 }
