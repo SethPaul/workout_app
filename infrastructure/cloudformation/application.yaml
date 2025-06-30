@@ -1,0 +1,367 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Application infrastructure for Realtime Collaborative Platform'
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Description: 'Environment name for resource naming'
+  
+  VpcId:
+    Type: String
+    Description: 'VPC ID for application resources'
+  
+  PublicSubnetIds:
+    Type: CommaDelimitedList
+    Description: 'Public subnet IDs for load balancer'
+  
+  PrivateSubnetIds:
+    Type: CommaDelimitedList
+    Description: 'Private subnet IDs for ECS tasks'
+  
+  ContainerImage:
+    Type: String
+    Description: 'Docker image URI for the collaboration server'
+  
+  DesiredCapacity:
+    Type: Number
+    Default: 2
+    Description: 'Desired number of ECS tasks'
+  
+  MaxCapacity:
+    Type: Number
+    Default: 10
+    Description: 'Maximum number of ECS tasks'
+  
+  MinCapacity:
+    Type: Number
+    Default: 1
+    Description: 'Minimum number of ECS tasks'
+  
+  RedisEndpoint:
+    Type: String
+    Description: 'Redis cluster endpoint'
+  
+  DynamoDBTable:
+    Type: String
+    Description: 'DynamoDB table name'
+  
+  CertificateArn:
+    Type: String
+    Description: 'SSL certificate ARN'
+
+Resources:
+  # ECS Cluster
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub '${EnvironmentName}-collaboration-cluster'
+      CapacityProviders:
+        - FARGATE
+        - FARGATE_SPOT
+      DefaultCapacityProviderStrategy:
+        - CapacityProvider: FARGATE
+          Weight: 1
+        - CapacityProvider: FARGATE_SPOT
+          Weight: 2
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-ecs-cluster'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  # Application Load Balancer
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub '${EnvironmentName}-collaboration-alb'
+      Scheme: internet-facing
+      Type: application
+      Subnets: !Ref PublicSubnetIds
+      SecurityGroups:
+        - !ImportValue !Sub '${EnvironmentName}-LoadBalancerSecurityGroupId'
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-application-lb'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  # Target Groups
+  HTTPTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub '${EnvironmentName}-http-targets'
+      Port: 3000
+      Protocol: HTTP
+      VpcId: !Ref VpcId
+      TargetType: ip
+      HealthCheckPath: /health
+      HealthCheckProtocol: HTTP
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-http-target-group'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  WebSocketTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub '${EnvironmentName}-ws-targets'
+      Port: 3001
+      Protocol: HTTP
+      VpcId: !Ref VpcId
+      TargetType: ip
+      HealthCheckPath: /ws-health
+      HealthCheckProtocol: HTTP
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-websocket-target-group'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  # Listeners
+  HTTPSListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref HTTPTargetGroup
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 443
+      Protocol: HTTPS
+      Certificates:
+        - CertificateArn: !Ref CertificateArn
+      SslPolicy: ELBSecurityPolicy-TLS-1-2-2017-01
+
+  HTTPListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: redirect
+          RedirectConfig:
+            Protocol: HTTPS
+            Port: 443
+            StatusCode: HTTP_301
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+  WebSocketListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref WebSocketTargetGroup
+      Conditions:
+        - Field: path-pattern
+          Values: ['/ws/*']
+      ListenerArn: !Ref HTTPSListener
+      Priority: 100
+
+  # IAM Roles
+  ECSTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${EnvironmentName}-ecs-task-execution-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: SecretsManagerAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !ImportValue !Sub '${EnvironmentName}-RedisAuthTokenSecret'
+
+  ECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${EnvironmentName}-ecs-task-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                  - dynamodb:BatchGetItem
+                  - dynamodb:BatchWriteItem
+                Resource:
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTable}'
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTable}/index/*'
+
+  # CloudWatch Log Group
+  ECSLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/ecs/${EnvironmentName}-collaboration'
+      RetentionInDays: 30
+
+  # ECS Task Definition
+  ECSTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub '${EnvironmentName}-collaboration-task'
+      Cpu: 512
+      Memory: 1024
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
+      TaskRoleArn: !GetAtt ECSTaskRole.Arn
+      ContainerDefinitions:
+        - Name: collaboration-server
+          Image: !Ref ContainerImage
+          Essential: true
+          PortMappings:
+            - ContainerPort: 3000
+              Protocol: tcp
+            - ContainerPort: 3001
+              Protocol: tcp
+          Environment:
+            - Name: NODE_ENV
+              Value: production
+            - Name: REDIS_ENDPOINT
+              Value: !Ref RedisEndpoint
+            - Name: DYNAMODB_TABLE
+              Value: !Ref DynamoDBTable
+            - Name: AWS_REGION
+              Value: !Ref AWS::Region
+          Secrets:
+            - Name: REDIS_AUTH_TOKEN
+              ValueFrom: !ImportValue !Sub '${EnvironmentName}-RedisAuthTokenSecret'
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref ECSLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: ecs
+          HealthCheck:
+            Command:
+              - CMD-SHELL
+              - curl -f http://localhost:3000/health || exit 1
+            Interval: 30
+            Timeout: 5
+            Retries: 3
+
+  # ECS Service
+  ECSService:
+    Type: AWS::ECS::Service
+    DependsOn: HTTPSListener
+    Properties:
+      ServiceName: !Sub '${EnvironmentName}-collaboration-service'
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref ECSTaskDefinition
+      DesiredCount: !Ref DesiredCapacity
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - !ImportValue !Sub '${EnvironmentName}-ApplicationSecurityGroupId'
+          Subnets: !Ref PrivateSubnetIds
+      LoadBalancers:
+        - ContainerName: collaboration-server
+          ContainerPort: 3000
+          TargetGroupArn: !Ref HTTPTargetGroup
+        - ContainerName: collaboration-server
+          ContainerPort: 3001
+          TargetGroupArn: !Ref WebSocketTargetGroup
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 50
+        DeploymentCircuitBreaker:
+          Enable: true
+          Rollback: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-ecs-service'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  # Auto Scaling
+  ServiceScalingTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: !Ref MaxCapacity
+      MinCapacity: !Ref MinCapacity
+      ResourceId: !Sub 'service/${ECSCluster}/${ECSService.Name}'
+      RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService'
+      ServiceNamespace: ecs
+      ScalableDimension: ecs:service:DesiredCount
+
+  ServiceScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub '${EnvironmentName}-collaboration-scaling-policy'
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref ServiceScalingTarget
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+        TargetValue: 70
+        ScaleOutCooldown: 300
+        ScaleInCooldown: 300
+
+Outputs:
+  ECSClusterName:
+    Description: 'ECS Cluster name'
+    Value: !Ref ECSCluster
+    Export:
+      Name: !Sub '${EnvironmentName}-ECSClusterName'
+
+  LoadBalancerDNS:
+    Description: 'Application Load Balancer DNS name'
+    Value: !GetAtt ApplicationLoadBalancer.DNSName
+    Export:
+      Name: !Sub '${EnvironmentName}-LoadBalancerDNS'
+
+  LoadBalancerFullName:
+    Description: 'Application Load Balancer full name'
+    Value: !GetAtt ApplicationLoadBalancer.LoadBalancerFullName
+    Export:
+      Name: !Sub '${EnvironmentName}-LoadBalancerFullName'
+
+  LoadBalancerArn:
+    Description: 'Application Load Balancer ARN'
+    Value: !Ref ApplicationLoadBalancer
+    Export:
+      Name: !Sub '${EnvironmentName}-LoadBalancerArn'
+
+  ECSServiceName:
+    Description: 'ECS Service name'
+    Value: !GetAtt ECSService.Name
+    Export:
+      Name: !Sub '${EnvironmentName}-ECSServiceName'

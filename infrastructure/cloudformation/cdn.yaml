@@ -1,0 +1,333 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFront CDN infrastructure for Realtime Collaborative Platform'
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Description: 'Environment name for resource naming'
+  
+  DomainName:
+    Type: String
+    Description: 'Domain name for the application'
+  
+  CertificateArn:
+    Type: String
+    Description: 'SSL certificate ARN (must be in us-east-1 for CloudFront)'
+  
+  ApplicationLoadBalancerDNS:
+    Type: String
+    Description: 'Application Load Balancer DNS name'
+  
+  WebSocketApiEndpoint:
+    Type: String
+    Description: 'WebSocket API endpoint'
+
+Resources:
+  # S3 Bucket for static assets
+  StaticAssetsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${EnvironmentName}-collaboration-static-${AWS::AccountId}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteIncompleteMultipartUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+          - Id: NonCurrentVersionExpiration
+            Status: Enabled
+            NoncurrentVersionExpirationInDays: 30
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-static-assets'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  # Origin Access Identity for CloudFront
+  CloudFrontOriginAccessIdentity:
+    Type: AWS::CloudFront::OriginAccessIdentity
+    Properties:
+      OriginAccessIdentityConfig:
+        Comment: !Sub 'OAI for ${EnvironmentName} collaboration platform'
+
+  # S3 Bucket Policy
+  StaticAssetsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref StaticAssetsBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCloudFrontAccess
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${CloudFrontOriginAccessIdentity}'
+            Action: s3:GetObject
+            Resource: !Sub '${StaticAssetsBucket.Arn}/*'
+          - Sid: AllowCloudFrontListBucket
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${CloudFrontOriginAccessIdentity}'
+            Action: s3:ListBucket
+            Resource: !Ref StaticAssetsBucket
+
+  # CloudFront Distribution
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Ref DomainName
+        Comment: !Sub 'CloudFront distribution for ${EnvironmentName} collaboration platform'
+        DefaultCacheBehavior:
+          TargetOriginId: ALBOrigin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+            - PUT
+            - POST
+            - PATCH
+            - DELETE
+          CachedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          Compress: true
+          ForwardedValues:
+            QueryString: true
+            Headers:
+              - Authorization
+              - Content-Type
+              - Accept
+              - Accept-Language
+              - Accept-Encoding
+              - Origin
+              - Referer
+              - User-Agent
+              - X-Forwarded-For
+              - X-Forwarded-Proto
+              - X-Forwarded-Port
+            Cookies:
+              Forward: all
+          TrustedSigners: []
+          MinTTL: 0
+          DefaultTTL: 0
+          MaxTTL: 31536000
+        CacheBehaviors:
+          - PathPattern: '/static/*'
+            TargetOriginId: S3Origin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+            CachedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+            Compress: true
+            ForwardedValues:
+              QueryString: false
+              Headers: []
+              Cookies:
+                Forward: none
+            MinTTL: 0
+            DefaultTTL: 86400
+            MaxTTL: 31536000
+          - PathPattern: '/api/*'
+            TargetOriginId: ALBOrigin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+              - PUT
+              - POST
+              - PATCH
+              - DELETE
+            CachedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+            Compress: true
+            ForwardedValues:
+              QueryString: true
+              Headers:
+                - '*'
+              Cookies:
+                Forward: all
+            MinTTL: 0
+            DefaultTTL: 0
+            MaxTTL: 0
+        DefaultRootObject: index.html
+        Enabled: true
+        HttpVersion: http2
+        IPV6Enabled: true
+        Origins:
+          - Id: ALBOrigin
+            DomainName: !Ref ApplicationLoadBalancerDNS
+            CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              OriginProtocolPolicy: https-only
+              OriginSSLProtocols:
+                - TLSv1.2
+            OriginPath: ''
+          - Id: S3Origin
+            DomainName: !GetAtt StaticAssetsBucket.RegionalDomainName
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub 'origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}'
+            OriginPath: ''
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CertificateArn
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
+        CustomErrorResponses:
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 300
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 300
+        Logging:
+          Bucket: !GetAtt LoggingBucket.DomainName
+          IncludeCookies: false
+          Prefix: cloudfront-logs/
+        WebACLId: !Ref WebACL
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-cloudfront-distribution'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  # Logging bucket for CloudFront
+  LoggingBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${EnvironmentName}-cloudfront-logs-${AWS::AccountId}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldLogs
+            Status: Enabled
+            ExpirationInDays: 90
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-cloudfront-logs'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  # WAF Web ACL for CloudFront
+  WebACL:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Name: !Sub '${EnvironmentName}-cloudfront-waf'
+      Scope: CLOUDFRONT
+      DefaultAction:
+        Allow: {}
+      Rules:
+        - Name: AWSManagedRulesCommonRuleSet
+          Priority: 1
+          OverrideAction:
+            None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesCommonRuleSet
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: CommonRuleSetMetric
+        - Name: AWSManagedRulesKnownBadInputsRuleSet
+          Priority: 2
+          OverrideAction:
+            None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesKnownBadInputsRuleSet
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: KnownBadInputsRuleSetMetric
+        - Name: RateLimitRule
+          Priority: 3
+          Action:
+            Block: {}
+          Statement:
+            RateBasedStatement:
+              Limit: 2000
+              AggregateKeyType: IP
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: RateLimitMetric
+      VisibilityConfig:
+        SampledRequestsEnabled: true
+        CloudWatchMetricsEnabled: true
+        MetricName: !Sub '${EnvironmentName}WebACL'
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-waf-acl'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  # Route 53 DNS Record
+  DNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneName: !Sub '${DomainName}.'
+      Name: !Ref DomainName
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt CloudFrontDistribution.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2 # CloudFront hosted zone ID
+
+Outputs:
+  CloudFrontDomainName:
+    Description: 'CloudFront distribution domain name'
+    Value: !GetAtt CloudFrontDistribution.DomainName
+    Export:
+      Name: !Sub '${EnvironmentName}-CloudFrontDomainName'
+
+  CloudFrontDistributionId:
+    Description: 'CloudFront distribution ID'
+    Value: !Ref CloudFrontDistribution
+    Export:
+      Name: !Sub '${EnvironmentName}-CloudFrontDistributionId'
+
+  StaticAssetsBucket:
+    Description: 'S3 bucket name for static assets'
+    Value: !Ref StaticAssetsBucket
+    Export:
+      Name: !Sub '${EnvironmentName}-StaticAssetsBucket'
+
+  WebACLArn:
+    Description: 'WAF Web ACL ARN'
+    Value: !GetAtt WebACL.Arn
+    Export:
+      Name: !Sub '${EnvironmentName}-WebACLArn'

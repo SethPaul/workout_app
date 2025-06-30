@@ -1,0 +1,364 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Monitoring and observability infrastructure for Realtime Collaborative Platform'
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Description: 'Environment name for resource naming'
+  
+  ECSClusterName:
+    Type: String
+    Description: 'ECS Cluster name'
+  
+  LoadBalancerFullName:
+    Type: String
+    Description: 'Application Load Balancer full name'
+  
+  WebSocketApiId:
+    Type: String
+    Description: 'WebSocket API ID'
+
+Resources:
+  # CloudWatch Dashboard
+  CollaborationDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Sub '${EnvironmentName}-collaboration-platform'
+      DashboardBody: !Sub |
+        {
+          "widgets": [
+            {
+              "type": "metric",
+              "x": 0,
+              "y": 0,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "AWS/ECS", "CPUUtilization", "ServiceName", "${EnvironmentName}-collaboration-service", "ClusterName", "${ECSClusterName}" ],
+                  [ ".", "MemoryUtilization", ".", ".", ".", "." ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "ECS Service Metrics",
+                "period": 300
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12,
+              "y": 0,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "AWS/ApplicationELB", "RequestCount", "LoadBalancer", "${LoadBalancerFullName}" ],
+                  [ ".", "TargetResponseTime", ".", "." ],
+                  [ ".", "HTTPCode_ELB_5XX_Count", ".", "." ],
+                  [ ".", "HTTPCode_Target_2XX_Count", ".", "." ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "Load Balancer Metrics",
+                "period": 300
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0,
+              "y": 6,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "${EnvironmentName}-collaboration-state" ],
+                  [ ".", "ConsumedWriteCapacityUnits", ".", "." ],
+                  [ ".", "ThrottledRequests", ".", "." ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "DynamoDB Metrics",
+                "period": 300
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12,
+              "y": 6,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "AWS/ElastiCache", "CPUUtilization", "CacheClusterId", "${EnvironmentName}-collaboration-redis-001" ],
+                  [ ".", "DatabaseMemoryUsagePercentage", ".", "." ],
+                  [ ".", "NetworkBytesIn", ".", "." ],
+                  [ ".", "NetworkBytesOut", ".", "." ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "Redis Metrics",
+                "period": 300
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0,
+              "y": 12,
+              "width": 24,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "AWS/ApiGateway", "Count", "ApiName", "${EnvironmentName}-collaboration-websocket" ],
+                  [ ".", "IntegrationLatency", ".", "." ],
+                  [ ".", "Latency", ".", "." ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "WebSocket API Metrics",
+                "period": 300
+              }
+            }
+          ]
+        }
+
+  # SNS Topic for Alerts
+  AlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub '${EnvironmentName}-collaboration-alerts'
+      DisplayName: !Sub 'Alerts for ${EnvironmentName} Collaboration Platform'
+
+  # CloudWatch Alarms
+  ECSHighCPUAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${EnvironmentName}-ecs-high-cpu'
+      AlarmDescription: 'ECS service CPU usage is high'
+      MetricName: CPUUtilization
+      Namespace: AWS/ECS
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 80
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: ServiceName
+          Value: !Sub '${EnvironmentName}-collaboration-service'
+        - Name: ClusterName
+          Value: !Ref ECSClusterName
+      AlarmActions:
+        - !Ref AlertsTopic
+
+  ECSHighMemoryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${EnvironmentName}-ecs-high-memory'
+      AlarmDescription: 'ECS service memory usage is high'
+      MetricName: MemoryUtilization
+      Namespace: AWS/ECS
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 85
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: ServiceName
+          Value: !Sub '${EnvironmentName}-collaboration-service'
+        - Name: ClusterName
+          Value: !Ref ECSClusterName
+      AlarmActions:
+        - !Ref AlertsTopic
+
+  ALBHighLatencyAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${EnvironmentName}-alb-high-latency'
+      AlarmDescription: 'Application Load Balancer response time is high'
+      MetricName: TargetResponseTime
+      Namespace: AWS/ApplicationELB
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 2
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: LoadBalancer
+          Value: !Ref LoadBalancerFullName
+      AlarmActions:
+        - !Ref AlertsTopic
+
+  ALBErrorRateAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${EnvironmentName}-alb-error-rate'
+      AlarmDescription: 'Application Load Balancer error rate is high'
+      MetricName: HTTPCode_ELB_5XX_Count
+      Namespace: AWS/ApplicationELB
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 10
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: LoadBalancer
+          Value: !Ref LoadBalancerFullName
+      AlarmActions:
+        - !Ref AlertsTopic
+
+  WebSocketHighLatencyAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${EnvironmentName}-websocket-high-latency'
+      AlarmDescription: 'WebSocket API latency is high'
+      MetricName: IntegrationLatency
+      Namespace: AWS/ApiGateway
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 5000
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: ApiName
+          Value: !Sub '${EnvironmentName}-collaboration-websocket'
+      AlarmActions:
+        - !Ref AlertsTopic
+
+  # Log Groups
+  ApplicationLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/ecs/${EnvironmentName}/collaboration'
+      RetentionInDays: 30
+
+  WebSocketLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${EnvironmentName}/websocket'
+      RetentionInDays: 30
+
+  # Custom Metrics for Business Logic
+  CustomMetricsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${EnvironmentName}-custom-metrics-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: CloudWatchMetrics
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudwatch:PutMetricData
+                Resource: '*'
+
+  # Lambda for Custom Metrics (Business Logic Monitoring)
+  CustomMetricsFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${EnvironmentName}-custom-metrics'
+      Runtime: python3.9
+      Handler: index.lambda_handler
+      Role: !GetAtt CustomMetricsRole.Arn
+      Timeout: 60
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref EnvironmentName
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+          import os
+          from datetime import datetime
+          
+          cloudwatch = boto3.client('cloudwatch')
+          
+          def lambda_handler(event, context):
+              """
+              Custom metrics function for business logic monitoring
+              This can be invoked by the application to track custom metrics
+              """
+              try:
+                  environment = os.environ['ENVIRONMENT']
+                  
+                  # Parse the incoming metrics data
+                  metrics = json.loads(event.get('body', '{}'))
+                  
+                  # Put custom metrics to CloudWatch
+                  for metric in metrics.get('metrics', []):
+                      cloudwatch.put_metric_data(
+                          Namespace=f'CollaborationPlatform/{environment}',
+                          MetricData=[
+                              {
+                                  'MetricName': metric.get('name'),
+                                  'Value': metric.get('value', 0),
+                                  'Unit': metric.get('unit', 'Count'),
+                                  'Dimensions': [
+                                      {
+                                          'Name': 'Environment',
+                                          'Value': environment
+                                      }
+                                  ],
+                                  'Timestamp': datetime.utcnow()
+                              }
+                          ]
+                      )
+                  
+                  return {
+                      'statusCode': 200,
+                      'body': json.dumps({'message': 'Metrics published successfully'})
+                  }
+                  
+              except Exception as e:
+                  print(f'Error publishing metrics: {str(e)}')
+                  return {
+                      'statusCode': 500,
+                      'body': json.dumps({'error': 'Failed to publish metrics'})
+                  }
+
+  # CloudWatch Insights Queries
+  InsightQueriesParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/${EnvironmentName}/cloudwatch/insight-queries'
+      Type: String
+      Value: !Sub |
+        {
+          "error_analysis": "fields @timestamp, @message | filter @message like /ERROR/ | sort @timestamp desc | limit 100",
+          "slow_requests": "fields @timestamp, @message | filter @message like /slow/ or @duration > 1000 | sort @timestamp desc | limit 50",
+          "websocket_connections": "fields @timestamp, @message | filter @message like /connect/ or @message like /disconnect/ | stats count() by bin(5m)",
+          "collaboration_events": "fields @timestamp, @message | filter @message like /collaboration/ | stats count() by action, bin(5m)"
+        }
+      Description: 'CloudWatch Insights queries for collaboration platform'
+
+Outputs:
+  DashboardURL:
+    Description: 'CloudWatch dashboard URL'
+    Value: !Sub 'https://${AWS::Region}.console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#dashboards:name=${EnvironmentName}-collaboration-platform'
+    Export:
+      Name: !Sub '${EnvironmentName}-DashboardURL'
+
+  AlertsTopicArn:
+    Description: 'SNS topic ARN for alerts'
+    Value: !Ref AlertsTopic
+    Export:
+      Name: !Sub '${EnvironmentName}-AlertsTopicArn'
+
+  CustomMetricsFunctionArn:
+    Description: 'Custom metrics Lambda function ARN'
+    Value: !GetAtt CustomMetricsFunction.Arn
+    Export:
+      Name: !Sub '${EnvironmentName}-CustomMetricsFunctionArn'
