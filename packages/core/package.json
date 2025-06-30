@@ -1,0 +1,41 @@
+{
+  "name": "@collab-platform/core",
+  "version": "1.0.0",
+  "description": "Core isolated components for realtime collaborative platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src/**/*.ts",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "uuid": "^9.0.0",
+    "eventemitter3": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/uuid": "^9.0.0",
+    "@types/jest": "^29.5.0",
+    "jest": "^29.5.0",
+    "typescript": "^5.0.0",
+    "eslint": "^8.40.0",
+    "@typescript-eslint/eslint-plugin": "^5.59.0",
+    "@typescript-eslint/parser": "^5.59.0",
+    "ts-jest": "^29.1.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "src/**/*.ts",
+      "!src/**/*.d.ts",
+      "!src/**/index.ts"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.test.ts"
+    ]
+  }
+}
