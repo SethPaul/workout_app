@@ -1,0 +1,408 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Database and caching infrastructure for Realtime Collaborative Platform'
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Description: 'Environment name for resource naming'
+  
+  VpcId:
+    Type: String
+    Description: 'VPC ID for database resources'
+  
+  PrivateSubnetIds:
+    Type: CommaDelimitedList
+    Description: 'Private subnet IDs for database placement'
+  
+  RedisInstanceType:
+    Type: String
+    Default: 'cache.t3.micro'
+    Description: 'ElastiCache Redis instance type'
+
+Resources:
+  # DynamoDB Table for storing collaboration state
+  CollaborationTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${EnvironmentName}-collaboration-state'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: 'SessionId'
+          AttributeType: 'S'
+        - AttributeName: 'ElementId'
+          AttributeType: 'S'
+        - AttributeName: 'Version'
+          AttributeType: 'N'
+        - AttributeName: 'UserId'
+          AttributeType: 'S'
+        - AttributeName: 'Timestamp'
+          AttributeType: 'N'
+      KeySchema:
+        - AttributeName: 'SessionId'
+          KeyType: 'HASH'
+        - AttributeName: 'ElementId'
+          KeyType: 'RANGE'
+      GlobalSecondaryIndexes:
+        - IndexName: 'UserOperationsIndex'
+          KeySchema:
+            - AttributeName: 'UserId'
+              KeyType: 'HASH'
+            - AttributeName: 'Timestamp'
+              KeyType: 'RANGE'
+          Projection:
+            ProjectionType: 'ALL'
+        - IndexName: 'ElementVersionIndex'
+          KeySchema:
+            - AttributeName: 'ElementId'
+              KeyType: 'HASH'
+            - AttributeName: 'Version'
+              KeyType: 'RANGE'
+          Projection:
+            ProjectionType: 'ALL'
+      StreamSpecification:
+        StreamViewType: 'NEW_AND_OLD_IMAGES'
+      TimeToLiveSpecification:
+        AttributeName: 'TTL'
+        Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+        KMSMasterKeyId: !Ref DynamoDBKMSKey
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-collaboration-table'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  # DynamoDB Table for session management
+  SessionTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${EnvironmentName}-collaboration-sessions'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: 'SessionId'
+          AttributeType: 'S'
+        - AttributeName: 'ConnectionId'
+          AttributeType: 'S'
+        - AttributeName: 'UserId'
+          AttributeType: 'S'
+      KeySchema:
+        - AttributeName: 'SessionId'
+          KeyType: 'HASH'
+        - AttributeName: 'ConnectionId'
+          KeyType: 'RANGE'
+      GlobalSecondaryIndexes:
+        - IndexName: 'ConnectionIndex'
+          KeySchema:
+            - AttributeName: 'ConnectionId'
+              KeyType: 'HASH'
+          Projection:
+            ProjectionType: 'ALL'
+        - IndexName: 'UserSessionIndex'
+          KeySchema:
+            - AttributeName: 'UserId'
+              KeyType: 'HASH'
+            - AttributeName: 'SessionId'
+              KeyType: 'RANGE'
+          Projection:
+            ProjectionType: 'ALL'
+      TimeToLiveSpecification:
+        AttributeName: 'TTL'
+        Enabled: true
+      SSESpecification:
+        SSEEnabled: true
+        KMSMasterKeyId: !Ref DynamoDBKMSKey
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-session-table'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  # KMS Key for DynamoDB encryption
+  DynamoDBKMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: !Sub 'KMS Key for ${EnvironmentName} DynamoDB encryption'
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action: 'kms:*'
+            Resource: '*'
+          - Sid: Allow DynamoDB Service
+            Effect: Allow
+            Principal:
+              Service: dynamodb.amazonaws.com
+            Action:
+              - 'kms:Decrypt'
+              - 'kms:GenerateDataKey'
+              - 'kms:CreateGrant'
+              - 'kms:DescribeKey'
+            Resource: '*'
+            Condition:
+              StringEquals:
+                'kms:ViaService': !Sub 'dynamodb.${AWS::Region}.amazonaws.com'
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-dynamodb-key'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  DynamoDBKMSKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub 'alias/${EnvironmentName}-collaboration-dynamodb'
+      TargetKeyId: !Ref DynamoDBKMSKey
+
+  # ElastiCache Subnet Group
+  RedisSubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      Description: !Sub 'Subnet group for ${EnvironmentName} Redis cluster'
+      SubnetIds: !Ref PrivateSubnetIds
+      CacheSubnetGroupName: !Sub '${EnvironmentName}-redis-subnet-group'
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-redis-subnet-group'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  # ElastiCache Parameter Group
+  RedisParameterGroup:
+    Type: AWS::ElastiCache::ParameterGroup
+    Properties:
+      CacheParameterGroupFamily: 'redis7.x'
+      Description: !Sub 'Parameter group for ${EnvironmentName} Redis cluster'
+      CacheParameterGroupName: !Sub '${EnvironmentName}-redis-params'
+      Properties:
+        maxmemory-policy: 'allkeys-lru'
+        timeout: '300'
+        tcp-keepalive: '60'
+        maxclients: '10000'
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-redis-parameter-group'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  # ElastiCache Replication Group (Redis Cluster)
+  RedisReplicationGroup:
+    Type: AWS::ElastiCache::ReplicationGroup
+    Properties:
+      ReplicationGroupId: !Sub '${EnvironmentName}-collaboration-redis'
+      Description: !Sub 'Redis cluster for ${EnvironmentName} collaboration platform'
+      NodeType: !Ref RedisInstanceType
+      Port: 6379
+      ParameterGroupName: !Ref RedisParameterGroup
+      CacheSubnetGroupName: !Ref RedisSubnetGroup
+      SecurityGroupIds:
+        - !ImportValue !Sub '${EnvironmentName}-DatabaseSecurityGroupId'
+      NumCacheClusters: 2
+      MultiAZEnabled: true
+      AutomaticFailoverEnabled: true
+      AtRestEncryptionEnabled: true
+      TransitEncryptionEnabled: true
+      KmsKeyId: !Ref RedisKMSKey
+      AuthToken: !Ref RedisAuthToken
+      SnapshotRetentionLimit: 7
+      SnapshotWindow: '03:00-05:00'
+      PreferredMaintenanceWindow: 'sun:05:00-sun:07:00'
+      LogDeliveryConfigurations:
+        - DestinationType: cloudwatch-logs
+          DestinationDetails:
+            LogGroup: !Ref RedisLogGroup
+          LogFormat: text
+          LogType: slow-log
+      NotificationTopicArn: !Ref RedisNotificationTopic
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-redis-cluster'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  # KMS Key for Redis encryption
+  RedisKMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: !Sub 'KMS Key for ${EnvironmentName} Redis encryption'
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action: 'kms:*'
+            Resource: '*'
+          - Sid: Allow ElastiCache Service
+            Effect: Allow
+            Principal:
+              Service: elasticache.amazonaws.com
+            Action:
+              - 'kms:Decrypt'
+              - 'kms:GenerateDataKey'
+              - 'kms:CreateGrant'
+              - 'kms:DescribeKey'
+            Resource: '*'
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-redis-key'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  RedisKMSKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub 'alias/${EnvironmentName}-collaboration-redis'
+      TargetKeyId: !Ref RedisKMSKey
+
+  # Redis Auth Token (stored in Secrets Manager)
+  RedisAuthToken:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub '${EnvironmentName}/collaboration/redis-auth-token'
+      Description: !Sub 'Redis authentication token for ${EnvironmentName}'
+      GenerateSecretString:
+        SecretStringTemplate: '{}'
+        GenerateStringKey: 'authToken'
+        PasswordLength: 64
+        ExcludeCharacters: '"@/\'
+      KmsKeyId: !Ref RedisKMSKey
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-redis-auth-token'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  # CloudWatch Log Group for Redis
+  RedisLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/elasticache/redis/${EnvironmentName}'
+      RetentionInDays: 30
+      KmsKeyId: !GetAtt RedisKMSKey.Arn
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-redis-logs'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  # SNS Topic for Redis notifications
+  RedisNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub '${EnvironmentName}-redis-notifications'
+      DisplayName: !Sub 'Redis Notifications for ${EnvironmentName}'
+      KmsMasterKeyId: !Ref RedisKMSKey
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-redis-notifications'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  # CloudWatch Alarms for Redis
+  RedisHighMemoryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${EnvironmentName}-redis-high-memory'
+      AlarmDescription: 'Redis memory usage is high'
+      MetricName: DatabaseMemoryUsagePercentage
+      Namespace: AWS/ElastiCache
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 80
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: CacheClusterId
+          Value: !Sub '${EnvironmentName}-collaboration-redis-001'
+      AlarmActions:
+        - !Ref RedisNotificationTopic
+      TreatMissingData: notBreaching
+
+  RedisHighCPUAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${EnvironmentName}-redis-high-cpu'
+      AlarmDescription: 'Redis CPU usage is high'
+      MetricName: CPUUtilization
+      Namespace: AWS/ElastiCache
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 75
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: CacheClusterId
+          Value: !Sub '${EnvironmentName}-collaboration-redis-001'
+      AlarmActions:
+        - !Ref RedisNotificationTopic
+      TreatMissingData: notBreaching
+
+  # DynamoDB CloudWatch Alarms
+  DynamoDBThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${EnvironmentName}-dynamodb-throttle'
+      AlarmDescription: 'DynamoDB requests are being throttled'
+      MetricName: ThrottledRequests
+      Namespace: AWS/DynamoDB
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: TableName
+          Value: !Ref CollaborationTable
+      AlarmActions:
+        - !Ref RedisNotificationTopic
+      TreatMissingData: notBreaching
+
+Outputs:
+  DynamoDBTable:
+    Description: 'DynamoDB table name for collaboration state'
+    Value: !Ref CollaborationTable
+    Export:
+      Name: !Sub '${EnvironmentName}-DynamoDBTable'
+
+  SessionTable:
+    Description: 'DynamoDB table name for session management'
+    Value: !Ref SessionTable
+    Export:
+      Name: !Sub '${EnvironmentName}-SessionTable'
+
+  RedisEndpoint:
+    Description: 'Redis cluster primary endpoint'
+    Value: !GetAtt RedisReplicationGroup.PrimaryEndPoint.Address
+    Export:
+      Name: !Sub '${EnvironmentName}-RedisEndpoint'
+
+  RedisPort:
+    Description: 'Redis cluster port'
+    Value: !GetAtt RedisReplicationGroup.PrimaryEndPoint.Port
+    Export:
+      Name: !Sub '${EnvironmentName}-RedisPort'
+
+  RedisAuthTokenSecret:
+    Description: 'Secrets Manager ARN for Redis auth token'
+    Value: !Ref RedisAuthToken
+    Export:
+      Name: !Sub '${EnvironmentName}-RedisAuthTokenSecret'
+
+  DynamoDBKMSKey:
+    Description: 'KMS Key ARN for DynamoDB encryption'
+    Value: !GetAtt DynamoDBKMSKey.Arn
+    Export:
+      Name: !Sub '${EnvironmentName}-DynamoDBKMSKey'
+
+  RedisKMSKey:
+    Description: 'KMS Key ARN for Redis encryption'
+    Value: !GetAtt RedisKMSKey.Arn
+    Export:
+      Name: !Sub '${EnvironmentName}-RedisKMSKey'

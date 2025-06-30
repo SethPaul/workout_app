@@ -1,0 +1,415 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Network infrastructure for Realtime Collaborative Platform'
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Description: 'Environment name for resource naming'
+  
+  VpcCidr:
+    Type: String
+    Default: '10.0.0.0/16'
+    Description: 'CIDR block for the VPC'
+
+Resources:
+  # VPC
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-collaboration-vpc'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  # Internet Gateway
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-collaboration-igw'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  # Public Subnets
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [0, !GetAZs '']
+      CidrBlock: !Select [0, !Cidr [!Ref VpcCidr, 8, 8]]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-public-subnet-1'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+        - Key: Type
+          Value: 'Public'
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [1, !GetAZs '']
+      CidrBlock: !Select [1, !Cidr [!Ref VpcCidr, 8, 8]]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-public-subnet-2'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+        - Key: Type
+          Value: 'Public'
+
+  # Private Subnets
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [0, !GetAZs '']
+      CidrBlock: !Select [2, !Cidr [!Ref VpcCidr, 8, 8]]
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-private-subnet-1'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+        - Key: Type
+          Value: 'Private'
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [1, !GetAZs '']
+      CidrBlock: !Select [3, !Cidr [!Ref VpcCidr, 8, 8]]
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-private-subnet-2'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+        - Key: Type
+          Value: 'Private'
+
+  # NAT Gateways
+  NatGateway1EIP:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-nat-eip-1'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  NatGateway2EIP:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-nat-eip-2'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  NatGateway1:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGateway1EIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-nat-gateway-1'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  NatGateway2:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGateway2EIP.AllocationId
+      SubnetId: !Ref PublicSubnet2
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-nat-gateway-2'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  # Route Tables
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-public-route-table'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  DefaultPublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
+
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet2
+
+  PrivateRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-private-route-table-1'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  DefaultPrivateRoute1:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway1
+
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
+      SubnetId: !Ref PrivateSubnet1
+
+  PrivateRouteTable2:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-private-route-table-2'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  DefaultPrivateRoute2:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable2
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway2
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable2
+      SubnetId: !Ref PrivateSubnet2
+
+  # Security Groups
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub '${EnvironmentName}-lb-sg'
+      GroupDescription: 'Security group for Application Load Balancer'
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: 'HTTP from anywhere'
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: 'HTTPS from anywhere'
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: 'All outbound traffic'
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-lb-security-group'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  ApplicationSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub '${EnvironmentName}-app-sg'
+      GroupDescription: 'Security group for ECS tasks'
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+          Description: 'HTTP from Load Balancer'
+        - IpProtocol: tcp
+          FromPort: 3001
+          ToPort: 3001
+          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+          Description: 'WebSocket from Load Balancer'
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: 'All outbound traffic'
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-app-security-group'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  DatabaseSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub '${EnvironmentName}-db-sg'
+      GroupDescription: 'Security group for database resources'
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 6379
+          ToPort: 6379
+          SourceSecurityGroupId: !Ref ApplicationSecurityGroup
+          Description: 'Redis from application'
+        - IpProtocol: tcp
+          FromPort: 6379
+          ToPort: 6379
+          SourceSecurityGroupId: !Ref LambdaSecurityGroup
+          Description: 'Redis from Lambda'
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: 'All outbound traffic'
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-db-security-group'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub '${EnvironmentName}-lambda-sg'
+      GroupDescription: 'Security group for Lambda functions'
+      VpcId: !Ref VPC
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: 'All outbound traffic'
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-lambda-security-group'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  # VPC Endpoints for AWS Services (cost optimization for Lambda and ECS)
+  S3VPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+      VpcEndpointType: Gateway
+      RouteTableIds:
+        - !Ref PrivateRouteTable1
+        - !Ref PrivateRouteTable2
+
+  DynamoDBVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.dynamodb'
+      VpcEndpointType: Gateway
+      RouteTableIds:
+        - !Ref PrivateRouteTable1
+        - !Ref PrivateRouteTable2
+
+  ECRVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecr.dkr'
+      VpcEndpointType: Interface
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      SecurityGroupIds:
+        - !Ref ApplicationSecurityGroup
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - 'ecr:GetAuthorizationToken'
+              - 'ecr:BatchCheckLayerAvailability'
+              - 'ecr:GetDownloadUrlForLayer'
+              - 'ecr:BatchGetImage'
+            Resource: '*'
+
+Outputs:
+  VpcId:
+    Description: 'VPC ID'
+    Value: !Ref VPC
+    Export:
+      Name: !Sub '${EnvironmentName}-VpcId'
+
+  PublicSubnetIds:
+    Description: 'Comma-delimited list of public subnet IDs'
+    Value: !Join [',', [!Ref PublicSubnet1, !Ref PublicSubnet2]]
+    Export:
+      Name: !Sub '${EnvironmentName}-PublicSubnetIds'
+
+  PrivateSubnetIds:
+    Description: 'Comma-delimited list of private subnet IDs'
+    Value: !Join [',', [!Ref PrivateSubnet1, !Ref PrivateSubnet2]]
+    Export:
+      Name: !Sub '${EnvironmentName}-PrivateSubnetIds'
+
+  LoadBalancerSecurityGroupId:
+    Description: 'Load Balancer Security Group ID'
+    Value: !Ref LoadBalancerSecurityGroup
+    Export:
+      Name: !Sub '${EnvironmentName}-LoadBalancerSecurityGroupId'
+
+  ApplicationSecurityGroupId:
+    Description: 'Application Security Group ID'
+    Value: !Ref ApplicationSecurityGroup
+    Export:
+      Name: !Sub '${EnvironmentName}-ApplicationSecurityGroupId'
+
+  DatabaseSecurityGroupId:
+    Description: 'Database Security Group ID'
+    Value: !Ref DatabaseSecurityGroup
+    Export:
+      Name: !Sub '${EnvironmentName}-DatabaseSecurityGroupId'
+
+  LambdaSecurityGroupId:
+    Description: 'Lambda Security Group ID'
+    Value: !Ref LambdaSecurityGroup
+    Export:
+      Name: !Sub '${EnvironmentName}-LambdaSecurityGroupId'
+
+  VpcCidr:
+    Description: 'VPC CIDR Block'
+    Value: !Ref VpcCidr
+    Export:
+      Name: !Sub '${EnvironmentName}-VpcCidr'

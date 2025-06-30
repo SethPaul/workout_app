@@ -1,0 +1,386 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'WebSocket API infrastructure for Realtime Collaborative Platform'
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Description: 'Environment name for resource naming'
+  
+  DynamoDBTable:
+    Type: String
+    Description: 'DynamoDB table name for collaboration state'
+  
+  RedisEndpoint:
+    Type: String
+    Description: 'Redis cluster endpoint'
+  
+  ApplicationLoadBalancerDNS:
+    Type: String
+    Description: 'Application Load Balancer DNS name'
+
+Resources:
+  # WebSocket API Gateway
+  WebSocketApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub '${EnvironmentName}-collaboration-websocket'
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: '$request.body.action'
+      Description: !Sub 'WebSocket API for ${EnvironmentName} collaboration platform'
+      Tags:
+        Environment: !Ref EnvironmentName
+        Project: 'RealtimeCollaboration'
+
+  # Lambda Execution Role
+  WebSocketLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${EnvironmentName}-websocket-lambda-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource:
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTable}'
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTable}/index/*'
+        - PolicyName: ApiGatewayManagement
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - execute-api:ManageConnections
+                Resource: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*'
+        - PolicyName: SecretsManagerAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !ImportValue !Sub '${EnvironmentName}-RedisAuthTokenSecret'
+
+  # Connect Lambda Function
+  ConnectFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${EnvironmentName}-websocket-connect'
+      Runtime: nodejs18.x
+      Handler: index.handler
+      Role: !GetAtt WebSocketLambdaRole.Arn
+      Timeout: 30
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref DynamoDBTable
+          REDIS_ENDPOINT: !Ref RedisEndpoint
+          AWS_REGION: !Ref AWS::Region
+      VpcConfig:
+        SecurityGroupIds:
+          - !ImportValue !Sub '${EnvironmentName}-LambdaSecurityGroupId'
+        SubnetIds: !Split
+          - ','
+          - !ImportValue !Sub '${EnvironmentName}-PrivateSubnetIds'
+      Code:
+        ZipFile: |
+          const AWS = require('aws-sdk');
+          const redis = require('redis');
+          
+          const dynamodb = new AWS.DynamoDB.DocumentClient();
+          const apiGateway = new AWS.ApiGatewayManagementApi({
+            endpoint: process.env.API_GATEWAY_ENDPOINT
+          });
+          
+          exports.handler = async (event) => {
+            const connectionId = event.requestContext.connectionId;
+            const routeKey = event.requestContext.routeKey;
+            
+            console.log('Connect event:', { connectionId, routeKey });
+            
+            try {
+              // Store connection in DynamoDB
+              await dynamodb.put({
+                TableName: process.env.DYNAMODB_TABLE,
+                Item: {
+                  ConnectionId: connectionId,
+                  ConnectedAt: Date.now(),
+                  TTL: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
+                }
+              }).promise();
+              
+              return { statusCode: 200 };
+            } catch (error) {
+              console.error('Connect error:', error);
+              return { statusCode: 500 };
+            }
+          };
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-connect-function'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  # Disconnect Lambda Function
+  DisconnectFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${EnvironmentName}-websocket-disconnect'
+      Runtime: nodejs18.x
+      Handler: index.handler
+      Role: !GetAtt WebSocketLambdaRole.Arn
+      Timeout: 30
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref DynamoDBTable
+          REDIS_ENDPOINT: !Ref RedisEndpoint
+      VpcConfig:
+        SecurityGroupIds:
+          - !ImportValue !Sub '${EnvironmentName}-LambdaSecurityGroupId'
+        SubnetIds: !Split
+          - ','
+          - !ImportValue !Sub '${EnvironmentName}-PrivateSubnetIds'
+      Code:
+        ZipFile: |
+          const AWS = require('aws-sdk');
+          
+          const dynamodb = new AWS.DynamoDB.DocumentClient();
+          
+          exports.handler = async (event) => {
+            const connectionId = event.requestContext.connectionId;
+            
+            console.log('Disconnect event:', { connectionId });
+            
+            try {
+              // Remove connection from DynamoDB
+              await dynamodb.delete({
+                TableName: process.env.DYNAMODB_TABLE,
+                Key: {
+                  ConnectionId: connectionId
+                }
+              }).promise();
+              
+              return { statusCode: 200 };
+            } catch (error) {
+              console.error('Disconnect error:', error);
+              return { statusCode: 500 };
+            }
+          };
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-disconnect-function'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  # Default Route Lambda Function
+  DefaultFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${EnvironmentName}-websocket-default'
+      Runtime: nodejs18.x
+      Handler: index.handler
+      Role: !GetAtt WebSocketLambdaRole.Arn
+      Timeout: 30
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref DynamoDBTable
+          REDIS_ENDPOINT: !Ref RedisEndpoint
+          ALB_DNS: !Ref ApplicationLoadBalancerDNS
+      VpcConfig:
+        SecurityGroupIds:
+          - !ImportValue !Sub '${EnvironmentName}-LambdaSecurityGroupId'
+        SubnetIds: !Split
+          - ','
+          - !ImportValue !Sub '${EnvironmentName}-PrivateSubnetIds'
+      Code:
+        ZipFile: |
+          const AWS = require('aws-sdk');
+          const https = require('https');
+          
+          const apiGateway = new AWS.ApiGatewayManagementApi({
+            endpoint: process.env.API_GATEWAY_ENDPOINT
+          });
+          
+          exports.handler = async (event) => {
+            const connectionId = event.requestContext.connectionId;
+            const body = JSON.parse(event.body || '{}');
+            
+            console.log('Default route:', { connectionId, body });
+            
+            try {
+              // Forward to ECS service for processing
+              const response = await forwardToECS(body);
+              
+              // Send response back to client
+              await apiGateway.postToConnection({
+                ConnectionId: connectionId,
+                Data: JSON.stringify(response)
+              }).promise();
+              
+              return { statusCode: 200 };
+            } catch (error) {
+              console.error('Default route error:', error);
+              return { statusCode: 500 };
+            }
+          };
+          
+          function forwardToECS(data) {
+            return new Promise((resolve, reject) => {
+              const postData = JSON.stringify(data);
+              
+              const options = {
+                hostname: process.env.ALB_DNS,
+                port: 443,
+                path: '/api/websocket',
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Content-Length': Buffer.byteLength(postData)
+                }
+              };
+              
+              const req = https.request(options, (res) => {
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => resolve(JSON.parse(data)));
+              });
+              
+              req.on('error', reject);
+              req.write(postData);
+              req.end();
+            });
+          }
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-default-function'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  # Lambda Permissions
+  ConnectPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref ConnectFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*'
+
+  DisconnectPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref DisconnectFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*'
+
+  DefaultPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref DefaultFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*'
+
+  # WebSocket Routes
+  ConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: '$connect'
+      Target: !Sub 'integrations/${ConnectIntegration}'
+
+  DisconnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: '$disconnect'
+      Target: !Sub 'integrations/${DisconnectIntegration}'
+
+  DefaultRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: '$default'
+      Target: !Sub 'integrations/${DefaultIntegration}'
+
+  # WebSocket Integrations
+  ConnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ConnectFunction.Arn}/invocations'
+
+  DisconnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DisconnectFunction.Arn}/invocations'
+
+  DefaultIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DefaultFunction.Arn}/invocations'
+
+  # WebSocket Deployment
+  WebSocketDeployment:
+    Type: AWS::ApiGatewayV2::Deployment
+    DependsOn:
+      - ConnectRoute
+      - DisconnectRoute
+      - DefaultRoute
+    Properties:
+      ApiId: !Ref WebSocketApi
+
+  # WebSocket Stage
+  WebSocketStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref WebSocketApi
+      DeploymentId: !Ref WebSocketDeployment
+      StageName: !Ref EnvironmentName
+      Description: !Sub 'WebSocket stage for ${EnvironmentName}'
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 5000
+        ThrottlingRateLimit: 2000
+      Tags:
+        Environment: !Ref EnvironmentName
+        Project: 'RealtimeCollaboration'
+
+Outputs:
+  WebSocketApiId:
+    Description: 'WebSocket API ID'
+    Value: !Ref WebSocketApi
+    Export:
+      Name: !Sub '${EnvironmentName}-WebSocketApiId'
+
+  WebSocketApiEndpoint:
+    Description: 'WebSocket API endpoint URL'
+    Value: !Sub 'wss://${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/${EnvironmentName}'
+    Export:
+      Name: !Sub '${EnvironmentName}-WebSocketEndpoint'
+
+  ConnectFunctionArn:
+    Description: 'Connect Lambda function ARN'
+    Value: !GetAtt ConnectFunction.Arn
+    Export:
+      Name: !Sub '${EnvironmentName}-ConnectFunctionArn'

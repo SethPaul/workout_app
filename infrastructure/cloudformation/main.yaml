@@ -1,0 +1,227 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Main CloudFormation template for Realtime Collaborative Platform'
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: 'prod'
+    AllowedValues: ['dev', 'staging', 'prod']
+    Description: 'Environment name for resource naming and configuration'
+  
+  DomainName:
+    Type: String
+    Description: 'Domain name for the application (e.g., collaborate.example.com)'
+    Default: 'collaborate.example.com'
+  
+  CertificateArn:
+    Type: String
+    Description: 'ARN of the SSL certificate for HTTPS'
+  
+  VpcCidr:
+    Type: String
+    Default: '10.0.0.0/16'
+    Description: 'CIDR block for the VPC'
+  
+  ContainerImage:
+    Type: String
+    Description: 'Docker image URI for the collaboration server'
+    Default: 'your-account.dkr.ecr.region.amazonaws.com/collaboration-server:latest'
+  
+  RedisInstanceType:
+    Type: String
+    Default: 'cache.t3.micro'
+    AllowedValues: ['cache.t3.micro', 'cache.t3.small', 'cache.t3.medium', 'cache.r6g.large']
+    Description: 'ElastiCache Redis instance type'
+  
+  DesiredCapacity:
+    Type: Number
+    Default: 2
+    MinValue: 1
+    MaxValue: 10
+    Description: 'Desired number of ECS tasks'
+  
+  MaxCapacity:
+    Type: Number
+    Default: 10
+    MinValue: 1
+    MaxValue: 50
+    Description: 'Maximum number of ECS tasks'
+
+Mappings:
+  EnvironmentConfig:
+    dev:
+      InstanceType: 'cache.t3.micro'
+      MinCapacity: 1
+      MaxCapacity: 3
+      DesiredCapacity: 1
+    staging:
+      InstanceType: 'cache.t3.small'
+      MinCapacity: 1
+      MaxCapacity: 5
+      DesiredCapacity: 2
+    prod:
+      InstanceType: 'cache.r6g.large'
+      MinCapacity: 2
+      MaxCapacity: 20
+      DesiredCapacity: 3
+
+Resources:
+  # Network Infrastructure
+  NetworkStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: './network.yaml'
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+        VpcCidr: !Ref VpcCidr
+      Tags:
+        - Key: Environment
+          Value: !Ref EnvironmentName
+        - Key: Project
+          Value: 'RealtimeCollaboration'
+
+  # Database and Caching
+  DatabaseStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: NetworkStack
+    Properties:
+      TemplateURL: './database.yaml'
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+        VpcId: !GetAtt NetworkStack.Outputs.VpcId
+        PrivateSubnetIds: !GetAtt NetworkStack.Outputs.PrivateSubnetIds
+        RedisInstanceType: !FindInMap [EnvironmentConfig, !Ref EnvironmentName, InstanceType]
+      Tags:
+        - Key: Environment
+          Value: !Ref EnvironmentName
+        - Key: Project
+          Value: 'RealtimeCollaboration'
+
+  # Application Infrastructure
+  ApplicationStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: 
+      - NetworkStack
+      - DatabaseStack
+    Properties:
+      TemplateURL: './application.yaml'
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+        VpcId: !GetAtt NetworkStack.Outputs.VpcId
+        PublicSubnetIds: !GetAtt NetworkStack.Outputs.PublicSubnetIds
+        PrivateSubnetIds: !GetAtt NetworkStack.Outputs.PrivateSubnetIds
+        ContainerImage: !Ref ContainerImage
+        DesiredCapacity: !FindInMap [EnvironmentConfig, !Ref EnvironmentName, DesiredCapacity]
+        MaxCapacity: !FindInMap [EnvironmentConfig, !Ref EnvironmentName, MaxCapacity]
+        MinCapacity: !FindInMap [EnvironmentConfig, !Ref EnvironmentName, MinCapacity]
+        RedisEndpoint: !GetAtt DatabaseStack.Outputs.RedisEndpoint
+        DynamoDBTable: !GetAtt DatabaseStack.Outputs.DynamoDBTable
+        CertificateArn: !Ref CertificateArn
+      Tags:
+        - Key: Environment
+          Value: !Ref EnvironmentName
+        - Key: Project
+          Value: 'RealtimeCollaboration'
+
+  # WebSocket API
+  WebSocketStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: ApplicationStack
+    Properties:
+      TemplateURL: './websocket.yaml'
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+        DynamoDBTable: !GetAtt DatabaseStack.Outputs.DynamoDBTable
+        RedisEndpoint: !GetAtt DatabaseStack.Outputs.RedisEndpoint
+        ApplicationLoadBalancerDNS: !GetAtt ApplicationStack.Outputs.LoadBalancerDNS
+      Tags:
+        - Key: Environment
+          Value: !Ref EnvironmentName
+        - Key: Project
+          Value: 'RealtimeCollaboration'
+
+  # CloudFront Distribution
+  CDNStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: 
+      - ApplicationStack
+      - WebSocketStack
+    Properties:
+      TemplateURL: './cdn.yaml'
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+        DomainName: !Ref DomainName
+        CertificateArn: !Ref CertificateArn
+        ApplicationLoadBalancerDNS: !GetAtt ApplicationStack.Outputs.LoadBalancerDNS
+        WebSocketApiEndpoint: !GetAtt WebSocketStack.Outputs.WebSocketApiEndpoint
+      Tags:
+        - Key: Environment
+          Value: !Ref EnvironmentName
+        - Key: Project
+          Value: 'RealtimeCollaboration'
+
+  # Monitoring and Logging
+  MonitoringStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: ApplicationStack
+    Properties:
+      TemplateURL: './monitoring.yaml'
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+        ECSClusterName: !GetAtt ApplicationStack.Outputs.ECSClusterName
+        LoadBalancerFullName: !GetAtt ApplicationStack.Outputs.LoadBalancerFullName
+        WebSocketApiId: !GetAtt WebSocketStack.Outputs.WebSocketApiId
+      Tags:
+        - Key: Environment
+          Value: !Ref EnvironmentName
+        - Key: Project
+          Value: 'RealtimeCollaboration'
+
+Outputs:
+  VpcId:
+    Description: 'VPC ID'
+    Value: !GetAtt NetworkStack.Outputs.VpcId
+    Export:
+      Name: !Sub '${EnvironmentName}-VpcId'
+
+  LoadBalancerDNS:
+    Description: 'Application Load Balancer DNS name'
+    Value: !GetAtt ApplicationStack.Outputs.LoadBalancerDNS
+    Export:
+      Name: !Sub '${EnvironmentName}-LoadBalancerDNS'
+
+  WebSocketApiEndpoint:
+    Description: 'WebSocket API endpoint'
+    Value: !GetAtt WebSocketStack.Outputs.WebSocketApiEndpoint
+    Export:
+      Name: !Sub '${EnvironmentName}-WebSocketEndpoint'
+
+  CloudFrontDomainName:
+    Description: 'CloudFront distribution domain name'
+    Value: !GetAtt CDNStack.Outputs.CloudFrontDomainName
+    Export:
+      Name: !Sub '${EnvironmentName}-CloudFrontDomain'
+
+  ApplicationURL:
+    Description: 'Complete application URL'
+    Value: !Sub 'https://${DomainName}'
+    Export:
+      Name: !Sub '${EnvironmentName}-ApplicationURL'
+
+  RedisEndpoint:
+    Description: 'Redis cluster endpoint'
+    Value: !GetAtt DatabaseStack.Outputs.RedisEndpoint
+    Export:
+      Name: !Sub '${EnvironmentName}-RedisEndpoint'
+
+  DynamoDBTable:
+    Description: 'DynamoDB table name'
+    Value: !GetAtt DatabaseStack.Outputs.DynamoDBTable
+    Export:
+      Name: !Sub '${EnvironmentName}-DynamoDBTable'
+
+  MonitoringDashboard:
+    Description: 'CloudWatch dashboard URL'
+    Value: !GetAtt MonitoringStack.Outputs.DashboardURL
+    Export:
+      Name: !Sub '${EnvironmentName}-DashboardURL'
