@@ -4,7 +4,7 @@ on:
   pull_request:
     paths: ['app/**', '.github/workflows/ci.yml']
   push:
-    branches-ignore: [main]
+    branches: [main]
     paths: ['app/**', '.github/workflows/ci.yml']
 
 jobs:

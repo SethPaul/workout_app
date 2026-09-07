@@ -23,4 +23,4 @@ npm run check    # typecheck + lint + tests
 npm run build    # production bundle in app/dist
 ```
 
-Deploys to GitHub Pages from `main` via `.github/workflows/deploy.yml`.
+Hosted on Cloudflare Pages, which builds `app/` from `main` on every push (root directory `app`, build `npm ci && npm run build`, output `dist`). CI runs typecheck, lint, tests, and a build on pull requests.
