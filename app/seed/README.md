@@ -163,3 +163,14 @@ Rows with two accessory lists produce two conditioning blocks (Conditioning + Fi
 workouts each block originally received the full intensity duration, doubling the session length.
 The AMRAP budget is now split evenly across the AMRAP blocks: H 12 min, M 20 min, L 30 min total.
 Interval and rounds blocks were left as-is (10 x 30/30 per block; H 3 / M 4 / L 5 rounds per block).
+
+## Evidence-based revision (see AUDIT.md)
+
+`revise.py` applied 161 data-level changes from the audit: heavy-lift rest 90s → 180s (barbell
+squat/hinge/press) or 240s (olympic), clean/snatch main lifts 5 → 3 reps with sets capped at 6,
+single-set strength blocks raised to 3 or 5 sets, olympic lifts and heavy barbell lifts inside timed
+blocks capped at 3 reps with a load-drop note, box jumps replaced by step-ups in fatigued blocks,
+eight pattern-stack substitutions, five duplicate-movement fixes, one disabled workout, `day:*` tags,
+and seven new workouts (mandatory deadlift + push press day, bench day, weighted pull-up day, power
+clean day, Zone 2 row, Norwegian 4x4 bike, single-movement Tabata bike) plus the `weighted_pullup`
+movement. The mandatory day's `cadenceDays` was set to 6 so it is eligible every week.

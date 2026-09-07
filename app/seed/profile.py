@@ -213,16 +213,23 @@ def main():
         p(f"- intensity: {w['intensity']}")
 
         sb = strength_block(w)
-        main_id = sb["movements"][0]["movementId"]
-        main_mv = moves[main_id]
-        sets = sb.get("sets") or 1
-        reps = sb["movements"][0].get("reps") or 0
-        rest = sb.get("restSec") or 0
-        total_heavy_reps = sets * reps
-        p(f"- main lift: {main_id} ({main_mv['name']}) -- {sets}x{reps}, rest {rest}s between sets, {total_heavy_reps} total heavy reps")
-
-        agg_strength_scheme[f"{sets}x{reps}"] += 1
-        agg_rest[rest] += 1
+        if sb is None:
+            # Conditioning-only workout (e.g. Zone 2, 4x4, single-movement Tabata): use the first movement
+            # of the first block as the "main" movement and skip strength aggregates.
+            main_id = w["blocks"][0]["movements"][0]["movementId"]
+            main_mv = moves[main_id]
+            sets = reps = rest = total_heavy_reps = 0
+            p(f"- main lift: none (conditioning-only); first movement {main_id} ({main_mv['name']})")
+        else:
+            main_id = sb["movements"][0]["movementId"]
+            main_mv = moves[main_id]
+            sets = sb.get("sets") or 1
+            reps = sb["movements"][0].get("reps") or 0
+            rest = sb.get("restSec") or 0
+            total_heavy_reps = sets * reps
+            p(f"- main lift: {main_id} ({main_mv['name']}) -- {sets}x{reps}, rest {rest}s between sets, {total_heavy_reps} total heavy reps")
+            agg_strength_scheme[f"{sets}x{reps}"] += 1
+            agg_rest[rest] += 1
         movement_appearance[main_id] += 1
         movement_as_main_lift[main_id] += 1
         main_lift_pattern_of[main_id] = movement_patterns(main_mv)
@@ -230,7 +237,7 @@ def main():
             main_lift_cadence[main_id] = main_mv["cadenceDays"]
         main_lift_patterns_used |= movement_patterns(main_mv)
 
-        total_minutes = estimate_block_minutes(sb)
+        total_minutes = estimate_block_minutes(sb) if sb else 0.0
 
         cond_blocks = [b for b in w["blocks"] if b["format"] != "strength"]
         cond_pattern_ids = set()

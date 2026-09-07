@@ -1277,5 +1277,24 @@
     "cadenceDays": 3,
     "unit": "seconds",
     "loadable": false
+  },
+  {
+    "id": "weighted_pullup",
+    "name": "Weighted Pull-up",
+    "aliases": [
+      "weighted pull up",
+      "weighted pullups",
+      "weighted pull-up"
+    ],
+    "tags": [
+      "compound",
+      "pull"
+    ],
+    "equipment": [
+      "pullup_bar"
+    ],
+    "cadenceDays": 7,
+    "unit": "reps",
+    "loadable": true
   }
 ]

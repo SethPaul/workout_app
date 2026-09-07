@@ -14,7 +14,7 @@
           }
         ],
         "sets": 10,
-        "restSec": 90
+        "restSec": 180
       },
       {
         "format": "interval",
@@ -34,11 +34,11 @@
         "title": "Finisher",
         "movements": [
           {
-            "movementId": "lunge",
+            "movementId": "dumbbell_row",
             "reps": 5
           },
           {
-            "movementId": "box_jump",
+            "movementId": "step_up",
             "reps": 5
           },
           {
@@ -53,7 +53,9 @@
     ],
     "cadenceDays": 14,
     "enabled": true,
-    "tags": [],
+    "tags": [
+      "day:squat-strength"
+    ],
     "source": "spreadsheet"
   },
   {
@@ -71,7 +73,7 @@
           }
         ],
         "sets": 5,
-        "restSec": 90
+        "restSec": 180
       },
       {
         "format": "amrap",
@@ -115,7 +117,8 @@
     "cadenceDays": 14,
     "enabled": true,
     "tags": [
-      "slog"
+      "slog",
+      "day:squat-strength"
     ],
     "source": "spreadsheet"
   },
@@ -134,7 +137,7 @@
           }
         ],
         "sets": 10,
-        "restSec": 90
+        "restSec": 180
       },
       {
         "format": "emom",
@@ -142,7 +145,8 @@
         "movements": [
           {
             "movementId": "deadlift",
-            "reps": 5
+            "reps": 3,
+            "loadNote": "cap \u226460-70% 1RM under fatigue, technique focus (R8/R9)"
           },
           {
             "movementId": "side_lunge",
@@ -175,7 +179,9 @@
     ],
     "cadenceDays": 14,
     "enabled": true,
-    "tags": [],
+    "tags": [
+      "day:squat-strength"
+    ],
     "source": "spreadsheet"
   },
   {
@@ -193,14 +199,14 @@
           }
         ],
         "sets": 3,
-        "restSec": 90
+        "restSec": 180
       },
       {
         "format": "rounds",
         "title": "Conditioning",
         "movements": [
           {
-            "movementId": "box_jump",
+            "movementId": "step_up",
             "reps": 10
           },
           {
@@ -232,7 +238,9 @@
     ],
     "cadenceDays": 14,
     "enabled": true,
-    "tags": [],
+    "tags": [
+      "day:squat-strength"
+    ],
     "source": "spreadsheet"
   },
   {
@@ -250,7 +258,7 @@
           }
         ],
         "sets": 5,
-        "restSec": 90
+        "restSec": 180
       },
       {
         "format": "tabata",
@@ -258,7 +266,8 @@
         "movements": [
           {
             "movementId": "clean",
-            "reps": 5
+            "reps": 3,
+            "loadNote": "cap \u226460-70% 1RM under fatigue, technique focus (R8/R9)"
           },
           {
             "movementId": "romanian_deadlift",
@@ -297,7 +306,9 @@
     ],
     "cadenceDays": 14,
     "enabled": true,
-    "tags": [],
+    "tags": [
+      "day:squat-strength"
+    ],
     "source": "spreadsheet"
   },
   {
@@ -314,8 +325,8 @@
             "reps": 5
           }
         ],
-        "sets": 1,
-        "restSec": 90
+        "sets": 5,
+        "restSec": 180
       },
       {
         "format": "interval",
@@ -357,8 +368,10 @@
       }
     ],
     "cadenceDays": 14,
-    "enabled": true,
-    "tags": [],
+    "enabled": false,
+    "tags": [
+      "day:squat-strength"
+    ],
     "source": "spreadsheet"
   },
   {
@@ -372,11 +385,11 @@
         "movements": [
           {
             "movementId": "clean",
-            "reps": 5
+            "reps": 3
           }
         ],
         "sets": 5,
-        "restSec": 90
+        "restSec": 240
       },
       {
         "format": "interval",
@@ -420,7 +433,8 @@
     "cadenceDays": 14,
     "enabled": true,
     "tags": [
-      "diversity"
+      "diversity",
+      "day:oly-power"
     ],
     "source": "spreadsheet"
   },
@@ -435,11 +449,11 @@
         "movements": [
           {
             "movementId": "clean",
-            "reps": 5
+            "reps": 3
           }
         ],
-        "sets": 8,
-        "restSec": 90
+        "sets": 6,
+        "restSec": 240
       },
       {
         "format": "amrap",
@@ -447,7 +461,8 @@
         "movements": [
           {
             "movementId": "clean",
-            "reps": 5
+            "reps": 3,
+            "loadNote": "cap \u226460-70% 1RM under fatigue, technique focus (R8/R9)"
           },
           {
             "movementId": "side_lunge",
@@ -479,7 +494,8 @@
     "cadenceDays": 14,
     "enabled": true,
     "tags": [
-      "diversity"
+      "diversity",
+      "day:oly-power"
     ],
     "source": "spreadsheet"
   },
@@ -494,18 +510,18 @@
         "movements": [
           {
             "movementId": "clean",
-            "reps": 5
+            "reps": 3
           }
         ],
         "sets": 5,
-        "restSec": 90
+        "restSec": 240
       },
       {
         "format": "emom",
         "title": "Conditioning",
         "movements": [
           {
-            "movementId": "star_shrug",
+            "movementId": "battle_ropes",
             "reps": 5
           }
         ],
@@ -536,7 +552,8 @@
     "cadenceDays": 14,
     "enabled": true,
     "tags": [
-      "diversity"
+      "diversity",
+      "day:oly-power"
     ],
     "source": "spreadsheet"
   },
@@ -551,11 +568,11 @@
         "movements": [
           {
             "movementId": "clean",
-            "reps": 5
+            "reps": 3
           }
         ],
         "sets": 3,
-        "restSec": 90
+        "restSec": 240
       },
       {
         "format": "rounds",
@@ -563,7 +580,8 @@
         "movements": [
           {
             "movementId": "snatch",
-            "reps": 5
+            "reps": 3,
+            "loadNote": "cap \u226460-70% 1RM under fatigue, technique focus (R8/R9)"
           },
           {
             "movementId": "lunge",
@@ -591,7 +609,8 @@
     "cadenceDays": 14,
     "enabled": true,
     "tags": [
-      "diversity"
+      "diversity",
+      "day:oly-power"
     ],
     "source": "spreadsheet"
   },
@@ -606,18 +625,18 @@
         "movements": [
           {
             "movementId": "clean",
-            "reps": 5
+            "reps": 3
           }
         ],
-        "sets": 8,
-        "restSec": 90
+        "sets": 6,
+        "restSec": 240
       },
       {
         "format": "tabata",
         "title": "Conditioning",
         "movements": [
           {
-            "movementId": "box_jump",
+            "movementId": "step_up",
             "reps": 10
           },
           {
@@ -654,7 +673,8 @@
     "cadenceDays": 14,
     "enabled": true,
     "tags": [
-      "diversity"
+      "diversity",
+      "day:oly-power"
     ],
     "source": "spreadsheet"
   },
@@ -669,11 +689,11 @@
         "movements": [
           {
             "movementId": "clean",
-            "reps": 5
+            "reps": 3
           }
         ],
         "sets": 3,
-        "restSec": 90
+        "restSec": 240
       },
       {
         "format": "interval",
@@ -681,10 +701,11 @@
         "movements": [
           {
             "movementId": "snatch",
-            "reps": 5
+            "reps": 3,
+            "loadNote": "cap \u226460-70% 1RM under fatigue, technique focus (R8/R9)"
           },
           {
-            "movementId": "bent_over_row",
+            "movementId": "landmine_twist",
             "reps": 5
           }
         ],
@@ -717,7 +738,8 @@
     "cadenceDays": 14,
     "enabled": true,
     "tags": [
-      "diversity"
+      "diversity",
+      "day:oly-power"
     ],
     "source": "spreadsheet"
   },
@@ -736,7 +758,7 @@
           }
         ],
         "sets": 5,
-        "restSec": 90
+        "restSec": 180
       },
       {
         "format": "interval",
@@ -784,7 +806,8 @@
     "cadenceDays": 14,
     "enabled": true,
     "tags": [
-      "deadlift-day"
+      "deadlift-day",
+      "day:hinge-strength"
     ],
     "source": "spreadsheet"
   },
@@ -803,7 +826,7 @@
           }
         ],
         "sets": 5,
-        "restSec": 90
+        "restSec": 180
       },
       {
         "format": "amrap",
@@ -847,7 +870,8 @@
     "cadenceDays": 14,
     "enabled": true,
     "tags": [
-      "deadlift-day"
+      "deadlift-day",
+      "day:hinge-strength"
     ],
     "source": "spreadsheet"
   },
@@ -866,7 +890,7 @@
           }
         ],
         "sets": 3,
-        "restSec": 90
+        "restSec": 180
       },
       {
         "format": "emom",
@@ -874,7 +898,8 @@
         "movements": [
           {
             "movementId": "snatch",
-            "reps": 5
+            "reps": 3,
+            "loadNote": "cap \u226460-70% 1RM under fatigue, technique focus (R8/R9)"
           },
           {
             "movementId": "bar_complex",
@@ -912,7 +937,8 @@
     "cadenceDays": 14,
     "enabled": true,
     "tags": [
-      "deadlift-day"
+      "deadlift-day",
+      "day:hinge-strength"
     ],
     "source": "spreadsheet"
   },
@@ -931,7 +957,7 @@
           }
         ],
         "sets": 3,
-        "restSec": 90
+        "restSec": 180
       },
       {
         "format": "rounds",
@@ -971,7 +997,8 @@
     "cadenceDays": 14,
     "enabled": true,
     "tags": [
-      "deadlift-day"
+      "deadlift-day",
+      "day:hinge-strength"
     ],
     "source": "spreadsheet"
   },
@@ -990,7 +1017,7 @@
           }
         ],
         "sets": 5,
-        "restSec": 90
+        "restSec": 180
       },
       {
         "format": "tabata",
@@ -998,7 +1025,8 @@
         "movements": [
           {
             "movementId": "sumo_deadlift",
-            "reps": 5
+            "reps": 3,
+            "loadNote": "cap \u226460-70% 1RM under fatigue, technique focus (R8/R9)"
           },
           {
             "movementId": "knees_to_elbows",
@@ -1038,7 +1066,8 @@
     "cadenceDays": 14,
     "enabled": true,
     "tags": [
-      "deadlift-day"
+      "deadlift-day",
+      "day:hinge-strength"
     ],
     "source": "spreadsheet"
   },
@@ -1057,7 +1086,7 @@
           }
         ],
         "sets": 3,
-        "restSec": 90
+        "restSec": 180
       },
       {
         "format": "interval",
@@ -1065,7 +1094,8 @@
         "movements": [
           {
             "movementId": "jerk",
-            "reps": 5
+            "reps": 3,
+            "loadNote": "cap \u226460-70% 1RM under fatigue, technique focus (R8/R9)"
           },
           {
             "movementId": "sandbag_drop",
@@ -1093,7 +1123,8 @@
     "cadenceDays": 14,
     "enabled": true,
     "tags": [
-      "deadlift-day"
+      "deadlift-day",
+      "day:hinge-strength"
     ],
     "source": "spreadsheet"
   },
@@ -1112,7 +1143,7 @@
           }
         ],
         "sets": 3,
-        "restSec": 90
+        "restSec": 180
       },
       {
         "format": "interval",
@@ -1159,7 +1190,9 @@
     ],
     "cadenceDays": 14,
     "enabled": true,
-    "tags": [],
+    "tags": [
+      "day:squat-strength"
+    ],
     "source": "spreadsheet"
   },
   {
@@ -1176,8 +1209,8 @@
             "reps": 5
           }
         ],
-        "sets": 1,
-        "restSec": 90
+        "sets": 5,
+        "restSec": 180
       },
       {
         "format": "amrap",
@@ -1185,7 +1218,8 @@
         "movements": [
           {
             "movementId": "sumo_deadlift",
-            "reps": 5
+            "reps": 3,
+            "loadNote": "cap \u226460-70% 1RM under fatigue, technique focus (R8/R9)"
           },
           {
             "movementId": "sled_push",
@@ -1203,7 +1237,7 @@
             "reps": 5
           },
           {
-            "movementId": "bent_over_row",
+            "movementId": "dumbbell_row",
             "reps": 5
           }
         ],
@@ -1212,7 +1246,9 @@
     ],
     "cadenceDays": 14,
     "enabled": true,
-    "tags": [],
+    "tags": [
+      "day:squat-strength"
+    ],
     "source": "spreadsheet"
   },
   {
@@ -1230,7 +1266,7 @@
           }
         ],
         "sets": 8,
-        "restSec": 90
+        "restSec": 180
       },
       {
         "format": "emom",
@@ -1271,7 +1307,9 @@
     ],
     "cadenceDays": 14,
     "enabled": true,
-    "tags": [],
+    "tags": [
+      "day:squat-strength"
+    ],
     "source": "spreadsheet"
   },
   {
@@ -1289,7 +1327,7 @@
           }
         ],
         "sets": 3,
-        "restSec": 90
+        "restSec": 180
       },
       {
         "format": "rounds",
@@ -1328,7 +1366,9 @@
     ],
     "cadenceDays": 14,
     "enabled": true,
-    "tags": [],
+    "tags": [
+      "day:squat-strength"
+    ],
     "source": "spreadsheet"
   },
   {
@@ -1346,7 +1386,7 @@
           }
         ],
         "sets": 3,
-        "restSec": 90
+        "restSec": 180
       },
       {
         "format": "tabata",
@@ -1354,7 +1394,8 @@
         "movements": [
           {
             "movementId": "sumo_deadlift",
-            "reps": 5
+            "reps": 3,
+            "loadNote": "cap \u226460-70% 1RM under fatigue, technique focus (R8/R9)"
           }
         ],
         "rounds": 8,
@@ -1385,7 +1426,9 @@
     ],
     "cadenceDays": 14,
     "enabled": true,
-    "tags": [],
+    "tags": [
+      "day:squat-strength"
+    ],
     "source": "spreadsheet"
   },
   {
@@ -1403,7 +1446,7 @@
           }
         ],
         "sets": 8,
-        "restSec": 90
+        "restSec": 180
       },
       {
         "format": "interval",
@@ -1450,7 +1493,9 @@
     ],
     "cadenceDays": 14,
     "enabled": true,
-    "tags": [],
+    "tags": [
+      "day:squat-strength"
+    ],
     "source": "spreadsheet"
   },
   {
@@ -1468,14 +1513,14 @@
           }
         ],
         "sets": 3,
-        "restSec": 90
+        "restSec": 240
       },
       {
         "format": "interval",
         "title": "Conditioning",
         "movements": [
           {
-            "movementId": "box_jump",
+            "movementId": "step_up",
             "reps": 10
           },
           {
@@ -1515,7 +1560,9 @@
     ],
     "cadenceDays": 14,
     "enabled": true,
-    "tags": [],
+    "tags": [
+      "day:squat-strength"
+    ],
     "source": "spreadsheet"
   },
   {
@@ -1532,8 +1579,8 @@
             "reps": 5
           }
         ],
-        "sets": 1,
-        "restSec": 90
+        "sets": 3,
+        "restSec": 240
       },
       {
         "format": "amrap",
@@ -1577,7 +1624,8 @@
     "cadenceDays": 14,
     "enabled": true,
     "tags": [
-      "slog"
+      "slog",
+      "day:squat-strength"
     ],
     "source": "spreadsheet"
   },
@@ -1596,14 +1644,14 @@
           }
         ],
         "sets": 3,
-        "restSec": 90
+        "restSec": 240
       },
       {
         "format": "emom",
         "title": "Conditioning",
         "movements": [
           {
-            "movementId": "box_jump",
+            "movementId": "step_up",
             "reps": 10
           },
           {
@@ -1637,7 +1685,9 @@
     ],
     "cadenceDays": 14,
     "enabled": true,
-    "tags": [],
+    "tags": [
+      "day:squat-strength"
+    ],
     "source": "spreadsheet"
   },
   {
@@ -1655,7 +1705,7 @@
           }
         ],
         "sets": 8,
-        "restSec": 90
+        "restSec": 240
       },
       {
         "format": "rounds",
@@ -1663,7 +1713,8 @@
         "movements": [
           {
             "movementId": "deadlift",
-            "reps": 5
+            "reps": 3,
+            "loadNote": "cap \u226460-70% 1RM under fatigue, technique focus (R8/R9)"
           },
           {
             "movementId": "pull_up",
@@ -1698,7 +1749,9 @@
     ],
     "cadenceDays": 14,
     "enabled": true,
-    "tags": [],
+    "tags": [
+      "day:squat-strength"
+    ],
     "source": "spreadsheet"
   },
   {
@@ -1716,7 +1769,7 @@
           }
         ],
         "sets": 3,
-        "restSec": 90
+        "restSec": 240
       },
       {
         "format": "tabata",
@@ -1724,7 +1777,8 @@
         "movements": [
           {
             "movementId": "jerk",
-            "reps": 5
+            "reps": 3,
+            "loadNote": "cap \u226460-70% 1RM under fatigue, technique focus (R8/R9)"
           },
           {
             "movementId": "run",
@@ -1763,7 +1817,9 @@
     ],
     "cadenceDays": 14,
     "enabled": true,
-    "tags": [],
+    "tags": [
+      "day:squat-strength"
+    ],
     "source": "spreadsheet"
   },
   {
@@ -1781,14 +1837,14 @@
           }
         ],
         "sets": 3,
-        "restSec": 90
+        "restSec": 240
       },
       {
         "format": "interval",
         "title": "Conditioning",
         "movements": [
           {
-            "movementId": "snatch",
+            "movementId": "kb_swing",
             "reps": 5
           },
           {
@@ -1828,7 +1884,9 @@
     ],
     "cadenceDays": 14,
     "enabled": true,
-    "tags": [],
+    "tags": [
+      "day:squat-strength"
+    ],
     "source": "spreadsheet"
   },
   {
@@ -1845,7 +1903,7 @@
             "reps": 5
           }
         ],
-        "sets": 1,
+        "sets": 5,
         "restSec": 90
       },
       {
@@ -2044,7 +2102,7 @@
         "title": "Conditioning",
         "movements": [
           {
-            "movementId": "box_jump",
+            "movementId": "step_up",
             "reps": 10
           },
           {
@@ -2063,7 +2121,7 @@
             "reps": 5
           },
           {
-            "movementId": "side_lunge",
+            "movementId": "dumbbell_row",
             "reps": 5
           }
         ],
@@ -2167,7 +2225,8 @@
         "movements": [
           {
             "movementId": "deadlift",
-            "reps": 5
+            "reps": 3,
+            "loadNote": "cap \u226460-70% 1RM under fatigue, technique focus (R8/R9)"
           }
         ],
         "workSec": 45,
@@ -2214,11 +2273,11 @@
         "movements": [
           {
             "movementId": "snatch",
-            "reps": 5
+            "reps": 3
           }
         ],
-        "sets": 10,
-        "restSec": 90
+        "sets": 6,
+        "restSec": 240
       },
       {
         "format": "interval",
@@ -2229,7 +2288,7 @@
             "reps": 5
           },
           {
-            "movementId": "hammer_curl",
+            "movementId": "landmine_twist",
             "reps": 5
           },
           {
@@ -2266,7 +2325,8 @@
     "cadenceDays": 14,
     "enabled": true,
     "tags": [
-      "diversity"
+      "diversity",
+      "day:oly-power"
     ],
     "source": "spreadsheet"
   },
@@ -2281,11 +2341,11 @@
         "movements": [
           {
             "movementId": "snatch",
-            "reps": 5
+            "reps": 3
           }
         ],
         "sets": 3,
-        "restSec": 90
+        "restSec": 240
       },
       {
         "format": "amrap",
@@ -2326,7 +2386,8 @@
     "enabled": true,
     "tags": [
       "diversity",
-      "slog"
+      "slog",
+      "day:oly-power"
     ],
     "source": "spreadsheet"
   },
@@ -2341,18 +2402,18 @@
         "movements": [
           {
             "movementId": "snatch",
-            "reps": 5
+            "reps": 3
           }
         ],
         "sets": 5,
-        "restSec": 90
+        "restSec": 240
       },
       {
         "format": "emom",
         "title": "Conditioning",
         "movements": [
           {
-            "movementId": "kb_snatch",
+            "movementId": "kb_swing",
             "reps": 5
           },
           {
@@ -2391,7 +2452,8 @@
     "cadenceDays": 14,
     "enabled": true,
     "tags": [
-      "diversity"
+      "diversity",
+      "day:oly-power"
     ],
     "source": "spreadsheet"
   },
@@ -2406,11 +2468,11 @@
         "movements": [
           {
             "movementId": "snatch",
-            "reps": 5
+            "reps": 3
           }
         ],
-        "sets": 1,
-        "restSec": 90
+        "sets": 3,
+        "restSec": 240
       },
       {
         "format": "rounds",
@@ -2418,7 +2480,8 @@
         "movements": [
           {
             "movementId": "jerk",
-            "reps": 5
+            "reps": 3,
+            "loadNote": "cap \u226460-70% 1RM under fatigue, technique focus (R8/R9)"
           },
           {
             "movementId": "lunge",
@@ -2450,7 +2513,8 @@
     "cadenceDays": 14,
     "enabled": true,
     "tags": [
-      "diversity"
+      "diversity",
+      "day:oly-power"
     ],
     "source": "spreadsheet"
   },
@@ -2465,11 +2529,11 @@
         "movements": [
           {
             "movementId": "snatch",
-            "reps": 5
+            "reps": 3
           }
         ],
         "sets": 3,
-        "restSec": 90
+        "restSec": 240
       },
       {
         "format": "tabata",
@@ -2513,7 +2577,8 @@
     "cadenceDays": 14,
     "enabled": true,
     "tags": [
-      "diversity"
+      "diversity",
+      "day:oly-power"
     ],
     "source": "spreadsheet"
   },
@@ -2528,11 +2593,11 @@
         "movements": [
           {
             "movementId": "snatch",
-            "reps": 5
+            "reps": 3
           }
         ],
-        "sets": 10,
-        "restSec": 90
+        "sets": 6,
+        "restSec": 240
       },
       {
         "format": "interval",
@@ -2564,7 +2629,7 @@
             "reps": 5
           },
           {
-            "movementId": "side_lunge",
+            "movementId": "farmers_carry",
             "reps": 5
           },
           {
@@ -2580,7 +2645,8 @@
     "cadenceDays": 14,
     "enabled": true,
     "tags": [
-      "diversity"
+      "diversity",
+      "day:oly-power"
     ],
     "source": "spreadsheet"
   },
@@ -2599,14 +2665,14 @@
           }
         ],
         "sets": 5,
-        "restSec": 90
+        "restSec": 180
       },
       {
         "format": "amrap",
         "title": "Conditioning",
         "movements": [
           {
-            "movementId": "box_jump",
+            "movementId": "step_up",
             "reps": 10
           },
           {
@@ -2658,7 +2724,7 @@
           }
         ],
         "sets": 3,
-        "restSec": 90
+        "restSec": 180
       },
       {
         "format": "rounds",
@@ -2684,7 +2750,7 @@
             "reps": 5
           },
           {
-            "movementId": "bent_over_row",
+            "movementId": "dumbbell_row",
             "reps": 5
           },
           {
@@ -2717,7 +2783,7 @@
           }
         ],
         "sets": 3,
-        "restSec": 90
+        "restSec": 180
       },
       {
         "format": "amrap",
@@ -2725,7 +2791,8 @@
         "movements": [
           {
             "movementId": "jerk",
-            "reps": 5
+            "reps": 3,
+            "loadNote": "cap \u226460-70% 1RM under fatigue, technique focus (R8/R9)"
           },
           {
             "movementId": "sled_push",
@@ -2780,7 +2847,7 @@
           }
         ],
         "sets": 5,
-        "restSec": 90
+        "restSec": 180
       },
       {
         "format": "rounds",
@@ -2788,7 +2855,8 @@
         "movements": [
           {
             "movementId": "jerk",
-            "reps": 5
+            "reps": 3,
+            "loadNote": "cap \u226460-70% 1RM under fatigue, technique focus (R8/R9)"
           },
           {
             "movementId": "bike",
@@ -2838,8 +2906,8 @@
             "reps": 5
           }
         ],
-        "sets": 1,
-        "restSec": 90
+        "sets": 5,
+        "restSec": 180
       },
       {
         "format": "amrap",
@@ -2847,10 +2915,11 @@
         "movements": [
           {
             "movementId": "deadlift",
-            "reps": 5
+            "reps": 3,
+            "loadNote": "cap \u226460-70% 1RM under fatigue, technique focus (R8/R9)"
           },
           {
-            "movementId": "box_jump",
+            "movementId": "step_up",
             "reps": 5
           },
           {
@@ -2884,7 +2953,8 @@
     "enabled": true,
     "tags": [
       "deadlift-day",
-      "diversity"
+      "diversity",
+      "day:hinge-strength"
     ],
     "source": "spreadsheet"
   },
@@ -2903,7 +2973,7 @@
           }
         ],
         "sets": 8,
-        "restSec": 90
+        "restSec": 180
       },
       {
         "format": "interval",
@@ -2948,7 +3018,8 @@
     "enabled": true,
     "tags": [
       "deadlift-day",
-      "diversity"
+      "diversity",
+      "day:hinge-strength"
     ],
     "source": "spreadsheet"
   },
@@ -2963,11 +3034,11 @@
         "movements": [
           {
             "movementId": "clean",
-            "reps": 5
+            "reps": 3
           }
         ],
-        "sets": 1,
-        "restSec": 90
+        "sets": 3,
+        "restSec": 240
       },
       {
         "format": "emom",
@@ -2975,7 +3046,8 @@
         "movements": [
           {
             "movementId": "deadlift",
-            "reps": 5
+            "reps": 3,
+            "loadNote": "cap \u226460-70% 1RM under fatigue, technique focus (R8/R9)"
           },
           {
             "movementId": "bent_over_row",
@@ -2998,7 +3070,7 @@
             "reps": 5
           },
           {
-            "movementId": "side_lunge",
+            "movementId": "mountain_climber",
             "reps": 5
           },
           {
@@ -3013,7 +3085,8 @@
     "cadenceDays": 14,
     "enabled": true,
     "tags": [
-      "diversity"
+      "diversity",
+      "day:oly-power"
     ],
     "source": "spreadsheet"
   },
@@ -3028,11 +3101,11 @@
         "movements": [
           {
             "movementId": "snatch",
-            "reps": 5
+            "reps": 3
           }
         ],
         "sets": 3,
-        "restSec": 90
+        "restSec": 240
       },
       {
         "format": "amrap",
@@ -3040,14 +3113,15 @@
         "movements": [
           {
             "movementId": "jerk",
-            "reps": 5
+            "reps": 3,
+            "loadNote": "cap \u226460-70% 1RM under fatigue, technique focus (R8/R9)"
           },
           {
             "movementId": "pull_up",
             "reps": 5
           },
           {
-            "movementId": "bent_over_row",
+            "movementId": "skull_crusher",
             "reps": 5
           }
         ],
@@ -3076,7 +3150,8 @@
     "cadenceDays": 14,
     "enabled": true,
     "tags": [
-      "diversity"
+      "diversity",
+      "day:oly-power"
     ],
     "source": "spreadsheet"
   },
@@ -3095,7 +3170,7 @@
           }
         ],
         "sets": 3,
-        "restSec": 90
+        "restSec": 240
       },
       {
         "format": "rounds",
@@ -3103,11 +3178,12 @@
         "movements": [
           {
             "movementId": "jerk",
-            "reps": 5
+            "reps": 3,
+            "loadNote": "cap \u226460-70% 1RM under fatigue, technique focus (R8/R9)"
           },
           {
             "movementId": "bike",
-            "distanceM": 8047
+            "distanceM": 1609
           }
         ],
         "rounds": 4
@@ -3201,5 +3277,305 @@
       "diversity"
     ],
     "source": "spreadsheet"
+  },
+  {
+    "id": "new-deadlift-pushpress-day",
+    "name": "Deadlift + Push Press (mandatory day)",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "deadlift",
+            "reps": 5,
+            "loadNote": "70-85% 1RM"
+          }
+        ],
+        "sets": 5,
+        "restSec": 180
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "push_press",
+            "reps": 3,
+            "loadNote": "75-85% 1RM"
+          }
+        ],
+        "sets": 4,
+        "restSec": 180
+      },
+      {
+        "format": "rounds",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "plank",
+            "seconds": 30
+          },
+          {
+            "movementId": "dead_bug",
+            "reps": 10
+          }
+        ],
+        "rounds": 3
+      }
+    ],
+    "cadenceDays": 6,
+    "enabled": true,
+    "tags": [
+      "day:deadlift-press",
+      "mandatory"
+    ],
+    "source": "manual",
+    "notes": "Warm-up: 8-10 min easy row/bike + barbell-only ramp-up sets before the Deadlift block. Per R26, keep >=48h from any other heavy hinge or heavy overhead-press session; treat the next day as lower-intensity/rest (R21)."
+  },
+  {
+    "id": "new-bench-press-day",
+    "name": "Bench Press strength day",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "bench_press",
+            "reps": 5,
+            "loadNote": "75-85% 1RM"
+          }
+        ],
+        "sets": 5,
+        "restSec": 180
+      },
+      {
+        "format": "strength",
+        "title": "Accessory",
+        "movements": [
+          {
+            "movementId": "bent_over_row",
+            "reps": 8
+          }
+        ],
+        "sets": 3,
+        "restSec": 90
+      },
+      {
+        "format": "interval",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "row",
+            "distanceM": 250
+          }
+        ],
+        "workSec": 30,
+        "restSec": 30,
+        "rounds": 6
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "day:strength"
+    ],
+    "source": "manual",
+    "notes": "Warm-up: 8-10 min general + bar-only bench ramp-up sets."
+  },
+  {
+    "id": "new-weighted-pullup-day",
+    "name": "Weighted Pull-up strength day",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "weighted_pullup",
+            "reps": 5,
+            "loadNote": "RPE 7-8 (R28)"
+          }
+        ],
+        "sets": 5,
+        "restSec": 180
+      },
+      {
+        "format": "strength",
+        "title": "Accessory",
+        "movements": [
+          {
+            "movementId": "dip",
+            "reps": 8
+          }
+        ],
+        "sets": 3,
+        "restSec": 90
+      },
+      {
+        "format": "rounds",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "farmers_carry",
+            "reps": 1
+          }
+        ],
+        "rounds": 4
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "day:strength"
+    ],
+    "source": "manual",
+    "notes": "Warm-up: 8-10 min general + dead-hang/scap-pull activation."
+  },
+  {
+    "id": "new-power-clean-day",
+    "name": "Power Clean + Front Squat (olympic power day)",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "emom",
+        "title": "Power",
+        "movements": [
+          {
+            "movementId": "power_clean",
+            "reps": 2,
+            "loadNote": "65-75% 1RM, technique focus"
+          }
+        ],
+        "intervalSec": 60,
+        "rounds": 10
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "front_squat",
+            "reps": 5,
+            "loadNote": "75-85% 1RM"
+          }
+        ],
+        "sets": 5,
+        "restSec": 180
+      },
+      {
+        "format": "rounds",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "kb_swing",
+            "reps": 10
+          },
+          {
+            "movementId": "push_up",
+            "reps": 8
+          }
+        ],
+        "rounds": 3
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "day:oly-power",
+      "day:squat-strength"
+    ],
+    "source": "manual",
+    "notes": "Warm-up: 8-10 min general + empty-bar clean pulls/front-rack mobility. Power block goes first per R7/R24 (peak neural precision before fatigue)."
+  },
+  {
+    "id": "new-zone2-row",
+    "name": "Zone 2 Row (monthly slog)",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "row",
+            "distanceM": 7000,
+            "loadNote": "conversational pace, 65-75% HRmax (R15)"
+          }
+        ],
+        "workSec": 1800,
+        "restSec": 0,
+        "rounds": 1
+      }
+    ],
+    "cadenceDays": 30,
+    "enabled": true,
+    "tags": [
+      "day:zone2",
+      "slog"
+    ],
+    "source": "manual",
+    "notes": "Warm-up is built into the first 5 min of the row at an easy pace."
+  },
+  {
+    "id": "new-norwegian-4x4-bike",
+    "name": "Norwegian 4x4 Bike Intervals",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 240,
+            "loadNote": "90-95% HRmax (R13)"
+          }
+        ],
+        "workSec": 240,
+        "restSec": 180,
+        "rounds": 4
+      }
+    ],
+    "cadenceDays": 7,
+    "enabled": true,
+    "tags": [
+      "day:zone2",
+      "hiit"
+    ],
+    "source": "manual",
+    "notes": "Warm-up: 10 min easy bike before round 1. 3 min active recovery pedal between rounds."
+  },
+  {
+    "id": "new-tabata-bike",
+    "name": "True Tabata Bike Protocol",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "tabata",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 20,
+            "loadNote": "supramaximal effort (R12)"
+          }
+        ],
+        "rounds": 8,
+        "workSec": 20,
+        "restSec": 10
+      }
+    ],
+    "cadenceDays": 7,
+    "enabled": true,
+    "tags": [
+      "day:hiit"
+    ],
+    "source": "manual",
+    "notes": "Warm-up: 5-8 min easy bike. Single movement only, supramaximal intensity -- this is the actual validated Tabata protocol (R12), unlike the pool's other mixed-movement 20/10 circuits."
   }
 ]
