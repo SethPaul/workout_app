@@ -261,3 +261,122 @@ app/
 - Unparseable rows are listed in `seed/README.md` rather than guessed. Aim for correctness over
   coverage; 30 to 60 good pool entries is plenty.
 - Every `movementId` referenced in `pool.json` must exist in `movements.json` (a test enforces it).
+
+## 9. Programming layer (progression, autoregulation, deloads)
+
+Evidence: `project_docs/training_evidence.md` R27-R44. Everything here is derived from logs; nothing
+changes the pool data itself. All computations are pure functions in `src/domain/program/*` and
+unit-tested.
+
+### 9.1 Types (additions)
+
+```ts
+export type Units = 'lb' | 'kg';
+
+export interface Movement {           // additions
+  progression?: 'linear' | 'double'; // default: linear for barbell lifts, double for everything else
+  repRange?: [number, number];        // double progression range, default [6, 8] accessory, [3, 5] main
+  increment?: number;                 // load step in settings.units; default lower-body barbell 10 lb / 5 kg,
+                                      // upper-body barbell 5 lb / 2.5 kg, dumbbell/kettlebell 5 lb / 2 kg
+}
+
+export interface BlockMovement {      // addition
+  targetRpe?: number;                 // default 8 for strength main lifts, 8 for accessory, 6 during deload
+}
+
+export interface MovementResult {     // addition
+  rpe?: number;                       // per-movement RPE of the hardest set (optional, 1-10)
+}
+
+export interface WorkoutLog {         // additions
+  kind: 'pool' | 'adhoc' | 'max-test'; // existing logs migrate to 'pool'
+  poolWorkoutId?: string;             // absent for adhoc and max-test
+  durationMin?: number;               // derived from startedAt/finishedAt when both exist
+}
+
+export interface Settings {           // additions
+  units: Units;                       // default 'lb'
+  deloadPolicy: 'fatigue' | 'calendar' | 'off'; // default 'fatigue'
+  cycleWeeks: number;                 // default 4; calendar deload every cycleWeeks+1th week
+  focus: 'balanced' | 'strength' | 'conditioning'; // default 'balanced'
+  masters: boolean;                   // default false; true extends pattern cadence to 3 days (R44)
+}
+
+export interface ProgramState {       // stored in AppState
+  cycleStartedAt: string;             // ISO date of the current cycle's first session
+  deloadWeekStartedAt?: string;       // set when a deload is accepted; cleared after 7 days
+  dismissedFlags: string[];           // fatigue flag ids the user dismissed this cycle
+}
+```
+
+### 9.2 Estimated 1RM (R37)
+`e1rm(weight, reps)` = Epley `w * (1 + reps/30)`, only for `1 <= reps <= 10`. Per movement,
+`e1rmHistory(logs, movementId)` yields `{date, e1rm, source: 'estimate' | 'max-test'}` per session
+using the best set that session. `currentMax(movementId)`: a `max-test` log within 56 days wins;
+otherwise the max e1rm over the last 8 weeks; otherwise null.
+
+### 9.3 Load prescription (R36, R38)
+`RPE_TABLE[reps][rpe]` = fraction of 1RM (Helms/Zourdos RIR table, reps 1-10, RPE 6-10).
+`suggestLoad(movement, reps, targetRpe, logs, units)` = `round(currentMax * RPE_TABLE[reps][rpe])` to
+the nearest `increment/2`, or null when no max is known (UI then shows "log a set to calibrate").
+`loadPct` on a BlockMovement, when present, overrides the table.
+
+### 9.4 Progression and stalls (R30-R33)
+`progressionStatus(movement, logs)` looks at the last two strength-block sessions of the movement:
+- **linear**: success = every prescribed set hit target reps at `rpe <= targetRpe + 0.5` (missing
+  RPE counts as success). Next target = last load + `increment`. Two consecutive non-successes = stall.
+- **double**: success = every set reached `repRange[1]`. Next = load + increment, reps reset to
+  `repRange[0]`; else reps target = last reps + 1. Two sessions without any rep or load gain = stall.
+- **stall action**: suggest `load * 0.9` for one session, then resume; second stall in a cycle
+  suggests a scheme change (5x5 → 3x5 or shift rep range) as text.
+The Today card and Run screen show the suggested load per set from 9.3 adjusted by 9.4; the results
+form prefills it.
+
+### 9.5 Cycle wave (R34, R35)
+`cycleWeek(programState, now)` = 1-based week index. Strength blocks of a pulled workout are
+transformed at selection time (the snapshot stores the transformed block):
+- week 1: sets as written, targetRpe 7
+- week 2: sets as written, targetRpe 8
+- week 3: sets - 1 (min 3), reps - 1 (min 2 for olympic, 3 otherwise), targetRpe 9
+- week 4 (if `cycleWeeks` = 4): as week 2
+- deload week (see 9.6): sets × 0.5 (round up, min 2), targetRpe 6, conditioning blocks: AMRAP/rounds
+  durations × 0.6, intervals rounds × 0.6; `notes` gains "Deload week".
+A new cycle starts the day after a deload week ends, or after `cycleWeeks` weeks when no deload was
+taken and policy is 'off'.
+
+### 9.6 Fatigue flags and deload (R39-R41)
+`fatigueFlags(logs, now)` returns flags with ids and human text:
+- `e1rm-drop:<movementId>`: e1rm ≥ 5% below its 8-week peak in each of the last 2 sessions
+- `rpe-creep:<movementId>`: same load logged with rpe rising ≥ 1.5 over the last 3 sessions
+- `missed-reps:<movementId>`: prescribed reps missed in the last 2 sessions
+- `load-spike`: session-RPE × durationMin summed for the last 7 days ≥ 1.3 × the 28-day weekly mean
+  (flag only, low confidence; never sufficient alone)
+`deloadSuggested(flags, programState, settings, now)`:
+- policy 'fatigue': ≥ 2 non-dismissed flags, or ≥ 1 flag plus cycle week ≥ `cycleWeeks`, or cycle
+  week ≥ 6 (ceiling)
+- policy 'calendar': cycle week == `cycleWeeks` + 1
+- policy 'off': never
+The Today screen shows a banner "Deload suggested" with the flag texts, **Start deload week** and
+**Not now** (dismisses these flags for the cycle). Accepting sets `deloadWeekStartedAt`.
+
+### 9.7 Focus and masters (R42-R44)
+`focus` multiplies the selection score: strength ×1.5 for workouts whose first block is strength or
+Power, conditioning ×1.5 for `day:zone2`, `day:hiit`, and conditioning-only workouts. `masters` sets
+every `PATTERN_CADENCE_DAYS` entry ≥ 2 to 3 and appends a longer ramp-up note to strength blocks.
+
+### 9.8 Ad-hoc and max-test logging
+History gains **Log something else**. Form: date (default today), movements (searchable picker, add
+several), per movement a list of sets (weight, reps, optional rpe), notes, and a **This was a max
+test** toggle. Saves a `WorkoutLog` with `kind: 'adhoc' | 'max-test'`, no `poolWorkoutId`, and a
+synthetic `workoutSnapshot` (one strength block per movement, `source: 'manual'`, id `adhoc-<logId>`).
+Ad-hoc logs count for last-performed, pattern cadence, e1rm history, and fatigue flags exactly like
+pool logs. Max-test logs feed `currentMax` directly (9.2).
+
+### 9.9 UI summary
+- **Today**: cycle week chip ("Week 2 of 4"), deload banner, suggested loads on the card.
+- **Run**: suggested load and target RPE per set; results form prefilled; per-movement RPE field.
+- **Movements → detail**: current max (estimate or tested, with date), e1rm trend (last 12 sessions,
+  inline SVG sparkline), progression status and next target, PRs (best e1rm, best single).
+- **History**: "Log something else"; adhoc and max-test rows marked.
+- **Settings**: units, deload policy, cycle length, focus, masters; changing units converts nothing,
+  it only labels and sets increments (logs store the number as entered).
