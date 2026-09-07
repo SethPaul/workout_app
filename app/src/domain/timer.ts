@@ -160,7 +160,8 @@ function buildInternalBlock(block: Block): InternalBlock {
       const workSec = block.workSec ?? 20;
       const restSec = block.restSec ?? 10;
       const phases: InternalPhase[] = [];
-      for (const mv of block.movements) {
+      for (let mi = 0; mi < block.movements.length; mi++) {
+        const mv = block.movements[mi];
         for (let r = 1; r <= rounds; r++) {
           phases.push({
             kind: 'work',
@@ -171,14 +172,19 @@ function buildInternalBlock(block: Block): InternalBlock {
             beepOnStart: true,
             tenSecondCue: workSec * 1000 > 10_000,
           });
-          phases.push({
-            kind: 'rest',
-            label: 'Rest',
-            movementIds: [],
-            durationMs: restSec * 1000,
-            bellOnStart: true,
-            tenSecondCue: restSec * 1000 > 10_000,
-          });
+          // No rest after the very last round of the very last movement; a
+          // rest between rounds (same movement) or between movements stays.
+          const isLastPhase = mi === block.movements.length - 1 && r === rounds;
+          if (!isLastPhase) {
+            phases.push({
+              kind: 'rest',
+              label: 'Rest',
+              movementIds: [],
+              durationMs: restSec * 1000,
+              bellOnStart: true,
+              tenSecondCue: restSec * 1000 > 10_000,
+            });
+          }
         }
       }
       return { format: 'tabata', phases };
@@ -198,14 +204,16 @@ function buildInternalBlock(block: Block): InternalBlock {
           beepOnStart: true,
           tenSecondCue: workSec * 1000 > 10_000,
         });
-        phases.push({
-          kind: 'rest',
-          label: `Round ${r}/${rounds} rest`,
-          movementIds: [],
-          durationMs: restSec * 1000,
-          bellOnStart: true,
-          tenSecondCue: restSec * 1000 > 10_000,
-        });
+        if (r < rounds) {
+          phases.push({
+            kind: 'rest',
+            label: `Round ${r}/${rounds} rest`,
+            movementIds: [],
+            durationMs: restSec * 1000,
+            bellOnStart: true,
+            tenSecondCue: restSec * 1000 > 10_000,
+          });
+        }
       }
       return { format: 'interval', phases };
     }
@@ -400,7 +408,10 @@ function applyTick(state: TimerState, now: number): void {
 
   const last = state._lastTickAt ?? now;
   const dt = Math.max(0, now - last);
-  state._lastTickAt = now;
+  // A tick can arrive out of order (e.g. after a later tick was already
+  // applied); never let _lastTickAt move backwards, or the next tick would
+  // double-count the interval it already covered.
+  state._lastTickAt = Math.max(last, now);
   state._phaseElapsedMs += dt;
   state.phase.elapsedMs = state._phaseElapsedMs;
 

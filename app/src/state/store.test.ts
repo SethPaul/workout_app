@@ -82,6 +82,16 @@ describe('init / update', () => {
   });
 });
 
+describe('todayDateString (via setTodayWorkout)', () => {
+  it('uses the local calendar date, not the UTC date, for a 16:30 local timestamp', () => {
+    // Constructed with local-time components (not an ISO string), so this
+    // pins the local date regardless of host TZ.
+    const now = new Date(2024, 5, 20, 16, 30); // June 20 2024, 16:30 local
+    setTodayWorkout('w1', now);
+    expect(currentTodayWorkout(now)?.date).toBe('2024-06-20');
+  });
+});
+
 describe('today workout', () => {
   it('returns null when nothing has been set', () => {
     expect(currentTodayWorkout(new Date('2024-01-01T12:00:00Z'))).toBeNull();

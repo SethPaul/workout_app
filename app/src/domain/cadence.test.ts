@@ -46,6 +46,38 @@ describe('daysSince', () => {
   it('accepts a Date for now', () => {
     expect(daysSince('2024-01-01T00:00:00.000Z', new Date('2024-01-08T00:00:00.000Z'))).toBe(7);
   });
+
+  it('is a local calendar-day difference, not elapsed time: same day is 0', () => {
+    // Both constructed with local-time components (not ISO strings), so this
+    // is timezone-independent: "today" for both, regardless of host TZ.
+    const performedToday = new Date(2024, 0, 15, 6, 0).toISOString();
+    const nowSameDayLater = new Date(2024, 0, 15, 22, 0);
+    expect(daysSince(performedToday, nowSameDayLater)).toBe(0);
+  });
+
+  it('crossing local midnight counts as 1 day even under 24h elapsed', () => {
+    // Performed 23:00 local yesterday, now 07:00 local today: only 8 hours
+    // elapsed, but it's a different local calendar day.
+    const performedYesterdayLate = new Date(2024, 0, 14, 23, 0).toISOString();
+    const nowEarlyToday = new Date(2024, 0, 15, 7, 0);
+    expect(daysSince(performedYesterdayLate, nowEarlyToday)).toBe(1);
+  });
+});
+
+describe('daysSince (cadence gating scenarios)', () => {
+  it('same-day performance does not satisfy a 1-day cadence (not due)', () => {
+    const performedToday = new Date(2024, 2, 10, 6, 0).toISOString();
+    const now = new Date(2024, 2, 10, 20, 0);
+    const cadenceDays = 1;
+    expect(daysSince(performedToday, now) >= cadenceDays).toBe(false);
+  });
+
+  it('performed 23:00 local yesterday satisfies a 1-day cadence by 07:00 local today (due)', () => {
+    const performedYesterdayLate = new Date(2024, 2, 9, 23, 0).toISOString();
+    const now = new Date(2024, 2, 10, 7, 0);
+    const cadenceDays = 1;
+    expect(daysSince(performedYesterdayLate, now) >= cadenceDays).toBe(true);
+  });
 });
 
 describe('lastPerformedMovement', () => {

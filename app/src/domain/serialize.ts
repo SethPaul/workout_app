@@ -1,4 +1,4 @@
-import type { AppState, Block, Movement, PoolWorkout, Settings, WorkoutLog } from './types';
+import type { AppState, Block, Format, Movement, PoolWorkout, Settings, WorkoutLog } from './types';
 
 /** Serializes AppState to a JSON string for backup/export. */
 export function exportState(state: AppState): string {
@@ -29,6 +29,40 @@ function assertBoolean(value: unknown, path: string): asserts value is boolean {
   if (typeof value !== 'boolean') fail(`expected "${path}" to be a boolean`);
 }
 
+const FORMATS = new Set<string>([
+  'strength',
+  'emom',
+  'tabata',
+  'interval',
+  'amrap',
+  'rounds',
+  'chipper',
+  'death_by',
+]);
+
+function assertFormat(value: unknown, path: string): asserts value is Format {
+  assertString(value, path);
+  if (!FORMATS.has(value)) {
+    fail(`expected "${path}" to be one of ${[...FORMATS].join(', ')}, got "${value}"`);
+  }
+}
+
+/** A non-negative, finite cadence in days. */
+function assertCadenceDays(value: unknown, path: string): asserts value is number {
+  assertNumber(value, path);
+  if (!Number.isFinite(value) || value < 0) {
+    fail(`expected "${path}" to be a non-negative finite number`);
+  }
+}
+
+function assertNoDuplicateIds(ids: string[], kind: string): void {
+  const seen = new Set<string>();
+  for (const id of ids) {
+    if (seen.has(id)) fail(`duplicate ${kind} id "${id}"`);
+    seen.add(id);
+  }
+}
+
 function validateMovement(value: unknown, index: number): Movement {
   const path = `movements[${index}]`;
   if (!isPlainObject(value)) fail(`${path} must be an object`);
@@ -36,7 +70,7 @@ function validateMovement(value: unknown, index: number): Movement {
   assertString(value.name, `${path}.name`);
   assertArray(value.tags, `${path}.tags`);
   assertArray(value.equipment, `${path}.equipment`);
-  assertNumber(value.cadenceDays, `${path}.cadenceDays`);
+  assertCadenceDays(value.cadenceDays, `${path}.cadenceDays`);
   assertString(value.unit, `${path}.unit`);
   assertBoolean(value.loadable, `${path}.loadable`);
   if (value.aliases !== undefined) assertArray(value.aliases, `${path}.aliases`);
@@ -46,7 +80,7 @@ function validateMovement(value: unknown, index: number): Movement {
 function validateBlock(value: unknown, poolIndex: number, blockIndex: number): Block {
   const path = `pool[${poolIndex}].blocks[${blockIndex}]`;
   if (!isPlainObject(value)) fail(`${path} must be an object`);
-  assertString(value.format, `${path}.format`);
+  assertFormat(value.format, `${path}.format`);
   assertArray(value.movements, `${path}.movements`);
   value.movements.forEach((m, i) => {
     const mPath = `${path}.movements[${i}]`;
@@ -64,7 +98,7 @@ function validatePoolWorkout(value: unknown, index: number): PoolWorkout {
   assertString(value.intensity, `${path}.intensity`);
   assertArray(value.blocks, `${path}.blocks`);
   value.blocks.forEach((b, i) => validateBlock(b, index, i));
-  assertNumber(value.cadenceDays, `${path}.cadenceDays`);
+  assertCadenceDays(value.cadenceDays, `${path}.cadenceDays`);
   assertBoolean(value.enabled, `${path}.enabled`);
   assertString(value.source, `${path}.source`);
   return value as unknown as PoolWorkout;
@@ -83,13 +117,30 @@ function validateWorkoutLog(value: unknown, index: number): WorkoutLog {
   return value as unknown as WorkoutLog;
 }
 
+const DEFAULT_SETTINGS_BOOLEANS = { soundOn: true, vibrateOn: true, keepScreenOn: true } as const;
+
 function validateSettings(value: unknown): Settings {
   if (!isPlainObject(value)) fail('"settings" must be an object');
+  // availableEquipment has no sensible default: an import missing it is an error.
   assertArray(value.availableEquipment, 'settings.availableEquipment');
-  assertBoolean(value.soundOn, 'settings.soundOn');
-  assertBoolean(value.vibrateOn, 'settings.vibrateOn');
-  assertBoolean(value.keepScreenOn, 'settings.keepScreenOn');
-  return value as unknown as Settings;
+
+  // The three boolean fields may be filled in with defaults when absent, but
+  // if present they must be actual booleans.
+  const soundOn = value.soundOn === undefined ? DEFAULT_SETTINGS_BOOLEANS.soundOn : value.soundOn;
+  const vibrateOn =
+    value.vibrateOn === undefined ? DEFAULT_SETTINGS_BOOLEANS.vibrateOn : value.vibrateOn;
+  const keepScreenOn =
+    value.keepScreenOn === undefined ? DEFAULT_SETTINGS_BOOLEANS.keepScreenOn : value.keepScreenOn;
+  assertBoolean(soundOn, 'settings.soundOn');
+  assertBoolean(vibrateOn, 'settings.vibrateOn');
+  assertBoolean(keepScreenOn, 'settings.keepScreenOn');
+
+  return {
+    availableEquipment: value.availableEquipment,
+    soundOn,
+    vibrateOn,
+    keepScreenOn,
+  } as unknown as Settings;
 }
 
 /**
@@ -111,9 +162,17 @@ export function importState(json: string): AppState {
 
   assertArray(parsed.movements, 'movements');
   const movements = parsed.movements.map((m, i) => validateMovement(m, i));
+  assertNoDuplicateIds(
+    movements.map((m) => m.id),
+    'movement',
+  );
 
   assertArray(parsed.pool, 'pool');
   const pool = parsed.pool.map((w, i) => validatePoolWorkout(w, i));
+  assertNoDuplicateIds(
+    pool.map((w) => w.id),
+    'pool workout',
+  );
 
   assertArray(parsed.logs, 'logs');
   const logs = parsed.logs.map((l, i) => validateWorkoutLog(l, i));

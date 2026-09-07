@@ -2,11 +2,24 @@ import type { Movement, PoolWorkout, WorkoutLog } from './types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** Whole days elapsed between an ISO timestamp and `now` (also ISO or Date). */
+/** Midnight, local time, for the calendar day containing `d`. */
+function localMidnight(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+/**
+ * Local calendar-day difference between an ISO timestamp and `now` (also ISO
+ * or Date) — not elapsed milliseconds. A workout performed at 23:00 local
+ * yesterday is `1` day ago as of 07:00 local today, even though under 24h of
+ * wall-clock time has passed; the same calendar day is always `0`. Uses
+ * Math.round (not floor) so a DST transition's 23h/25h local day doesn't
+ * shift the result by one.
+ */
 export function daysSince(iso: string, now: string | Date): number {
-  const then = new Date(iso).getTime();
-  const nowMs = typeof now === 'string' ? new Date(now).getTime() : now.getTime();
-  return Math.floor((nowMs - then) / DAY_MS);
+  const then = new Date(iso);
+  const nowDate = typeof now === 'string' ? new Date(now) : now;
+  const diffMs = localMidnight(nowDate).getTime() - localMidnight(then).getTime();
+  return Math.round(diffMs / DAY_MS);
 }
 
 /** Latest `finishedAt` among logs whose workout snapshot contains this movement, or null. */

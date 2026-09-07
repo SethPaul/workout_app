@@ -88,4 +88,50 @@ describe('importState validation', () => {
     const state: Record<string, unknown> = { ...validState(), settings: { soundOn: true } };
     expect(() => importState(JSON.stringify(state))).toThrow(/settings/);
   });
+
+  it('fills in missing settings booleans with defaults', () => {
+    const state = validState();
+    const raw: Record<string, unknown> = {
+      ...state,
+      settings: { availableEquipment: ['barbell'] },
+    };
+    const imported = importState(JSON.stringify(raw));
+    expect(imported.settings).toEqual({
+      availableEquipment: ['barbell'],
+      soundOn: true,
+      vibrateOn: true,
+      keepScreenOn: true,
+    });
+  });
+
+  it('rejects an unknown block format', () => {
+    const state = validState();
+    // @ts-expect-error intentionally malformed for the test
+    state.pool[0].blocks[0].format = 'not-a-real-format';
+    expect(() => importState(JSON.stringify(state))).toThrow(/format/);
+  });
+
+  it('rejects a duplicate movement id', () => {
+    const state = validState();
+    state.movements.push({ ...state.movements[0] });
+    expect(() => importState(JSON.stringify(state))).toThrow(/duplicate movement id "squat"/);
+  });
+
+  it('rejects a duplicate pool workout id', () => {
+    const state = validState();
+    state.pool.push({ ...state.pool[0] });
+    expect(() => importState(JSON.stringify(state))).toThrow(/duplicate pool workout id "w1"/);
+  });
+
+  it('rejects a negative movement cadenceDays', () => {
+    const state = validState();
+    state.movements[0].cadenceDays = -1;
+    expect(() => importState(JSON.stringify(state))).toThrow(/cadenceDays/);
+  });
+
+  it('rejects a negative pool workout cadenceDays', () => {
+    const state = validState();
+    state.pool[0].cadenceDays = -7;
+    expect(() => importState(JSON.stringify(state))).toThrow(/cadenceDays/);
+  });
 });
