@@ -1,0 +1,3205 @@
+[
+  {
+    "id": "sheet4-r73-back-squat-30-on-30-off",
+    "name": "Back Squat 10x5 + KB swings, 30 on 30 off",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "back_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 10,
+        "restSec": 90
+      },
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "kb_swing",
+            "reps": 10
+          }
+        ],
+        "workSec": 30,
+        "restSec": 30,
+        "rounds": 10
+      },
+      {
+        "format": "interval",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "lunge",
+            "reps": 5
+          },
+          {
+            "movementId": "box_jump",
+            "reps": 5
+          },
+          {
+            "movementId": "row",
+            "distanceM": 500
+          }
+        ],
+        "workSec": 30,
+        "restSec": 30,
+        "rounds": 10
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r11-back-squat-amrap",
+    "name": "Back Squat 5x5 + thrusters/romanian deadlift/bench press, AMRAP",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "back_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 5,
+        "restSec": 90
+      },
+      {
+        "format": "amrap",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "thruster",
+            "reps": 5
+          },
+          {
+            "movementId": "romanian_deadlift",
+            "reps": 5
+          },
+          {
+            "movementId": "bench_press",
+            "reps": 5
+          }
+        ],
+        "durationSec": 900
+      },
+      {
+        "format": "amrap",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "bent_over_row",
+            "reps": 5
+          },
+          {
+            "movementId": "chest_fly",
+            "reps": 5
+          },
+          {
+            "movementId": "sled_push",
+            "reps": 1
+          }
+        ],
+        "durationSec": 900
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "slog"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r7-back-squat-emom",
+    "name": "Back Squat 10x5 + deadlift/side lunges, EMOM",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "back_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 10,
+        "restSec": 90
+      },
+      {
+        "format": "emom",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "deadlift",
+            "reps": 5
+          },
+          {
+            "movementId": "side_lunge",
+            "reps": 5
+          }
+        ],
+        "intervalSec": 60,
+        "rounds": 10
+      },
+      {
+        "format": "emom",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "pull_up",
+            "reps": 5
+          },
+          {
+            "movementId": "hammer_curl",
+            "reps": 5
+          },
+          {
+            "movementId": "run",
+            "distanceM": 1609
+          }
+        ],
+        "intervalSec": 60,
+        "rounds": 10
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r2-back-squat-n-rounds",
+    "name": "Back Squat 3x5 + box jumps/bench press/sled push, N rounds",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "back_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 3,
+        "restSec": 90
+      },
+      {
+        "format": "rounds",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "box_jump",
+            "reps": 10
+          },
+          {
+            "movementId": "bench_press",
+            "reps": 5
+          },
+          {
+            "movementId": "sled_push",
+            "reps": 1
+          }
+        ],
+        "rounds": 3
+      },
+      {
+        "format": "rounds",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "bent_over_row",
+            "reps": 5
+          },
+          {
+            "movementId": "sandbag_drop",
+            "reps": 5
+          }
+        ],
+        "rounds": 3
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r65-back-squat-tabata",
+    "name": "Back Squat 5x5 + clean/romanian deadlift/planks, Tabata",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "back_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 5,
+        "restSec": 90
+      },
+      {
+        "format": "tabata",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "clean",
+            "reps": 5
+          },
+          {
+            "movementId": "romanian_deadlift",
+            "reps": 5
+          },
+          {
+            "movementId": "plank",
+            "seconds": 30
+          }
+        ],
+        "rounds": 8,
+        "workSec": 20,
+        "restSec": 10
+      },
+      {
+        "format": "tabata",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "dip",
+            "reps": 5
+          },
+          {
+            "movementId": "grasshopper",
+            "reps": 5
+          },
+          {
+            "movementId": "mountain_climber",
+            "reps": 20
+          }
+        ],
+        "rounds": 8,
+        "workSec": 20,
+        "restSec": 10
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r69-back-squat-clusters",
+    "name": "Back Squat 1x5 + KB swings/renegade manmakers, clusters",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "back_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 1,
+        "restSec": 90
+      },
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "kb_swing",
+            "reps": 10
+          },
+          {
+            "movementId": "renegade_manmaker",
+            "reps": 5
+          }
+        ],
+        "workSec": 45,
+        "restSec": 30,
+        "rounds": 1
+      },
+      {
+        "format": "interval",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "dip",
+            "reps": 5
+          },
+          {
+            "movementId": "ghd_situp",
+            "reps": 5
+          },
+          {
+            "movementId": "pistol_squat",
+            "reps": 3
+          }
+        ],
+        "workSec": 45,
+        "restSec": 30,
+        "rounds": 1
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r61-clean-30-on-30-off",
+    "name": "Clean 5x5 + thrusters/strict press, 30 on 30 off",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "clean",
+            "reps": 5
+          }
+        ],
+        "sets": 5,
+        "restSec": 90
+      },
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "thruster",
+            "reps": 5
+          },
+          {
+            "movementId": "strict_press",
+            "reps": 5
+          }
+        ],
+        "workSec": 30,
+        "restSec": 30,
+        "rounds": 12
+      },
+      {
+        "format": "interval",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "lunge",
+            "reps": 5
+          },
+          {
+            "movementId": "romanian_deadlift",
+            "reps": 5
+          },
+          {
+            "movementId": "ghd_back_extension",
+            "reps": 5
+          }
+        ],
+        "workSec": 30,
+        "restSec": 30,
+        "rounds": 12
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r3-clean-amrap",
+    "name": "Clean 8x5 + clean/side lunges, AMRAP",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "clean",
+            "reps": 5
+          }
+        ],
+        "sets": 8,
+        "restSec": 90
+      },
+      {
+        "format": "amrap",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "clean",
+            "reps": 5
+          },
+          {
+            "movementId": "side_lunge",
+            "reps": 5
+          }
+        ],
+        "durationSec": 600
+      },
+      {
+        "format": "amrap",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "pull_up",
+            "reps": 5
+          },
+          {
+            "movementId": "row",
+            "distanceM": 500
+          },
+          {
+            "movementId": "step_up",
+            "reps": 10
+          }
+        ],
+        "durationSec": 600
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r24-clean-emom",
+    "name": "Clean 5x5 + star shrugs, EMOM",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "clean",
+            "reps": 5
+          }
+        ],
+        "sets": 5,
+        "restSec": 90
+      },
+      {
+        "format": "emom",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "star_shrug",
+            "reps": 5
+          }
+        ],
+        "intervalSec": 60,
+        "rounds": 16
+      },
+      {
+        "format": "emom",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "dip",
+            "reps": 5
+          },
+          {
+            "movementId": "lunge",
+            "reps": 5
+          },
+          {
+            "movementId": "bent_over_row",
+            "reps": 5
+          }
+        ],
+        "intervalSec": 60,
+        "rounds": 16
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r82-clean-n-rounds",
+    "name": "Clean 3x5 + snatch/lunges, N rounds",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "clean",
+            "reps": 5
+          }
+        ],
+        "sets": 3,
+        "restSec": 90
+      },
+      {
+        "format": "rounds",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "snatch",
+            "reps": 5
+          },
+          {
+            "movementId": "lunge",
+            "reps": 5
+          }
+        ],
+        "rounds": 4
+      },
+      {
+        "format": "rounds",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "lunge",
+            "reps": 5
+          },
+          {
+            "movementId": "sandbag_drop",
+            "reps": 5
+          }
+        ],
+        "rounds": 4
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r53-clean-tabata",
+    "name": "Clean 8x5 + box jumps/dead bugs/lunges, Tabata",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "clean",
+            "reps": 5
+          }
+        ],
+        "sets": 8,
+        "restSec": 90
+      },
+      {
+        "format": "tabata",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "box_jump",
+            "reps": 10
+          },
+          {
+            "movementId": "dead_bug",
+            "reps": 20
+          },
+          {
+            "movementId": "lunge",
+            "reps": 5
+          }
+        ],
+        "rounds": 8,
+        "workSec": 20,
+        "restSec": 10
+      },
+      {
+        "format": "tabata",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "skull_crusher",
+            "reps": 5
+          },
+          {
+            "movementId": "wall_ball",
+            "reps": 10
+          }
+        ],
+        "rounds": 8,
+        "workSec": 20,
+        "restSec": 10
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r177-clean-clusters",
+    "name": "Clean 3x5 + snatch/bentover_rows, clusters",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "clean",
+            "reps": 5
+          }
+        ],
+        "sets": 3,
+        "restSec": 90
+      },
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "snatch",
+            "reps": 5
+          },
+          {
+            "movementId": "bent_over_row",
+            "reps": 5
+          }
+        ],
+        "workSec": 45,
+        "restSec": 30,
+        "rounds": 3
+      },
+      {
+        "format": "interval",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "dumbbell_row",
+            "reps": 5
+          },
+          {
+            "movementId": "russian_twist",
+            "reps": 10
+          },
+          {
+            "movementId": "wall_ball",
+            "reps": 10
+          }
+        ],
+        "workSec": 45,
+        "restSec": 30,
+        "rounds": 3
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r13-deadlift-30-on-30-off",
+    "name": "Deadlift 5x5 + star shrugs/run/suicide sprints, 30 on 30 off",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "deadlift",
+            "reps": 5
+          }
+        ],
+        "sets": 5,
+        "restSec": 90
+      },
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "star_shrug",
+            "reps": 5
+          },
+          {
+            "movementId": "run",
+            "seconds": 180
+          },
+          {
+            "movementId": "suicide_sprint",
+            "reps": 1
+          }
+        ],
+        "workSec": 30,
+        "restSec": 30,
+        "rounds": 8
+      },
+      {
+        "format": "interval",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "dumbbell_row",
+            "reps": 5
+          },
+          {
+            "movementId": "battle_ropes",
+            "seconds": 10
+          },
+          {
+            "movementId": "plank",
+            "seconds": 30
+          }
+        ],
+        "workSec": 30,
+        "restSec": 30,
+        "rounds": 8
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "deadlift-day"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r63-deadlift-amrap",
+    "name": "Deadlift 5x5 + thrusters/strict press/planks, AMRAP",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "deadlift",
+            "reps": 5
+          }
+        ],
+        "sets": 5,
+        "restSec": 90
+      },
+      {
+        "format": "amrap",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "thruster",
+            "reps": 5
+          },
+          {
+            "movementId": "strict_press",
+            "reps": 5
+          },
+          {
+            "movementId": "plank",
+            "seconds": 30
+          }
+        ],
+        "durationSec": 360
+      },
+      {
+        "format": "amrap",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "dumbbell_row",
+            "reps": 5
+          },
+          {
+            "movementId": "knees_to_elbows",
+            "reps": 5
+          },
+          {
+            "movementId": "run",
+            "distanceM": 1609
+          }
+        ],
+        "durationSec": 360
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "deadlift-day"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r67-deadlift-emom",
+    "name": "Deadlift 3x5 + snatch/bar complexes/dumbell rows, EMOM",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "deadlift",
+            "reps": 5
+          }
+        ],
+        "sets": 3,
+        "restSec": 90
+      },
+      {
+        "format": "emom",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "snatch",
+            "reps": 5
+          },
+          {
+            "movementId": "bar_complex",
+            "reps": 5
+          },
+          {
+            "movementId": "dumbbell_row",
+            "reps": 5
+          }
+        ],
+        "intervalSec": 60,
+        "rounds": 16
+      },
+      {
+        "format": "emom",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "bent_over_row",
+            "reps": 5
+          },
+          {
+            "movementId": "turkish_getup",
+            "reps": 5
+          },
+          {
+            "movementId": "pistol_squat",
+            "reps": 3
+          }
+        ],
+        "intervalSec": 60,
+        "rounds": 16
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "deadlift-day"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r34-deadlift-n-rounds",
+    "name": "Deadlift 3x5 + high pulls/bentover_rows, N rounds",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "deadlift",
+            "reps": 5
+          }
+        ],
+        "sets": 3,
+        "restSec": 90
+      },
+      {
+        "format": "rounds",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "high_pull",
+            "reps": 5
+          },
+          {
+            "movementId": "bent_over_row",
+            "reps": 5
+          }
+        ],
+        "rounds": 3
+      },
+      {
+        "format": "rounds",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "dumbbell_row",
+            "reps": 5
+          },
+          {
+            "movementId": "ghd_back_extension",
+            "reps": 5
+          },
+          {
+            "movementId": "bear_crawl",
+            "reps": 1
+          }
+        ],
+        "rounds": 3
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "deadlift-day"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r5-deadlift-tabata",
+    "name": "Deadlift 5x5 + sumo deadift/knees to elbows/wall balls, Tabata",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "deadlift",
+            "reps": 5
+          }
+        ],
+        "sets": 5,
+        "restSec": 90
+      },
+      {
+        "format": "tabata",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "sumo_deadlift",
+            "reps": 5
+          },
+          {
+            "movementId": "knees_to_elbows",
+            "reps": 5
+          },
+          {
+            "movementId": "wall_ball",
+            "reps": 10
+          }
+        ],
+        "rounds": 8,
+        "workSec": 20,
+        "restSec": 10
+      },
+      {
+        "format": "tabata",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "dumbbell_row",
+            "reps": 5
+          },
+          {
+            "movementId": "wall_ball",
+            "reps": 10
+          },
+          {
+            "movementId": "tire_flip",
+            "reps": 5
+          }
+        ],
+        "rounds": 8,
+        "workSec": 20,
+        "restSec": 10
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "deadlift-day"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r9-deadlift-clusters",
+    "name": "Deadlift 3x5 + jerk/sandbag drops, clusters",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "deadlift",
+            "reps": 5
+          }
+        ],
+        "sets": 3,
+        "restSec": 90
+      },
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "jerk",
+            "reps": 5
+          },
+          {
+            "movementId": "sandbag_drop",
+            "reps": 5
+          }
+        ],
+        "workSec": 45,
+        "restSec": 30,
+        "rounds": 3
+      },
+      {
+        "format": "interval",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "side_lunge",
+            "reps": 5
+          }
+        ],
+        "workSec": 45,
+        "restSec": 30,
+        "rounds": 3
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "deadlift-day"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r1-front-squat-30-on-30-off",
+    "name": "Front Squat 3x5 + high pulls/bench press/flys, 30 on 30 off",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "front_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 3,
+        "restSec": 90
+      },
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "high_pull",
+            "reps": 5
+          },
+          {
+            "movementId": "bench_press",
+            "reps": 5
+          },
+          {
+            "movementId": "chest_fly",
+            "reps": 5
+          }
+        ],
+        "workSec": 30,
+        "restSec": 30,
+        "rounds": 10
+      },
+      {
+        "format": "interval",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "skull_crusher",
+            "reps": 5
+          },
+          {
+            "movementId": "ghd_situp",
+            "reps": 5
+          },
+          {
+            "movementId": "renegade_manmaker",
+            "reps": 5
+          }
+        ],
+        "workSec": 30,
+        "restSec": 30,
+        "rounds": 10
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r35-front-squat-amrap",
+    "name": "Front Squat 1x5 + sumo deadift/sled push, AMRAP",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "front_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 1,
+        "restSec": 90
+      },
+      {
+        "format": "amrap",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "sumo_deadlift",
+            "reps": 5
+          },
+          {
+            "movementId": "sled_push",
+            "reps": 1
+          }
+        ],
+        "durationSec": 600
+      },
+      {
+        "format": "amrap",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "bent_over_row",
+            "reps": 5
+          },
+          {
+            "movementId": "bent_over_row",
+            "reps": 5
+          }
+        ],
+        "durationSec": 600
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r43-front-squat-emom",
+    "name": "Front Squat 8x5 + KB snatch/dead bugs, EMOM",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "front_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 8,
+        "restSec": 90
+      },
+      {
+        "format": "emom",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "kb_snatch",
+            "reps": 5
+          },
+          {
+            "movementId": "dead_bug",
+            "reps": 20
+          }
+        ],
+        "intervalSec": 60,
+        "rounds": 10
+      },
+      {
+        "format": "emom",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "side_lunge",
+            "reps": 5
+          },
+          {
+            "movementId": "knees_to_elbows",
+            "reps": 5
+          },
+          {
+            "movementId": "bent_over_row",
+            "reps": 5
+          }
+        ],
+        "intervalSec": 60,
+        "rounds": 10
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r10-front-squat-n-rounds",
+    "name": "Front Squat 3x5 + high pulls/suicide sprints, N rounds",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "front_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 3,
+        "restSec": 90
+      },
+      {
+        "format": "rounds",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "high_pull",
+            "reps": 5
+          },
+          {
+            "movementId": "suicide_sprint",
+            "reps": 1
+          }
+        ],
+        "rounds": 3
+      },
+      {
+        "format": "rounds",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "push_up",
+            "reps": 5
+          },
+          {
+            "movementId": "run",
+            "distanceM": 1609
+          },
+          {
+            "movementId": "ghd_back_extension",
+            "reps": 5
+          }
+        ],
+        "rounds": 3
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r101-front-squat-tabata",
+    "name": "Front Squat 3x5 + sumo deadift, Tabata",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "front_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 3,
+        "restSec": 90
+      },
+      {
+        "format": "tabata",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "sumo_deadlift",
+            "reps": 5
+          }
+        ],
+        "rounds": 8,
+        "workSec": 20,
+        "restSec": 10
+      },
+      {
+        "format": "tabata",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "side_lunge",
+            "reps": 5
+          },
+          {
+            "movementId": "bike",
+            "seconds": 20
+          },
+          {
+            "movementId": "ghd_situp",
+            "reps": 5
+          }
+        ],
+        "rounds": 8,
+        "workSec": 20,
+        "restSec": 10
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r93-front-squat-clusters",
+    "name": "Front Squat 8x5 + thrusters/assault bike/dumbell rows, clusters",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "front_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 8,
+        "restSec": 90
+      },
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "thruster",
+            "reps": 5
+          },
+          {
+            "movementId": "bike",
+            "seconds": 20
+          },
+          {
+            "movementId": "dumbbell_row",
+            "reps": 5
+          }
+        ],
+        "workSec": 45,
+        "restSec": 30,
+        "rounds": 8
+      },
+      {
+        "format": "interval",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "bent_over_row",
+            "reps": 5
+          },
+          {
+            "movementId": "burpee",
+            "reps": 4
+          },
+          {
+            "movementId": "landmine_twist",
+            "reps": 10
+          }
+        ],
+        "workSec": 45,
+        "restSec": 30,
+        "rounds": 8
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r49-overhead-squat-30-on-30-off",
+    "name": "Overhead Squat 3x5 + box jumps/Ring Rows/seated russion twists, 30 on 30 off",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "overhead_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 3,
+        "restSec": 90
+      },
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "box_jump",
+            "reps": 10
+          },
+          {
+            "movementId": "ring_row",
+            "reps": 5
+          },
+          {
+            "movementId": "russian_twist",
+            "reps": 10
+          }
+        ],
+        "workSec": 30,
+        "restSec": 30,
+        "rounds": 10
+      },
+      {
+        "format": "interval",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "bent_over_row",
+            "reps": 5
+          },
+          {
+            "movementId": "strict_press",
+            "reps": 5
+          },
+          {
+            "movementId": "grasshopper",
+            "reps": 5
+          }
+        ],
+        "workSec": 30,
+        "restSec": 30,
+        "rounds": 10
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r20-overhead-squat-amrap",
+    "name": "Overhead Squat 1x5 + KB snatch/mountain climbers/romanian deadlift, AMRAP",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "overhead_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 1,
+        "restSec": 90
+      },
+      {
+        "format": "amrap",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "kb_snatch",
+            "reps": 5
+          },
+          {
+            "movementId": "mountain_climber",
+            "reps": 20
+          },
+          {
+            "movementId": "romanian_deadlift",
+            "reps": 5
+          }
+        ],
+        "durationSec": 900
+      },
+      {
+        "format": "amrap",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "pull_up",
+            "reps": 5
+          },
+          {
+            "movementId": "grasshopper",
+            "reps": 5
+          },
+          {
+            "movementId": "lunge",
+            "reps": 5
+          }
+        ],
+        "durationSec": 900
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "slog"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r91-overhead-squat-emom",
+    "name": "Overhead Squat 3x5 + box jumps/ball slams, EMOM",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "overhead_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 3,
+        "restSec": 90
+      },
+      {
+        "format": "emom",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "box_jump",
+            "reps": 10
+          },
+          {
+            "movementId": "ball_slam",
+            "reps": 5
+          }
+        ],
+        "intervalSec": 60,
+        "rounds": 16
+      },
+      {
+        "format": "emom",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "skull_crusher",
+            "reps": 5
+          },
+          {
+            "movementId": "romanian_deadlift",
+            "reps": 5
+          },
+          {
+            "movementId": "ball_slam",
+            "reps": 5
+          }
+        ],
+        "intervalSec": 60,
+        "rounds": 16
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r4-overhead-squat-n-rounds",
+    "name": "Overhead Squat 8x5 + deadlift/pull ups/turkish getups, N rounds",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "overhead_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 8,
+        "restSec": 90
+      },
+      {
+        "format": "rounds",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "deadlift",
+            "reps": 5
+          },
+          {
+            "movementId": "pull_up",
+            "reps": 5
+          },
+          {
+            "movementId": "turkish_getup",
+            "reps": 5
+          }
+        ],
+        "rounds": 3
+      },
+      {
+        "format": "rounds",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "lunge",
+            "reps": 5
+          },
+          {
+            "movementId": "bar_complex",
+            "reps": 5
+          },
+          {
+            "movementId": "skull_crusher",
+            "reps": 5
+          }
+        ],
+        "rounds": 3
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r149-overhead-squat-tabata",
+    "name": "Overhead Squat 3x5 + jerk/run/mountain climbers, Tabata",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "overhead_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 3,
+        "restSec": 90
+      },
+      {
+        "format": "tabata",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "jerk",
+            "reps": 5
+          },
+          {
+            "movementId": "run",
+            "distanceM": 1609
+          },
+          {
+            "movementId": "mountain_climber",
+            "reps": 20
+          }
+        ],
+        "rounds": 8,
+        "workSec": 20,
+        "restSec": 10
+      },
+      {
+        "format": "tabata",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "dip",
+            "reps": 5
+          },
+          {
+            "movementId": "step_up",
+            "reps": 10
+          },
+          {
+            "movementId": "plank",
+            "seconds": 30
+          }
+        ],
+        "rounds": 8,
+        "workSec": 20,
+        "restSec": 10
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r33-overhead-squat-clusters",
+    "name": "Overhead Squat 3x5 + snatch/burpees/sled push, clusters",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "overhead_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 3,
+        "restSec": 90
+      },
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "snatch",
+            "reps": 5
+          },
+          {
+            "movementId": "burpee",
+            "reps": 4
+          },
+          {
+            "movementId": "sled_push",
+            "reps": 1
+          }
+        ],
+        "workSec": 45,
+        "restSec": 30,
+        "rounds": 3
+      },
+      {
+        "format": "interval",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "bent_over_row",
+            "reps": 5
+          },
+          {
+            "movementId": "step_up",
+            "reps": 10
+          },
+          {
+            "movementId": "good_morning",
+            "reps": 10
+          }
+        ],
+        "workSec": 45,
+        "restSec": 30,
+        "rounds": 3
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r37-pistol-squat-30-on-30-off",
+    "name": "Pistol / Lunge / Side Lunge 1x5 + thrusters/suicide sprints, 30 on 30 off",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "pistol_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 1,
+        "restSec": 90
+      },
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "thruster",
+            "reps": 5
+          },
+          {
+            "movementId": "suicide_sprint",
+            "reps": 1
+          }
+        ],
+        "workSec": 30,
+        "restSec": 30,
+        "rounds": 8
+      },
+      {
+        "format": "interval",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "dip",
+            "reps": 5
+          },
+          {
+            "movementId": "bike",
+            "seconds": 20
+          },
+          {
+            "movementId": "tire_flip",
+            "reps": 5
+          }
+        ],
+        "workSec": 30,
+        "restSec": 30,
+        "rounds": 8
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r8-pistol-squat-amrap",
+    "name": "Pistol / Lunge / Side Lunge 3x5 + KB snatch/grapevines/sled push, AMRAP",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "pistol_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 3,
+        "restSec": 90
+      },
+      {
+        "format": "amrap",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "kb_snatch",
+            "reps": 5
+          },
+          {
+            "movementId": "grapevine",
+            "reps": 1
+          },
+          {
+            "movementId": "sled_push",
+            "reps": 1
+          }
+        ],
+        "durationSec": 600
+      },
+      {
+        "format": "amrap",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "ring_row",
+            "reps": 5
+          },
+          {
+            "movementId": "good_morning",
+            "reps": 10
+          },
+          {
+            "movementId": "bent_over_row",
+            "reps": 5
+          }
+        ],
+        "durationSec": 600
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r115-pistol-squat-emom",
+    "name": "Pistol / Lunge / Side Lunge 5x5 + KB snatch/sled push/knees to elbows, EMOM",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "pistol_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 5,
+        "restSec": 90
+      },
+      {
+        "format": "emom",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "kb_snatch",
+            "reps": 5
+          },
+          {
+            "movementId": "sled_push",
+            "reps": 1
+          },
+          {
+            "movementId": "knees_to_elbows",
+            "reps": 5
+          }
+        ],
+        "intervalSec": 60,
+        "rounds": 12
+      },
+      {
+        "format": "emom",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "dumbbell_row",
+            "reps": 5
+          },
+          {
+            "movementId": "bike",
+            "seconds": 20
+          },
+          {
+            "movementId": "romanian_deadlift",
+            "reps": 5
+          }
+        ],
+        "intervalSec": 60,
+        "rounds": 12
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r28-pistol-squat-n-rounds",
+    "name": "Pistol / Lunge / Side Lunge 3x5 + box jumps/tire flip, N rounds",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "pistol_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 3,
+        "restSec": 90
+      },
+      {
+        "format": "rounds",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "box_jump",
+            "reps": 10
+          },
+          {
+            "movementId": "tire_flip",
+            "reps": 5
+          }
+        ],
+        "rounds": 3
+      },
+      {
+        "format": "rounds",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "side_lunge",
+            "reps": 5
+          },
+          {
+            "movementId": "side_lunge",
+            "reps": 5
+          }
+        ],
+        "rounds": 3
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r173-pistol-squat-tabata",
+    "name": "Pistol / Lunge / Side Lunge 10x5 + star shrugs/side lunges/bar complexes, Tabata",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "pistol_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 10,
+        "restSec": 90
+      },
+      {
+        "format": "tabata",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "star_shrug",
+            "reps": 5
+          },
+          {
+            "movementId": "side_lunge",
+            "reps": 5
+          },
+          {
+            "movementId": "bar_complex",
+            "reps": 5
+          }
+        ],
+        "rounds": 8,
+        "workSec": 20,
+        "restSec": 10
+      },
+      {
+        "format": "tabata",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "side_lunge",
+            "reps": 5
+          },
+          {
+            "movementId": "russian_twist",
+            "reps": 10
+          },
+          {
+            "movementId": "farmers_carry",
+            "reps": 1
+          }
+        ],
+        "rounds": 8,
+        "workSec": 20,
+        "restSec": 10
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r57-pistol-squat-clusters",
+    "name": "Pistol / Lunge / Side Lunge 10x5 + deadlift, clusters",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "pistol_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 10,
+        "restSec": 90
+      },
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "deadlift",
+            "reps": 5
+          }
+        ],
+        "workSec": 45,
+        "restSec": 30,
+        "rounds": 10
+      },
+      {
+        "format": "interval",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "dip",
+            "reps": 5
+          },
+          {
+            "movementId": "lunge",
+            "reps": 5
+          },
+          {
+            "movementId": "landmine_twist",
+            "reps": 10
+          }
+        ],
+        "workSec": 45,
+        "restSec": 30,
+        "rounds": 10
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r157-snatch-30-on-30-off",
+    "name": "Snatch 10x5 + high pulls/Hammer curls/bench press, 30 on 30 off",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "snatch",
+            "reps": 5
+          }
+        ],
+        "sets": 10,
+        "restSec": 90
+      },
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "high_pull",
+            "reps": 5
+          },
+          {
+            "movementId": "hammer_curl",
+            "reps": 5
+          },
+          {
+            "movementId": "bench_press",
+            "reps": 5
+          }
+        ],
+        "workSec": 30,
+        "restSec": 30,
+        "rounds": 8
+      },
+      {
+        "format": "interval",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "dumbbell_row",
+            "reps": 5
+          },
+          {
+            "movementId": "side_lunge",
+            "reps": 5
+          },
+          {
+            "movementId": "push_up",
+            "reps": 5
+          }
+        ],
+        "workSec": 30,
+        "restSec": 30,
+        "rounds": 8
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r99-snatch-amrap",
+    "name": "Snatch 3x5 + KB swings/good mornings, AMRAP",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "snatch",
+            "reps": 5
+          }
+        ],
+        "sets": 3,
+        "restSec": 90
+      },
+      {
+        "format": "amrap",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "kb_swing",
+            "reps": 10
+          },
+          {
+            "movementId": "good_morning",
+            "reps": 10
+          }
+        ],
+        "durationSec": 900
+      },
+      {
+        "format": "amrap",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "bent_over_row",
+            "reps": 5
+          },
+          {
+            "movementId": "bench_press",
+            "reps": 5
+          },
+          {
+            "movementId": "farmers_carry",
+            "reps": 1
+          }
+        ],
+        "durationSec": 900
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity",
+      "slog"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r12-snatch-emom",
+    "name": "Snatch 5x5 + KB snatch/row/romanian deadlift, EMOM",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "snatch",
+            "reps": 5
+          }
+        ],
+        "sets": 5,
+        "restSec": 90
+      },
+      {
+        "format": "emom",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "kb_snatch",
+            "reps": 5
+          },
+          {
+            "movementId": "row",
+            "distanceM": 500
+          },
+          {
+            "movementId": "romanian_deadlift",
+            "reps": 5
+          }
+        ],
+        "intervalSec": 60,
+        "rounds": 12
+      },
+      {
+        "format": "emom",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "dumbbell_row",
+            "reps": 5
+          },
+          {
+            "movementId": "plank",
+            "seconds": 30
+          },
+          {
+            "movementId": "knees_to_elbows",
+            "reps": 5
+          }
+        ],
+        "intervalSec": 60,
+        "rounds": 12
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r70-snatch-n-rounds",
+    "name": "Snatch 1x5 + jerk/lunges/flys, N rounds",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "snatch",
+            "reps": 5
+          }
+        ],
+        "sets": 1,
+        "restSec": 90
+      },
+      {
+        "format": "rounds",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "jerk",
+            "reps": 5
+          },
+          {
+            "movementId": "lunge",
+            "reps": 5
+          },
+          {
+            "movementId": "chest_fly",
+            "reps": 5
+          }
+        ],
+        "rounds": 4
+      },
+      {
+        "format": "rounds",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "bent_over_row",
+            "reps": 5
+          },
+          {
+            "movementId": "good_morning",
+            "reps": 10
+          }
+        ],
+        "rounds": 4
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r41-snatch-tabata",
+    "name": "Snatch 3x5 + KB snatch/Dips, Tabata",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "snatch",
+            "reps": 5
+          }
+        ],
+        "sets": 3,
+        "restSec": 90
+      },
+      {
+        "format": "tabata",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "kb_snatch",
+            "reps": 5
+          },
+          {
+            "movementId": "dip",
+            "reps": 5
+          }
+        ],
+        "rounds": 8,
+        "workSec": 20,
+        "restSec": 10
+      },
+      {
+        "format": "tabata",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "push_up",
+            "reps": 5
+          },
+          {
+            "movementId": "dumbbell_row",
+            "reps": 5
+          },
+          {
+            "movementId": "burpee",
+            "reps": 4
+          }
+        ],
+        "rounds": 8,
+        "workSec": 20,
+        "restSec": 10
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r273-snatch-clusters",
+    "name": "Snatch 10x5 + KB snatch/flys/sled push, clusters",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "snatch",
+            "reps": 5
+          }
+        ],
+        "sets": 10,
+        "restSec": 90
+      },
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "kb_snatch",
+            "reps": 5
+          },
+          {
+            "movementId": "chest_fly",
+            "reps": 5
+          },
+          {
+            "movementId": "sled_push",
+            "reps": 1
+          }
+        ],
+        "workSec": 45,
+        "restSec": 30,
+        "rounds": 10
+      },
+      {
+        "format": "interval",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "side_lunge",
+            "reps": 5
+          },
+          {
+            "movementId": "side_lunge",
+            "reps": 5
+          },
+          {
+            "movementId": "ghd_back_extension",
+            "reps": 5
+          }
+        ],
+        "workSec": 45,
+        "restSec": 30,
+        "rounds": 10
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r15-back-squat-amrap",
+    "name": "Back Squat 5x5 + box jumps/good mornings, AMRAP",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "back_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 5,
+        "restSec": 90
+      },
+      {
+        "format": "amrap",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "box_jump",
+            "reps": 10
+          },
+          {
+            "movementId": "good_morning",
+            "reps": 10
+          }
+        ],
+        "durationSec": 600
+      },
+      {
+        "format": "amrap",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "skull_crusher",
+            "reps": 5
+          },
+          {
+            "movementId": "grapevine",
+            "reps": 1
+          },
+          {
+            "movementId": "bike",
+            "seconds": 20
+          }
+        ],
+        "durationSec": 600
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r40-back-squat-n-rounds",
+    "name": "Back Squat 3x5 + KB snatch/pistols, N rounds",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "back_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 3,
+        "restSec": 90
+      },
+      {
+        "format": "rounds",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "kb_snatch",
+            "reps": 5
+          },
+          {
+            "movementId": "pistol_squat",
+            "reps": 3
+          }
+        ],
+        "rounds": 4
+      },
+      {
+        "format": "rounds",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "bent_over_row",
+            "reps": 5
+          },
+          {
+            "movementId": "bent_over_row",
+            "reps": 5
+          },
+          {
+            "movementId": "hammer_curl",
+            "reps": 5
+          }
+        ],
+        "rounds": 4
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r39-front-squat-amrap",
+    "name": "Front Squat 3x5 + jerk/sled push/row, AMRAP",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "front_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 3,
+        "restSec": 90
+      },
+      {
+        "format": "amrap",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "jerk",
+            "reps": 5
+          },
+          {
+            "movementId": "sled_push",
+            "reps": 1
+          },
+          {
+            "movementId": "row",
+            "distanceM": 500
+          }
+        ],
+        "durationSec": 360
+      },
+      {
+        "format": "amrap",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "ring_row",
+            "reps": 5
+          },
+          {
+            "movementId": "push_up",
+            "reps": 5
+          },
+          {
+            "movementId": "hammer_curl",
+            "reps": 5
+          }
+        ],
+        "durationSec": 360
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r14-front-squat-n-rounds",
+    "name": "Front Squat 5x5 + jerk/bike, N rounds",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "front_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 5,
+        "restSec": 90
+      },
+      {
+        "format": "rounds",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "jerk",
+            "reps": 5
+          },
+          {
+            "movementId": "bike",
+            "seconds": 60
+          }
+        ],
+        "rounds": 4
+      },
+      {
+        "format": "rounds",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "push_up",
+            "reps": 5
+          },
+          {
+            "movementId": "suicide_sprint",
+            "reps": 1
+          },
+          {
+            "movementId": "pull_up",
+            "reps": 5
+          }
+        ],
+        "rounds": 4
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r71-deadlift-amrap",
+    "name": "Deadlift 1x5 + deadlift/box jumps/run, AMRAP",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "deadlift",
+            "reps": 5
+          }
+        ],
+        "sets": 1,
+        "restSec": 90
+      },
+      {
+        "format": "amrap",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "deadlift",
+            "reps": 5
+          },
+          {
+            "movementId": "box_jump",
+            "reps": 5
+          },
+          {
+            "movementId": "run",
+            "seconds": 180
+          }
+        ],
+        "durationSec": 600
+      },
+      {
+        "format": "amrap",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "pull_up",
+            "reps": 5
+          },
+          {
+            "movementId": "lunge",
+            "reps": 5
+          },
+          {
+            "movementId": "step_up",
+            "reps": 10
+          }
+        ],
+        "durationSec": 600
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "deadlift-day",
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r42-deadlift-30-on-30-off",
+    "name": "Deadlift 8x5 + KB swings/landmine twists/bench press, 30 on 30 off",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "deadlift",
+            "reps": 5
+          }
+        ],
+        "sets": 8,
+        "restSec": 90
+      },
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "kb_swing",
+            "reps": 10
+          },
+          {
+            "movementId": "landmine_twist",
+            "reps": 10
+          },
+          {
+            "movementId": "bench_press",
+            "reps": 5
+          }
+        ],
+        "workSec": 30,
+        "restSec": 30,
+        "rounds": 12
+      },
+      {
+        "format": "interval",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "lunge",
+            "reps": 5
+          },
+          {
+            "movementId": "side_lunge",
+            "reps": 5
+          }
+        ],
+        "workSec": 30,
+        "restSec": 30,
+        "rounds": 12
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "deadlift-day",
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r235-clean-emom",
+    "name": "Clean 1x5 + deadlift/bentover_rows/seated russion twists, EMOM",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "clean",
+            "reps": 5
+          }
+        ],
+        "sets": 1,
+        "restSec": 90
+      },
+      {
+        "format": "emom",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "deadlift",
+            "reps": 5
+          },
+          {
+            "movementId": "bent_over_row",
+            "reps": 5
+          },
+          {
+            "movementId": "russian_twist",
+            "reps": 10
+          }
+        ],
+        "intervalSec": 60,
+        "rounds": 12
+      },
+      {
+        "format": "emom",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "side_lunge",
+            "reps": 5
+          },
+          {
+            "movementId": "side_lunge",
+            "reps": 5
+          },
+          {
+            "movementId": "ring_row",
+            "reps": 5
+          }
+        ],
+        "intervalSec": 60,
+        "rounds": 12
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r128-snatch-amrap",
+    "name": "Snatch 3x5 + jerk/pull ups/bentover_rows, AMRAP",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "snatch",
+            "reps": 5
+          }
+        ],
+        "sets": 3,
+        "restSec": 90
+      },
+      {
+        "format": "amrap",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "jerk",
+            "reps": 5
+          },
+          {
+            "movementId": "pull_up",
+            "reps": 5
+          },
+          {
+            "movementId": "bent_over_row",
+            "reps": 5
+          }
+        ],
+        "durationSec": 360
+      },
+      {
+        "format": "amrap",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "dumbbell_row",
+            "reps": 5
+          },
+          {
+            "movementId": "turkish_getup",
+            "reps": 5
+          },
+          {
+            "movementId": "dead_bug",
+            "reps": 20
+          }
+        ],
+        "durationSec": 360
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r16-overhead-squat-n-rounds",
+    "name": "Overhead Squat 3x5 + jerk/bike, N rounds",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "overhead_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 3,
+        "restSec": 90
+      },
+      {
+        "format": "rounds",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "jerk",
+            "reps": 5
+          },
+          {
+            "movementId": "bike",
+            "distanceM": 8047
+          }
+        ],
+        "rounds": 4
+      },
+      {
+        "format": "rounds",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "dip",
+            "reps": 5
+          },
+          {
+            "movementId": "bench_press",
+            "reps": 5
+          },
+          {
+            "movementId": "grasshopper",
+            "reps": 5
+          }
+        ],
+        "rounds": 4
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  },
+  {
+    "id": "sheet4-r95-pistol-squat-amrap",
+    "name": "Pistol / Lunge / Side Lunge 5x5 + KB swings/pushups/dead bugs, AMRAP",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "strength",
+        "title": "Strength",
+        "movements": [
+          {
+            "movementId": "pistol_squat",
+            "reps": 5
+          }
+        ],
+        "sets": 5,
+        "restSec": 90
+      },
+      {
+        "format": "amrap",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "kb_swing",
+            "reps": 10
+          },
+          {
+            "movementId": "push_up",
+            "reps": 5
+          },
+          {
+            "movementId": "dead_bug",
+            "reps": 20
+          }
+        ],
+        "durationSec": 360
+      },
+      {
+        "format": "amrap",
+        "title": "Finisher",
+        "movements": [
+          {
+            "movementId": "bent_over_row",
+            "reps": 5
+          },
+          {
+            "movementId": "step_up",
+            "reps": 10
+          },
+          {
+            "movementId": "run",
+            "seconds": 180
+          }
+        ],
+        "durationSec": 360
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity"
+    ],
+    "source": "spreadsheet"
+  }
+]

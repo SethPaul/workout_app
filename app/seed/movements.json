@@ -1,0 +1,1281 @@
+[
+  {
+    "id": "back_squat",
+    "name": "Back Squat",
+    "aliases": [
+      "back squat"
+    ],
+    "tags": [
+      "compound",
+      "squat",
+      "legs"
+    ],
+    "equipment": [
+      "barbell",
+      "rack"
+    ],
+    "cadenceDays": 7,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "front_squat",
+    "name": "Front Squat",
+    "aliases": [
+      "front squat"
+    ],
+    "tags": [
+      "compound",
+      "squat",
+      "legs"
+    ],
+    "equipment": [
+      "barbell",
+      "rack"
+    ],
+    "cadenceDays": 7,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "overhead_squat",
+    "name": "Overhead Squat",
+    "aliases": [
+      "over head squat",
+      "overhead squat"
+    ],
+    "tags": [
+      "compound",
+      "squat",
+      "olympic"
+    ],
+    "equipment": [
+      "barbell",
+      "rack"
+    ],
+    "cadenceDays": 7,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "deadlift",
+    "name": "Deadlift",
+    "aliases": [
+      "deadlift",
+      "dead lift"
+    ],
+    "tags": [
+      "compound",
+      "hinge"
+    ],
+    "equipment": [
+      "barbell"
+    ],
+    "cadenceDays": 7,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "sumo_deadlift",
+    "name": "Sumo Deadlift",
+    "aliases": [
+      "sumo deadlift",
+      "sumo deadift"
+    ],
+    "tags": [
+      "compound",
+      "hinge"
+    ],
+    "equipment": [
+      "barbell"
+    ],
+    "cadenceDays": 7,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "romanian_deadlift",
+    "name": "Romanian Deadlift",
+    "aliases": [
+      "romanian deadlift",
+      "rdl"
+    ],
+    "tags": [
+      "compound",
+      "hinge"
+    ],
+    "equipment": [
+      "barbell"
+    ],
+    "cadenceDays": 7,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "bench_press",
+    "name": "Bench Press",
+    "aliases": [
+      "bench press"
+    ],
+    "tags": [
+      "compound",
+      "push"
+    ],
+    "equipment": [
+      "barbell",
+      "bench"
+    ],
+    "cadenceDays": 7,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "strict_press",
+    "name": "Strict Press",
+    "aliases": [
+      "strict press",
+      "overhead press"
+    ],
+    "tags": [
+      "compound",
+      "push"
+    ],
+    "equipment": [
+      "barbell",
+      "rack"
+    ],
+    "cadenceDays": 7,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "push_press",
+    "name": "Push Press",
+    "aliases": [
+      "push press",
+      "pushpress"
+    ],
+    "tags": [
+      "compound",
+      "push"
+    ],
+    "equipment": [
+      "barbell",
+      "rack"
+    ],
+    "cadenceDays": 7,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "clean",
+    "name": "Clean",
+    "aliases": [
+      "clean"
+    ],
+    "tags": [
+      "olympic",
+      "compound",
+      "pull"
+    ],
+    "equipment": [
+      "barbell"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "power_clean",
+    "name": "Power Clean",
+    "aliases": [
+      "power clean"
+    ],
+    "tags": [
+      "olympic",
+      "compound",
+      "pull"
+    ],
+    "equipment": [
+      "barbell"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "hang_clean",
+    "name": "Hang Clean",
+    "aliases": [
+      "hang clean"
+    ],
+    "tags": [
+      "olympic",
+      "compound",
+      "pull"
+    ],
+    "equipment": [
+      "barbell"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "snatch",
+    "name": "Snatch",
+    "aliases": [
+      "snatch"
+    ],
+    "tags": [
+      "olympic",
+      "compound",
+      "pull"
+    ],
+    "equipment": [
+      "barbell"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "power_snatch",
+    "name": "Power Snatch",
+    "aliases": [
+      "power snatch"
+    ],
+    "tags": [
+      "olympic",
+      "compound",
+      "pull"
+    ],
+    "equipment": [
+      "barbell"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "jerk",
+    "name": "Jerk",
+    "aliases": [
+      "jerk",
+      "split jerk",
+      "push jerk"
+    ],
+    "tags": [
+      "olympic",
+      "compound",
+      "push"
+    ],
+    "equipment": [
+      "barbell",
+      "rack"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "good_morning",
+    "name": "Good Morning",
+    "aliases": [
+      "good mornings",
+      "good morning"
+    ],
+    "tags": [
+      "accessory",
+      "hinge"
+    ],
+    "equipment": [
+      "barbell"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "bent_over_row",
+    "name": "Bent Over Row",
+    "aliases": [
+      "bentover_rows",
+      "bent over rows",
+      "bent over row"
+    ],
+    "tags": [
+      "accessory",
+      "pull"
+    ],
+    "equipment": [
+      "barbell"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "high_pull",
+    "name": "High Pull",
+    "aliases": [
+      "high pulls",
+      "high pull"
+    ],
+    "tags": [
+      "accessory",
+      "pull",
+      "olympic"
+    ],
+    "equipment": [
+      "barbell"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "skull_crusher",
+    "name": "Skull Crusher",
+    "aliases": [
+      "skull crushers",
+      "skull crusher"
+    ],
+    "tags": [
+      "accessory",
+      "push"
+    ],
+    "equipment": [
+      "barbell"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "bar_complex",
+    "name": "Bar Complex",
+    "aliases": [
+      "bar complexes",
+      "bar complex"
+    ],
+    "tags": [
+      "accessory",
+      "compound"
+    ],
+    "equipment": [
+      "barbell"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "star_shrug",
+    "name": "Star Shrug",
+    "aliases": [
+      "star shrugs",
+      "star shrug"
+    ],
+    "tags": [
+      "accessory",
+      "pull"
+    ],
+    "equipment": [
+      "barbell"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "landmine_twist",
+    "name": "Landmine Twist",
+    "aliases": [
+      "landmine twists"
+    ],
+    "tags": [
+      "accessory",
+      "core"
+    ],
+    "equipment": [
+      "barbell",
+      "landmine"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "thruster",
+    "name": "Thruster",
+    "aliases": [
+      "thrusters"
+    ],
+    "tags": [
+      "accessory",
+      "compound",
+      "legs",
+      "push"
+    ],
+    "equipment": [
+      "barbell"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "dumbbell_row",
+    "name": "Dumbbell Row",
+    "aliases": [
+      "dumbell rows",
+      "dumbbell rows"
+    ],
+    "tags": [
+      "accessory",
+      "pull"
+    ],
+    "equipment": [
+      "dumbbell"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "hammer_curl",
+    "name": "Hammer Curl",
+    "aliases": [
+      "hammer curls"
+    ],
+    "tags": [
+      "accessory",
+      "pull"
+    ],
+    "equipment": [
+      "dumbbell"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "chest_fly",
+    "name": "Chest Fly",
+    "aliases": [
+      "flys"
+    ],
+    "tags": [
+      "accessory",
+      "push"
+    ],
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "renegade_manmaker",
+    "name": "Renegade Manmaker",
+    "aliases": [
+      "renegade manmakers"
+    ],
+    "tags": [
+      "accessory",
+      "compound"
+    ],
+    "equipment": [
+      "dumbbell"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "turkish_getup",
+    "name": "Turkish Getup",
+    "aliases": [
+      "turkish getups"
+    ],
+    "tags": [
+      "accessory",
+      "compound"
+    ],
+    "equipment": [
+      "kettlebell"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "kb_swing",
+    "name": "Kettlebell Swing",
+    "aliases": [
+      "kb swings"
+    ],
+    "tags": [
+      "accessory",
+      "hinge",
+      "cardio"
+    ],
+    "equipment": [
+      "kettlebell"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "kb_snatch",
+    "name": "Kettlebell Snatch",
+    "aliases": [
+      "kb snatch"
+    ],
+    "tags": [
+      "accessory",
+      "olympic"
+    ],
+    "equipment": [
+      "kettlebell"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "goblet_squat",
+    "name": "Goblet Squat",
+    "aliases": [
+      "goblet squat"
+    ],
+    "tags": [
+      "accessory",
+      "squat"
+    ],
+    "equipment": [
+      "kettlebell"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "farmers_carry",
+    "name": "Farmer's Carry",
+    "aliases": [
+      "farmer's carry",
+      "farmers carry"
+    ],
+    "tags": [
+      "accessory",
+      "carry"
+    ],
+    "equipment": [
+      "dumbbell"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "sled_push",
+    "name": "Sled Push",
+    "aliases": [
+      "sled push"
+    ],
+    "tags": [
+      "accessory",
+      "carry",
+      "legs"
+    ],
+    "equipment": [
+      "sled"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "sandbag_drop",
+    "name": "Sandbag Drop",
+    "aliases": [
+      "sandbag drops"
+    ],
+    "tags": [
+      "accessory"
+    ],
+    "equipment": [
+      "sandbag"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "tire_flip",
+    "name": "Tire Flip",
+    "aliases": [
+      "tire flip"
+    ],
+    "tags": [
+      "accessory"
+    ],
+    "equipment": [
+      "sled"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true
+  },
+  {
+    "id": "pull_up",
+    "name": "Pull-up",
+    "aliases": [
+      "pull ups",
+      "pull-ups"
+    ],
+    "tags": [
+      "bodyweight",
+      "pull"
+    ],
+    "equipment": [
+      "pullup_bar"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "push_up",
+    "name": "Push-up",
+    "aliases": [
+      "pushups",
+      "push-ups"
+    ],
+    "tags": [
+      "bodyweight",
+      "push"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "dip",
+    "name": "Dip",
+    "aliases": [
+      "dips"
+    ],
+    "tags": [
+      "bodyweight",
+      "push"
+    ],
+    "equipment": [
+      "pullup_bar"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "ring_row",
+    "name": "Ring Row",
+    "aliases": [
+      "ring rows"
+    ],
+    "tags": [
+      "bodyweight",
+      "pull"
+    ],
+    "equipment": [
+      "rings"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "box_jump",
+    "name": "Box Jump",
+    "aliases": [
+      "box jumps"
+    ],
+    "tags": [
+      "bodyweight",
+      "legs",
+      "plyo"
+    ],
+    "equipment": [
+      "plyo_box"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "box_jump_over",
+    "name": "Box Jump Over",
+    "aliases": [
+      "box jump overs"
+    ],
+    "tags": [
+      "bodyweight",
+      "legs",
+      "plyo"
+    ],
+    "equipment": [
+      "plyo_box"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "step_up",
+    "name": "Step Up",
+    "aliases": [
+      "step ups"
+    ],
+    "tags": [
+      "bodyweight",
+      "legs"
+    ],
+    "equipment": [
+      "box"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "burpee",
+    "name": "Burpee",
+    "aliases": [
+      "burpees"
+    ],
+    "tags": [
+      "bodyweight",
+      "cardio"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "grasshopper",
+    "name": "Grasshopper",
+    "aliases": [
+      "grass hoppers"
+    ],
+    "tags": [
+      "bodyweight",
+      "core"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "grapevine",
+    "name": "Grapevine",
+    "aliases": [
+      "grapevines"
+    ],
+    "tags": [
+      "bodyweight",
+      "cardio"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "bear_crawl",
+    "name": "Bear Crawl",
+    "aliases": [
+      "bear crawls"
+    ],
+    "tags": [
+      "bodyweight",
+      "cardio"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "mountain_climber",
+    "name": "Mountain Climber",
+    "aliases": [
+      "mountain climbers"
+    ],
+    "tags": [
+      "bodyweight",
+      "core",
+      "cardio"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "plank",
+    "name": "Plank",
+    "aliases": [
+      "planks"
+    ],
+    "tags": [
+      "bodyweight",
+      "core"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 3,
+    "unit": "seconds",
+    "loadable": false
+  },
+  {
+    "id": "dead_bug",
+    "name": "Dead Bug",
+    "aliases": [
+      "dead bugs"
+    ],
+    "tags": [
+      "bodyweight",
+      "core"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "knees_to_elbows",
+    "name": "Knees to Elbows",
+    "aliases": [
+      "knees to elbows"
+    ],
+    "tags": [
+      "bodyweight",
+      "core",
+      "pull"
+    ],
+    "equipment": [
+      "pullup_bar"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "russian_twist",
+    "name": "Russian Twist",
+    "aliases": [
+      "seated russion twists",
+      "russian twists",
+      "seated russian twists"
+    ],
+    "tags": [
+      "bodyweight",
+      "core"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "ball_slam",
+    "name": "Ball Slam",
+    "aliases": [
+      "ball slams"
+    ],
+    "tags": [
+      "accessory",
+      "core",
+      "cardio"
+    ],
+    "equipment": [
+      "medball"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "wall_ball",
+    "name": "Wall Ball",
+    "aliases": [
+      "wall balls"
+    ],
+    "tags": [
+      "accessory",
+      "cardio",
+      "legs"
+    ],
+    "equipment": [
+      "medball",
+      "wall"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "ghd_situp",
+    "name": "GHD Situp",
+    "aliases": [
+      "ghd situps"
+    ],
+    "tags": [
+      "accessory",
+      "core"
+    ],
+    "equipment": [
+      "ghd"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "ghd_back_extension",
+    "name": "GHD Back Extension",
+    "aliases": [
+      "ghd back extensions"
+    ],
+    "tags": [
+      "accessory",
+      "core",
+      "hinge"
+    ],
+    "equipment": [
+      "ghd"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "suicide_sprint",
+    "name": "Suicide Sprint",
+    "aliases": [
+      "suicide sprints"
+    ],
+    "tags": [
+      "bodyweight",
+      "cardio"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 1,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "shuttle_run",
+    "name": "Shuttle Run",
+    "aliases": [
+      "shuttle runs"
+    ],
+    "tags": [
+      "bodyweight",
+      "cardio"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 1,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "pistol_squat",
+    "name": "Pistol / Lunge / Side Lunge",
+    "aliases": [
+      "pistols/lunge/side lunge",
+      "pistols",
+      "pistol squat",
+      "3 pistols"
+    ],
+    "tags": [
+      "bodyweight",
+      "legs",
+      "unilateral",
+      "diversity"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "lunge",
+    "name": "Lunge",
+    "aliases": [
+      "lunges"
+    ],
+    "tags": [
+      "bodyweight",
+      "legs",
+      "unilateral"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "side_lunge",
+    "name": "Side Lunge",
+    "aliases": [
+      "side lunges"
+    ],
+    "tags": [
+      "bodyweight",
+      "legs",
+      "unilateral"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "broad_jump",
+    "name": "Broad Jump",
+    "aliases": [
+      "broad jumps"
+    ],
+    "tags": [
+      "bodyweight",
+      "legs",
+      "plyo"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "handstand_pushup",
+    "name": "Handstand Push-up",
+    "aliases": [
+      "handstand push ups",
+      "handstand push-ups"
+    ],
+    "tags": [
+      "bodyweight",
+      "push",
+      "gymnastics"
+    ],
+    "equipment": [
+      "wall"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "muscle_up",
+    "name": "Muscle-up",
+    "aliases": [
+      "muscle ups",
+      "muscle-ups"
+    ],
+    "tags": [
+      "bodyweight",
+      "pull",
+      "gymnastics"
+    ],
+    "equipment": [
+      "pullup_bar",
+      "rings"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "rope_climb",
+    "name": "Rope Climb",
+    "aliases": [
+      "rope climbs"
+    ],
+    "tags": [
+      "bodyweight",
+      "pull",
+      "gymnastics"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "ab_wheel_rollout",
+    "name": "Ab Wheel Rollout",
+    "aliases": [
+      "ab wheel rollouts"
+    ],
+    "tags": [
+      "accessory",
+      "core"
+    ],
+    "equipment": [
+      "ab_wheel"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "cable_woodchop",
+    "name": "Cable Woodchop",
+    "aliases": [
+      "cable woodchops"
+    ],
+    "tags": [
+      "accessory",
+      "core"
+    ],
+    "equipment": [
+      "cable"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "row",
+    "name": "Row",
+    "aliases": [
+      "row",
+      "500m row",
+      "rowing"
+    ],
+    "tags": [
+      "cardio"
+    ],
+    "equipment": [
+      "rower"
+    ],
+    "cadenceDays": 1,
+    "unit": "meters",
+    "loadable": false
+  },
+  {
+    "id": "run",
+    "name": "Run",
+    "aliases": [
+      "run",
+      "1 mile run",
+      "3 minute run",
+      "running"
+    ],
+    "tags": [
+      "cardio"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 1,
+    "unit": "meters",
+    "loadable": false
+  },
+  {
+    "id": "bike",
+    "name": "Bike",
+    "aliases": [
+      "bike",
+      "assault bike",
+      "1 minute bike",
+      "5 mile bike",
+      "cycling"
+    ],
+    "tags": [
+      "cardio"
+    ],
+    "equipment": [
+      "bike"
+    ],
+    "cadenceDays": 1,
+    "unit": "calories",
+    "loadable": false
+  },
+  {
+    "id": "double_unders",
+    "name": "Double Unders",
+    "aliases": [
+      "double unders"
+    ],
+    "tags": [
+      "cardio",
+      "bodyweight"
+    ],
+    "equipment": [
+      "jump_rope"
+    ],
+    "cadenceDays": 1,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "battle_ropes",
+    "name": "Battle Ropes",
+    "aliases": [
+      "ropes",
+      "10s ropes",
+      "battle ropes"
+    ],
+    "tags": [
+      "cardio",
+      "accessory"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 3,
+    "unit": "seconds",
+    "loadable": false
+  }
+]
