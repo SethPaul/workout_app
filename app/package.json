@@ -21,9 +21,13 @@
   },
   "devDependencies": {
     "@preact/preset-vite": "2.10.6",
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/preact": "3.2.4",
     "@types/node": "26.5.0",
     "eslint": "9.39.5",
     "globals": "17.12.0",
+    "jsdom": "30.0.1",
+    "playwright": "1.63.0",
     "prettier": "3.9.6",
     "typescript": "5.9.3",
     "typescript-eslint": "8.70.0",

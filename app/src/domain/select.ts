@@ -17,6 +17,9 @@ export interface SelectInput {
   now: string | Date;
   exclude?: string[];
   rng?: () => number;
+  /** Bypass the cadence gate (workout + movement) entirely. Used by the UI's
+   * "ignore cadence" escape hatch when the cadence gate empties the pool. */
+  ignoreCadence?: boolean;
 }
 
 const NEVER_PERFORMED_WORKOUT_SCORE = 100;
@@ -104,10 +107,12 @@ export function selectWorkout(input: SelectInput): SelectResult {
     return { workout: null, reason: 'equipment', candidates: [] };
   }
 
-  const cadenceOk = equipmentOk.filter((w) => {
-    if (!workoutCadenceOk(w, logs, now)) return false;
-    return workoutMovementIds(w).every((id) => movementCadenceOk(movementById.get(id), logs, now));
-  });
+  const cadenceOk = input.ignoreCadence
+    ? equipmentOk
+    : equipmentOk.filter((w) => {
+        if (!workoutCadenceOk(w, logs, now)) return false;
+        return workoutMovementIds(w).every((id) => movementCadenceOk(movementById.get(id), logs, now));
+      });
   if (cadenceOk.length === 0) {
     return { workout: null, reason: 'cadence', candidates: [] };
   }
