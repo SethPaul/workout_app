@@ -1,16 +1,26 @@
 # workout_app
 
-A new Flutter project.
+A single-user garage-gym daily workout picker. It holds a pool of workouts, pulls one per day that
+respects per-movement cadence (for example, deadlifts no more than every 7 days) and the equipment
+you have, runs a format-aware timer with audio cues, and logs weight and reps.
 
-## Getting Started
+## Layout
 
-This project is a starting point for a Flutter application.
+| Path | What it is |
+|---|---|
+| `app/` | **The current app.** Browser PWA (Vite + Preact + TypeScript), no backend. See `app/SPEC.md` and `app/README.md`. |
+| `app/seed/` | Curated movement library and workout pool derived from the original spreadsheet. |
+| `project_docs/`, `xlsx_version/` | Domain reference: workout formats, intensity levels, movement list, the original spreadsheet. |
+| everything else at the root | Legacy Flutter prototype (June 2025). Not maintained; slated for archival. |
 
-A few resources to get you started if this is your first Flutter project:
+## Develop
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+```sh
+cd app
+npm install
+npm run dev      # local dev server
+npm run check    # typecheck + lint + tests
+npm run build    # production bundle in app/dist
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Hosted on Cloudflare Pages, which builds `app/` from `main` on every push (root directory `app`, build `npm ci && npm run build`, output `dist`). CI runs typecheck, lint, tests, and a build on pull requests.
