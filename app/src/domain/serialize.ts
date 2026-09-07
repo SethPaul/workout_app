@@ -86,6 +86,14 @@ function validateBlock(value: unknown, poolIndex: number, blockIndex: number): B
     const mPath = `${path}.movements[${i}]`;
     if (!isPlainObject(m)) fail(`${mPath} must be an object`);
     assertString(m.movementId, `${mPath}.movementId`);
+    if (m.loadPct !== undefined) {
+      assertNumber(m.loadPct, `${mPath}.loadPct`);
+      if (m.loadPct < 0 || m.loadPct > 100) fail(`expected "${mPath}.loadPct" to be between 0 and 100`);
+    }
+    if (m.rir !== undefined) {
+      assertNumber(m.rir, `${mPath}.rir`);
+      if (m.rir < 0 || m.rir > 5) fail(`expected "${mPath}.rir" to be between 0 and 5`);
+    }
   });
   return value as unknown as Block;
 }

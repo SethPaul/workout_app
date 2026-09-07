@@ -462,6 +462,12 @@ a {
   color: var(--chip-m-fg);
 }
 
+.banner-info {
+  border-color: var(--accent);
+  background: var(--bg-elevated);
+  color: var(--accent);
+}
+
 /* ---------- Run screen ---------- */
 
 .run-screen {

@@ -85,6 +85,16 @@ def validate_block_movement(bm, ctx, movement_ids):
             err(f"{ctx}: {numeric_field} must be numeric")
     if "repScheme" in bm and not isinstance(bm["repScheme"], list):
         err(f"{ctx}: repScheme must be a list")
+    if "loadPct" in bm:
+        if not isinstance(bm["loadPct"], (int, float)):
+            err(f"{ctx}: loadPct must be numeric")
+        elif not (0 <= bm["loadPct"] <= 100):
+            err(f"{ctx}: loadPct {bm['loadPct']!r} out of range (must be 0-100)")
+    if "rir" in bm:
+        if not isinstance(bm["rir"], (int, float)):
+            err(f"{ctx}: rir must be numeric")
+        elif not (0 <= bm["rir"] <= 5):
+            err(f"{ctx}: rir {bm['rir']!r} out of range (must be 0-5)")
 
 
 def validate_block(b, ctx, movement_ids):
@@ -130,6 +140,17 @@ def validate_pool_workout(w, idx, movement_ids):
         err(f"{ctx}: workout has zero blocks")
     for i, b in enumerate(w["blocks"]):
         validate_block(b, f"{ctx}.blocks[{i}]", movement_ids)
+
+    # C3/C4 (warning, not error): a workout containing a strength block
+    # should lead with a Warm-up, Power, or the Strength block itself.
+    has_strength = any(isinstance(b, dict) and b.get("format") == "strength" for b in w["blocks"])
+    if has_strength and w["blocks"] and isinstance(w["blocks"][0], dict):
+        first_title = w["blocks"][0].get("title")
+        if first_title not in ("Warm-up", "Power", "Strength"):
+            warn(
+                f"{ctx}: has a strength block but blocks[0].title is {first_title!r}, "
+                "expected one of 'Warm-up', 'Power', 'Strength' (C3/C4)"
+            )
 
 
 def main():

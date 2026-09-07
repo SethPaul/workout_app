@@ -59,6 +59,8 @@ export interface BlockMovement {
   seconds?: number;       // for holds
   loadNote?: string;      // free text, e.g. "heavy", "70% 1RM", "bodyweight"
   repScheme?: number[];   // optional explicit per-round reps, e.g. [21,15,9] or [50,40,30,20,10]
+  loadPct?: number;       // structured target load, 0-100 (% of 1RM)
+  rir?: number;           // reps-in-reserve target, 0-5
 }
 
 export interface Block {
@@ -140,14 +142,31 @@ Inputs: `pool`, `movements`, `logs`, `settings`, `now`, `exclude: string[]` (bum
    - every required equipment of every movement is in `settings.availableEquipment`
    - `daysSince(lastPerformed(workout)) >= workout.cadenceDays` (never performed passes)
    - for every movement in the workout: `daysSince(lastPerformed(movement)) >= movement.cadenceDays`
-2. **Score** each survivor:
+   - **pattern-level cadence gate** (`app/src/domain/patterns.ts`, AUDIT.md C1): only HEAVY loading
+     counts — a movement appearing in a `strength` block, in a block titled `'Power'`, or any
+     olympic-tagged barbell movement in any block. For every pattern (`Pattern`: squat/hinge/push/
+     pull/olympic/core/cardio/plyo, via `movementPatterns(movement)`) of every HEAVY movement in the
+     candidate, `daysSince(last HEAVY performance of that pattern, scanned across all logs'
+     `workoutSnapshot`s) >= PATTERN_CADENCE_DAYS[pattern]` (squat/hinge/push/pull/olympic = 2, plyo =
+     1, core/cardio = 0, i.e. never gated). This is what stops e.g. a `front_squat` strength day the
+     day after a `back_squat` strength day, which per-movement cadence alone allows.
+   - `ignoreCadence` bypasses both the per-movement/per-workout cadence gate and the pattern gate.
+2. **Weekly mandatory-day gate** (`app/src/domain/weekly.ts`, AUDIT.md C2): compute
+   `weeklyNeed(logs, now)` — the first day type in `REQUIRED_WEEKLY` (currently just
+   `'deadlift-press'`) with no log in the last 7 local days whose `workoutSnapshot` carries the
+   matching `day:*` tag. If a day type is owed and at least one gate-1 survivor has that `day:*` tag,
+   restrict the candidate pool to those; otherwise (nothing owed, or no survivor has it) fall through
+   to the full gate-1 survivor set unchanged — this step never empties the pool on its own. The
+   result exposes `needed: string | null` so the UI can say e.g. "Deadlift + push press day is due
+   this week."
+3. **Score** each survivor:
    - `+2 * daysSince(workout)` (cap 60), or `+100` if never performed
    - `+ mean over movements of min(daysSince(movement), 30)` (never = 30)
    - `+ rng() * 5`
-3. Sort descending, take top `max(3, ceil(25% of survivors))`, pick one uniformly with `rng`.
-4. If step 1 yields nothing: return `{ workout: null, reason }` where reason explains which gate
-   emptied the list (equipment / cadence / all bumped), so the UI can offer "ignore cadence" or
-   "show all".
+4. Sort descending, take top `max(3, ceil(25% of survivors))`, pick one uniformly with `rng`.
+5. If step 1 yields nothing: return `{ workout: null, reason }` where reason explains which gate
+   emptied the list (equipment / cadence / pattern / all bumped), so the UI can offer "ignore
+   cadence" or "show all".
 
 **Bump** = call again with the current id appended to `exclude`. Exclusions reset daily.
 

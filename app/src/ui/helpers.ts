@@ -85,7 +85,12 @@ export function movementLine(state: AppState, bm: BlockMovement): string {
   if (bm.calories !== undefined) parts.push(`${bm.calories} cal`);
   if (bm.seconds !== undefined) parts.push(`${bm.seconds}s`);
   if (bm.loadNote) parts.push(bm.loadNote);
-  return parts.length > 0 ? `${name} — ${parts.join(', ')}` : name;
+  let line = parts.join(', ');
+  const targets: string[] = [];
+  if (bm.loadPct !== undefined) targets.push(`@ ${bm.loadPct}%`);
+  if (bm.rir !== undefined) targets.push(`RIR ${bm.rir}`);
+  if (targets.length > 0) line = line ? `${line} ${targets.join(', ')}` : targets.join(', ');
+  return line ? `${name} — ${line}` : name;
 }
 
 /** One human-readable line summarising a block's scheme (sets/rounds/timing). */

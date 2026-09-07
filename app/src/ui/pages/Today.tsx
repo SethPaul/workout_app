@@ -2,6 +2,7 @@ import { useState } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import { selectWorkout, type SelectReason } from '../../domain/select';
 import { estimateWorkoutSeconds, formatDurationMin } from '../../domain/estimate';
+import { weeklyNeed } from '../../domain/weekly';
 import { bumpTodayWorkout, currentTodayWorkout, setTodayWorkout, state, todayWorkout } from '../../state/store';
 import { beginRunSession } from '../../state/run';
 import { BlockSummary } from '../components/BlockSummary';
@@ -12,8 +13,14 @@ const REASON_MESSAGES: Record<SelectReason, string> = {
   'no-enabled': "No workouts are enabled in your pool yet. Enable some in the Pool tab.",
   equipment: "Every remaining workout needs equipment you don't have available right now.",
   cadence: 'Everything eligible is still on cooldown — every movement or workout needs more rest.',
+  pattern:
+    'Everything eligible would repeat a heavy squat/hinge/push/pull/olympic pattern too soon — give it another day or two.',
   excluded: "You've bumped every eligible workout for today.",
   ok: '',
+};
+
+const NEEDED_MESSAGES: Record<string, string> = {
+  'deadlift-press': 'Deadlift + push press day is due this week.',
 };
 
 export function Today() {
@@ -28,6 +35,7 @@ export function Today() {
   const workout: PoolWorkout | null = today?.workoutId
     ? (s.pool.find((w) => w.id === today.workoutId) ?? null)
     : null;
+  const needed = weeklyNeed(s.logs, new Date());
 
   function runSelection(ignoreCadence: boolean) {
     const t = currentTodayWorkout();
@@ -63,6 +71,8 @@ export function Today() {
     <div>
       <h1 class="page-title">Today</h1>
 
+      {needed && <div class="banner banner-info">{NEEDED_MESSAGES[needed] ?? `${needed} day is due this week.`}</div>}
+
       {workout ? (
         <div class="stack">
           <div class="card stack">
@@ -93,7 +103,7 @@ export function Today() {
         <div class="stack">
           <div class="banner banner-warn">{REASON_MESSAGES[failReason]}</div>
           <div class="stack">
-            {failReason === 'cadence' && (
+            {(failReason === 'cadence' || failReason === 'pattern') && (
               <button class="btn btn-block" onClick={() => runSelection(true)}>
                 Ignore cadence and pick anyway
               </button>

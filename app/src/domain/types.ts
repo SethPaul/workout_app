@@ -53,6 +53,8 @@ export interface BlockMovement {
   seconds?: number; // for holds
   loadNote?: string; // free text, e.g. "heavy", "70% 1RM", "bodyweight"
   repScheme?: number[]; // optional explicit per-round reps, e.g. [21,15,9] or [50,40,30,20,10]
+  loadPct?: number; // structured target load, 0-100 (% of 1RM)
+  rir?: number; // reps in reserve target, 0-5
 }
 
 export interface Block {

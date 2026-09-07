@@ -1,12 +1,16 @@
 import { daysSince, lastPerformedMovement, lastPerformedWorkout } from './cadence';
+import { heavyMovementsInWorkout, movementPatterns, PATTERN_CADENCE_DAYS, type Pattern } from './patterns';
 import type { Movement, PoolWorkout, Settings, WorkoutLog } from './types';
+import { dayType, weeklyNeed } from './weekly';
 
-export type SelectReason = 'no-enabled' | 'equipment' | 'cadence' | 'excluded' | 'ok';
+export type SelectReason = 'no-enabled' | 'equipment' | 'cadence' | 'pattern' | 'excluded' | 'ok';
 
 export interface SelectResult {
   workout: PoolWorkout | null;
   reason: SelectReason;
   candidates: PoolWorkout[];
+  /** A `day:*` type still owed this week (SPEC section 3), or null if none is. */
+  needed: string | null;
 }
 
 export interface SelectInput {
@@ -17,8 +21,9 @@ export interface SelectInput {
   now: string | Date;
   exclude?: string[];
   rng?: () => number;
-  /** Bypass the cadence gate (workout + movement) entirely. Used by the UI's
-   * "ignore cadence" escape hatch when the cadence gate empties the pool. */
+  /** Bypass the cadence gates (workout + movement + pattern) entirely. Used
+   * by the UI's "ignore cadence" escape hatch when a cadence gate empties
+   * the pool. */
   ignoreCadence?: boolean;
 }
 
@@ -48,6 +53,46 @@ function workoutCadenceOk(workout: PoolWorkout, logs: WorkoutLog[], now: string 
   const last = lastPerformedWorkout(logs, workout.id);
   if (last === null) return true;
   return daysSince(last, now) >= workout.cadenceDays;
+}
+
+/** Latest `finishedAt` among logs whose snapshot contains a HEAVY movement of this pattern, or null. */
+function lastHeavyPatternPerformance(
+  logs: WorkoutLog[],
+  movementById: Map<string, Movement>,
+  pattern: Pattern,
+): string | null {
+  let latest: string | null = null;
+  for (const log of logs) {
+    const heavy = heavyMovementsInWorkout(log.workoutSnapshot, movementById);
+    const matches = heavy.some((m) => movementPatterns(m).includes(pattern));
+    if (!matches) continue;
+    if (latest === null || log.finishedAt > latest) latest = log.finishedAt;
+  }
+  return latest;
+}
+
+/**
+ * Pattern-level cadence gate (SPEC section 3, AUDIT.md C1): every pattern of
+ * every HEAVY movement in the candidate must be far enough past its last
+ * HEAVY performance of that pattern, anywhere in the logs.
+ */
+function patternCadenceOk(
+  workout: PoolWorkout,
+  movementById: Map<string, Movement>,
+  logs: WorkoutLog[],
+  now: string | Date,
+): boolean {
+  const heavy = heavyMovementsInWorkout(workout, movementById);
+  for (const movement of heavy) {
+    for (const pattern of movementPatterns(movement)) {
+      const requiredDays = PATTERN_CADENCE_DAYS[pattern];
+      if (requiredDays <= 0) continue;
+      const last = lastHeavyPatternPerformance(logs, movementById, pattern);
+      if (last === null) continue;
+      if (daysSince(last, now) < requiredDays) return false;
+    }
+  }
+  return true;
 }
 
 function scoreWorkout(
@@ -89,22 +134,23 @@ export function selectWorkout(input: SelectInput): SelectResult {
 
   const movementById = new Map(movements.map((m) => [m.id, m]));
   const available = new Set(settings.availableEquipment);
+  const needed = weeklyNeed(logs, now);
 
   const enabledPool = pool.filter((w) => w.enabled);
   if (enabledPool.length === 0) {
-    return { workout: null, reason: 'no-enabled', candidates: [] };
+    return { workout: null, reason: 'no-enabled', candidates: [], needed };
   }
 
   const notExcluded = enabledPool.filter((w) => !exclude.includes(w.id));
   if (notExcluded.length === 0) {
-    return { workout: null, reason: 'excluded', candidates: [] };
+    return { workout: null, reason: 'excluded', candidates: [], needed };
   }
 
   const equipmentOk = notExcluded.filter((w) =>
     workoutMovementIds(w).every((id) => movementEquipmentOk(movementById.get(id), available)),
   );
   if (equipmentOk.length === 0) {
-    return { workout: null, reason: 'equipment', candidates: [] };
+    return { workout: null, reason: 'equipment', candidates: [], needed };
   }
 
   const cadenceOk = input.ignoreCadence
@@ -114,10 +160,23 @@ export function selectWorkout(input: SelectInput): SelectResult {
         return workoutMovementIds(w).every((id) => movementCadenceOk(movementById.get(id), logs, now));
       });
   if (cadenceOk.length === 0) {
-    return { workout: null, reason: 'cadence', candidates: [] };
+    return { workout: null, reason: 'cadence', candidates: [], needed };
   }
 
-  const scored = cadenceOk
+  const patternOk = input.ignoreCadence
+    ? cadenceOk
+    : cadenceOk.filter((w) => patternCadenceOk(w, movementById, logs, now));
+  if (patternOk.length === 0) {
+    return { workout: null, reason: 'pattern', candidates: [], needed };
+  }
+
+  // Weekly mandatory-day gate (SPEC section 3, AUDIT.md C2): restrict to the
+  // needed day type only if a gated survivor actually has it, otherwise fall
+  // through to the normal pool rather than returning empty.
+  const needMatches = needed ? patternOk.filter((w) => dayType(w) === needed) : [];
+  const gated = needMatches.length > 0 ? needMatches : patternOk;
+
+  const scored = gated
     .map((workout) => ({ workout, score: scoreWorkout(workout, movementById, logs, now, rng) }))
     .sort((a, b) => b.score - a.score);
 
@@ -127,5 +186,5 @@ export function selectWorkout(input: SelectInput): SelectResult {
   const pickIndex = Math.floor(rng() * candidates.length);
   const workout = candidates[Math.min(pickIndex, candidates.length - 1)];
 
-  return { workout, reason: 'ok', candidates };
+  return { workout, reason: 'ok', candidates, needed };
 }

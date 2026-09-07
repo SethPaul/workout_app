@@ -134,4 +134,37 @@ describe('importState validation', () => {
     state.pool[0].cadenceDays = -7;
     expect(() => importState(JSON.stringify(state))).toThrow(/cadenceDays/);
   });
+
+  it('accepts loadPct and rir within range', () => {
+    const state = validState();
+    state.pool[0].blocks[0].movements[0].loadPct = 70;
+    state.pool[0].blocks[0].movements[0].rir = 2;
+    const imported = importState(JSON.stringify(state));
+    expect(imported.pool[0].blocks[0].movements[0].loadPct).toBe(70);
+    expect(imported.pool[0].blocks[0].movements[0].rir).toBe(2);
+  });
+
+  it('rejects a loadPct above 100', () => {
+    const state = validState();
+    state.pool[0].blocks[0].movements[0].loadPct = 101;
+    expect(() => importState(JSON.stringify(state))).toThrow(/loadPct/);
+  });
+
+  it('rejects a negative loadPct', () => {
+    const state = validState();
+    state.pool[0].blocks[0].movements[0].loadPct = -5;
+    expect(() => importState(JSON.stringify(state))).toThrow(/loadPct/);
+  });
+
+  it('rejects an rir above 5', () => {
+    const state = validState();
+    state.pool[0].blocks[0].movements[0].rir = 6;
+    expect(() => importState(JSON.stringify(state))).toThrow(/rir/);
+  });
+
+  it('rejects a negative rir', () => {
+    const state = validState();
+    state.pool[0].blocks[0].movements[0].rir = -1;
+    expect(() => importState(JSON.stringify(state))).toThrow(/rir/);
+  });
 });

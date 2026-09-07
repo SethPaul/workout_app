@@ -40,11 +40,17 @@ function workout(id: string, movementIds: string[], overrides: Partial<PoolWorko
   };
 }
 
-function log(poolWorkoutId: string, movementIds: string[], finishedAt: string): WorkoutLog {
+function log(
+  poolWorkoutId: string,
+  movementIds: string[],
+  finishedAt: string,
+  workoutOverrides: Partial<PoolWorkout> = {},
+): WorkoutLog {
+  const snapshot = workout(poolWorkoutId, movementIds, workoutOverrides);
   return {
     id: `log-${poolWorkoutId}-${finishedAt}`,
     poolWorkoutId,
-    workoutSnapshot: workout(poolWorkoutId, movementIds),
+    workoutSnapshot: snapshot,
     startedAt: finishedAt,
     finishedAt,
     results: [],
@@ -256,5 +262,182 @@ describe('selectWorkout candidates', () => {
     });
     // 8 survivors -> ceil(0.25*8) = 2 -> max(3,2) = 3
     expect(result.candidates.length).toBe(3);
+  });
+});
+
+describe('selectWorkout pattern gate (C1)', () => {
+  const backSquat = movement('back_squat', { tags: ['squat', 'compound'], cadenceDays: 0 });
+  const frontSquat = movement('front_squat', { tags: ['squat', 'compound'], cadenceDays: 0 });
+
+  function strengthWorkout(id: string, movementId: string): PoolWorkout {
+    return {
+      id,
+      name: id,
+      intensity: 'M',
+      blocks: [{ format: 'strength', movements: [{ movementId }] }],
+      cadenceDays: 0,
+      enabled: true,
+      source: 'manual',
+    };
+  }
+
+  function amrapWorkout(id: string, movementId: string): PoolWorkout {
+    return {
+      id,
+      name: id,
+      intensity: 'M',
+      blocks: [{ format: 'amrap', title: 'Conditioning', movements: [{ movementId }], durationSec: 600 }],
+      cadenceDays: 0,
+      enabled: true,
+      source: 'manual',
+    };
+  }
+
+  function heavyLog(movementId: string, finishedAt: string): WorkoutLog {
+    const snapshot = strengthWorkout(`logged-${movementId}`, movementId);
+    return {
+      id: `log-${movementId}-${finishedAt}`,
+      poolWorkoutId: snapshot.id,
+      workoutSnapshot: snapshot,
+      startedAt: finishedAt,
+      finishedAt,
+      results: [],
+    };
+  }
+
+  it('blocks a front_squat strength workout the day after a back_squat strength workout (same pattern)', () => {
+    const pool = [strengthWorkout('fs', 'front_squat')];
+    const logs = [heavyLog('back_squat', '2024-01-31T00:00:00.000Z')]; // yesterday
+    const result = selectWorkout({
+      pool,
+      movements: [backSquat, frontSquat],
+      logs,
+      settings: settingsWith(['barbell', 'rack']),
+      now: NOW,
+    });
+    expect(result.reason).toBe('pattern');
+    expect(result.workout).toBeNull();
+  });
+
+  it('does not block when front_squat only appears in an AMRAP block (not heavy loading)', () => {
+    const pool = [amrapWorkout('fs-amrap', 'front_squat')];
+    const logs = [heavyLog('back_squat', '2024-01-31T00:00:00.000Z')];
+    const result = selectWorkout({
+      pool,
+      movements: [backSquat, frontSquat],
+      logs,
+      settings: settingsWith(['barbell', 'rack']),
+      now: NOW,
+    });
+    expect(result.reason).toBe('ok');
+  });
+
+  it('allows the front_squat strength workout two days after the back_squat strength workout', () => {
+    const pool = [strengthWorkout('fs', 'front_squat')];
+    const logs = [heavyLog('back_squat', '2024-01-30T00:00:00.000Z')]; // 2 days ago
+    const result = selectWorkout({
+      pool,
+      movements: [backSquat, frontSquat],
+      logs,
+      settings: settingsWith(['barbell', 'rack']),
+      now: NOW,
+    });
+    expect(result.reason).toBe('ok');
+  });
+
+  it('never blocks on the core pattern (0-day cadence)', () => {
+    const plank = movement('plank', { tags: ['core'], cadenceDays: 0 });
+    const pool = [strengthWorkout('plank-day', 'plank')];
+    const logs = [heavyLog('plank', NOW)]; // performed "today" itself
+    const result = selectWorkout({
+      pool,
+      movements: [plank],
+      logs,
+      settings: settingsWith([]),
+      now: NOW,
+    });
+    expect(result.reason).toBe('ok');
+  });
+
+  it('ignoreCadence bypasses the pattern gate too', () => {
+    const pool = [strengthWorkout('fs', 'front_squat')];
+    const logs = [heavyLog('back_squat', '2024-01-31T00:00:00.000Z')]; // yesterday, would otherwise block
+    const result = selectWorkout({
+      pool,
+      movements: [backSquat, frontSquat],
+      logs,
+      settings: settingsWith(['barbell', 'rack']),
+      now: NOW,
+      ignoreCadence: true,
+    });
+    expect(result.reason).toBe('ok');
+  });
+});
+
+describe('selectWorkout weekly mandatory-day gate (C2)', () => {
+  function dayWorkout(id: string, dayTag?: string): PoolWorkout {
+    return {
+      id,
+      name: id,
+      intensity: 'M',
+      blocks: [{ format: 'strength', movements: [{ movementId: 'row' }] }],
+      cadenceDays: 0,
+      enabled: true,
+      source: 'manual',
+      ...(dayTag ? { tags: [dayTag] } : {}),
+    };
+  }
+
+  it('exposes the needed day type when nothing satisfies it in the last 7 days', () => {
+    const pool = [dayWorkout('generic')];
+    const result = selectWorkout({
+      pool,
+      movements: [movement('row', { cadenceDays: 0 })],
+      logs: [],
+      settings: settingsWith([]),
+      now: NOW,
+    });
+    expect(result.needed).toBe('deadlift-press');
+  });
+
+  it('restricts candidates to the needed day type when a gated survivor has it', () => {
+    const pool = [dayWorkout('generic'), dayWorkout('the-day', 'day:deadlift-press')];
+    const result = selectWorkout({
+      pool,
+      movements: [movement('row', { cadenceDays: 0 })],
+      logs: [],
+      settings: settingsWith([]),
+      now: NOW,
+      rng: () => 0,
+    });
+    expect(result.reason).toBe('ok');
+    expect(result.workout?.id).toBe('the-day');
+  });
+
+  it('falls through to the normal pool when no survivor has the needed day type', () => {
+    const pool = [dayWorkout('generic')];
+    const result = selectWorkout({
+      pool,
+      movements: [movement('row', { cadenceDays: 0 })],
+      logs: [],
+      settings: settingsWith([]),
+      now: NOW,
+      rng: () => 0,
+    });
+    expect(result.reason).toBe('ok');
+    expect(result.workout?.id).toBe('generic');
+  });
+
+  it('clears the need when a matching log happened 3 days ago', () => {
+    const pool = [dayWorkout('generic')];
+    const logs = [log('the-day', ['row'], '2024-01-29T00:00:00.000Z', { tags: ['day:deadlift-press'] })]; // 3 days before NOW
+    const result = selectWorkout({
+      pool,
+      movements: [movement('row', { cadenceDays: 0 })],
+      logs,
+      settings: settingsWith([]),
+      now: NOW,
+    });
+    expect(result.needed).toBeNull();
   });
 });
