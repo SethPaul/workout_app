@@ -1,3 +1,4 @@
+import { migrate } from './migrate';
 import type { AppState, Block, Format, Movement, PoolWorkout, Settings, WorkoutLog } from './types';
 
 /** Serializes AppState to a JSON string for backup/export. */
@@ -74,6 +75,18 @@ function validateMovement(value: unknown, index: number): Movement {
   assertString(value.unit, `${path}.unit`);
   assertBoolean(value.loadable, `${path}.loadable`);
   if (value.aliases !== undefined) assertArray(value.aliases, `${path}.aliases`);
+  // SPEC 9.1 additions: all optional, validated only when present.
+  if (value.progression !== undefined) {
+    if (value.progression !== 'linear' && value.progression !== 'double') {
+      fail(`expected "${path}.progression" to be "linear" or "double"`);
+    }
+  }
+  if (value.repRange !== undefined) {
+    assertArray(value.repRange, `${path}.repRange`);
+    if (value.repRange.length !== 2) fail(`expected "${path}.repRange" to have exactly 2 entries`);
+    value.repRange.forEach((r, i) => assertNumber(r, `${path}.repRange[${i}]`));
+  }
+  if (value.increment !== undefined) assertNumber(value.increment, `${path}.increment`);
   return value as unknown as Movement;
 }
 
@@ -94,6 +107,7 @@ function validateBlock(value: unknown, poolIndex: number, blockIndex: number): B
       assertNumber(m.rir, `${mPath}.rir`);
       if (m.rir < 0 || m.rir > 5) fail(`expected "${mPath}.rir" to be between 0 and 5`);
     }
+    if (m.targetRpe !== undefined) assertNumber(m.targetRpe, `${mPath}.targetRpe`);
   });
   return value as unknown as Block;
 }
@@ -112,16 +126,24 @@ function validatePoolWorkout(value: unknown, index: number): PoolWorkout {
   return value as unknown as PoolWorkout;
 }
 
+const LOG_KINDS = new Set(['pool', 'adhoc', 'max-test']);
+
 function validateWorkoutLog(value: unknown, index: number): WorkoutLog {
   const path = `logs[${index}]`;
   if (!isPlainObject(value)) fail(`${path} must be an object`);
   assertString(value.id, `${path}.id`);
-  assertString(value.poolWorkoutId, `${path}.poolWorkoutId`);
+  // SPEC 9.1: poolWorkoutId is optional (absent for adhoc/max-test logs).
+  if (value.poolWorkoutId !== undefined) assertString(value.poolWorkoutId, `${path}.poolWorkoutId`);
   if (!isPlainObject(value.workoutSnapshot)) fail(`${path}.workoutSnapshot must be an object`);
   validatePoolWorkout(value.workoutSnapshot, index);
   assertString(value.startedAt, `${path}.startedAt`);
   assertString(value.finishedAt, `${path}.finishedAt`);
   assertArray(value.results, `${path}.results`);
+  if (value.kind !== undefined) {
+    assertString(value.kind, `${path}.kind`);
+    if (!LOG_KINDS.has(value.kind)) fail(`expected "${path}.kind" to be one of pool, adhoc, max-test`);
+  }
+  if (value.durationMin !== undefined) assertNumber(value.durationMin, `${path}.durationMin`);
   return value as unknown as WorkoutLog;
 }
 
@@ -143,12 +165,46 @@ function validateSettings(value: unknown): Settings {
   assertBoolean(vibrateOn, 'settings.vibrateOn');
   assertBoolean(keepScreenOn, 'settings.keepScreenOn');
 
+  // SPEC 9.1 additions: optional; migrate() fills defaults for anything
+  // absent (a v1 export never has these), but a present value must be valid.
+  if (value.units !== undefined) {
+    assertString(value.units, 'settings.units');
+    if (value.units !== 'lb' && value.units !== 'kg') fail('expected "settings.units" to be "lb" or "kg"');
+  }
+  if (value.deloadPolicy !== undefined) {
+    assertString(value.deloadPolicy, 'settings.deloadPolicy');
+    if (!['fatigue', 'calendar', 'off'].includes(value.deloadPolicy)) {
+      fail('expected "settings.deloadPolicy" to be one of fatigue, calendar, off');
+    }
+  }
+  if (value.cycleWeeks !== undefined) assertNumber(value.cycleWeeks, 'settings.cycleWeeks');
+  if (value.focus !== undefined) {
+    assertString(value.focus, 'settings.focus');
+    if (!['balanced', 'strength', 'conditioning'].includes(value.focus)) {
+      fail('expected "settings.focus" to be one of balanced, strength, conditioning');
+    }
+  }
+  if (value.masters !== undefined) assertBoolean(value.masters, 'settings.masters');
+
   return {
+    ...value,
     availableEquipment: value.availableEquipment,
     soundOn,
     vibrateOn,
     keepScreenOn,
   } as unknown as Settings;
+}
+
+function validateProgram(value: unknown): AppState['program'] {
+  if (value === undefined) return undefined;
+  if (!isPlainObject(value)) fail('"program" must be an object');
+  assertString(value.cycleStartedAt, 'program.cycleStartedAt');
+  if (value.deloadWeekStartedAt !== undefined) {
+    assertString(value.deloadWeekStartedAt, 'program.deloadWeekStartedAt');
+  }
+  assertArray(value.dismissedFlags, 'program.dismissedFlags');
+  value.dismissedFlags.forEach((f, i) => assertString(f, `program.dismissedFlags[${i}]`));
+  return value as unknown as AppState['program'];
 }
 
 /**
@@ -164,8 +220,8 @@ export function importState(json: string): AppState {
   }
 
   if (!isPlainObject(parsed)) fail('root value must be an object');
-  if (parsed.schemaVersion !== 1) {
-    fail(`unsupported schemaVersion "${String(parsed.schemaVersion)}" (expected 1)`);
+  if (parsed.schemaVersion !== 1 && parsed.schemaVersion !== 2) {
+    fail(`unsupported schemaVersion "${String(parsed.schemaVersion)}" (expected 1 or 2)`);
   }
 
   assertArray(parsed.movements, 'movements');
@@ -201,5 +257,16 @@ export function importState(json: string): AppState {
     }
   }
 
-  return { movements, pool, logs, settings, schemaVersion: 1 };
+  const program = validateProgram(parsed.program);
+
+  const raw: AppState = {
+    movements,
+    pool,
+    logs,
+    settings,
+    schemaVersion: parsed.schemaVersion,
+    program,
+  };
+  // Upgrades a v1 import to v2 (SPEC 9.1) and is a no-op on an already-full v2 import.
+  return migrate(raw);
 }

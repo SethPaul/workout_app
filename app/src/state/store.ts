@@ -1,5 +1,9 @@
 import { signal } from '@preact/signals';
-import type { AppState } from '../domain/types';
+import { migrate } from '../domain/migrate';
+import { applyWave, cycleWeek, isDeloadWeek } from '../domain/program/cycle';
+import { resolveProgram } from '../domain/program/context';
+import { selectWorkout, type SelectInput, type SelectResult } from '../domain/select';
+import type { AppState, PoolWorkout, ProgramState, WorkoutLog } from '../domain/types';
 import type { Storage } from '../storage/storage';
 import { IdbStorage } from '../storage/idb';
 import { buildSeedState } from '../storage/seed';
@@ -18,7 +22,7 @@ export function setStorage(next: Storage): void {
 export async function init(): Promise<void> {
   const loaded = await storage.load();
   if (loaded) {
-    state.value = loaded;
+    state.value = migrate(loaded);
     return;
   }
   const seeded = await buildSeedState();
@@ -34,6 +38,36 @@ export async function update(fn: (current: AppState) => AppState): Promise<void>
   await storage.save(next);
 }
 
+// --- Programming layer (SPEC 9.9) --------------------------------------
+
+/** Appends an ad-hoc or max-test WorkoutLog (SPEC 9.8) built by `program/adhoc.ts`. */
+export async function logAdhoc(log: WorkoutLog): Promise<void> {
+  await update((s) => ({ ...s, logs: [...s.logs, log] }));
+}
+
+/** Starts a deload week now: sets `program.deloadWeekStartedAt` (SPEC 9.6). */
+export async function acceptDeload(now: Date = new Date()): Promise<void> {
+  await update((s) => {
+    const program = resolveProgram(s.program, s.logs, now);
+    return { ...s, program: { ...program, deloadWeekStartedAt: now.toISOString() } };
+  });
+}
+
+/** Dismisses fatigue flags for the rest of the cycle (SPEC 9.6 "Not now"). */
+export async function dismissFlags(ids: string[]): Promise<void> {
+  await update((s) => {
+    const program = resolveProgram(s.program, s.logs, new Date());
+    const dismissed = new Set([...program.dismissedFlags, ...ids]);
+    return { ...s, program: { ...program, dismissedFlags: [...dismissed] } };
+  });
+}
+
+/** Starts a fresh cycle: resets `cycleStartedAt`, clears the deload and dismissed flags (SPEC 9.5). */
+export async function startNewCycle(now: Date = new Date()): Promise<void> {
+  const fresh: ProgramState = { cycleStartedAt: now.toISOString(), dismissedFlags: [] };
+  await update((s) => ({ ...s, program: fresh }));
+}
+
 // --- "today's workout" (SPEC section 3) -------------------------------
 // Remembered separately from AppState, in localStorage, since it is
 // day-scoped UI state rather than durable history.
@@ -42,6 +76,13 @@ export interface TodayWorkout {
   date: string; // YYYY-MM-DD, local to the device
   workoutId: string | null;
   excluded: string[]; // bumped ids; reset when the date changes
+  /**
+   * The cycle-wave-transformed copy of today's pulled workout (SPEC 9.5),
+   * set by `pullToday`. This is what should be run and logged, so the
+   * prescribed sets/reps/RPE reflect the current cycle week/deload rather
+   * than the raw pool entry.
+   */
+  snapshot?: PoolWorkout;
 }
 
 const TODAY_KEY = 'todayWorkout';
@@ -84,16 +125,42 @@ export function currentTodayWorkout(now: Date = new Date()): TodayWorkout | null
   return current;
 }
 
-/** Records that `workoutId` was pulled as today's workout. */
-export function setTodayWorkout(workoutId: string, now: Date = new Date()): void {
+/** Records that `workoutId` was pulled as today's workout, optionally with its wave-transformed snapshot. */
+export function setTodayWorkout(workoutId: string, now: Date = new Date(), snapshot?: PoolWorkout): void {
   const existing = currentTodayWorkout(now);
   const next: TodayWorkout = {
     date: todayDateString(now),
     workoutId,
     excluded: existing?.excluded ?? [],
+    snapshot,
   };
   todayWorkout.value = next;
   writeLocalStorage(next);
+}
+
+export interface PullTodayInput extends Omit<SelectInput, 'exclude'> {
+  now: Date;
+  /** Current AppState.program; defaulted (SPEC 9.1) via `resolveProgram` when absent. */
+  program?: ProgramState;
+}
+
+/**
+ * Pulls today's workout (SPEC section 3) and, when one is found, computes
+ * the cycle-wave-transformed snapshot for the current week/deload state
+ * (SPEC 9.5) and remembers it via `setTodayWorkout` so the run/log flow
+ * uses the transformed prescription rather than the raw pool entry.
+ */
+export function pullToday(input: PullTodayInput): SelectResult {
+  const existing = currentTodayWorkout(input.now);
+  const result = selectWorkout({ ...input, exclude: existing?.excluded ?? [] });
+  if (result.workout) {
+    const programState = resolveProgram(input.program, input.logs, input.now);
+    const week = cycleWeek(programState, input.now);
+    const deload = isDeloadWeek(programState, input.now);
+    const snapshot = applyWave(result.workout, week, deload, input.settings, input.movements);
+    setTodayWorkout(result.workout.id, input.now, snapshot);
+  }
+  return result;
 }
 
 /** Bumps the current workout: adds it to the excluded list and clears the pick. */

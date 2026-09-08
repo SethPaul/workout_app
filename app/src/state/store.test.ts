@@ -1,13 +1,19 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import type { AppState } from '../domain/types';
+import type { AppState, PoolWorkout, WorkoutLog } from '../domain/types';
 import type { Storage } from '../storage/storage';
+import { buildAdhocLog } from '../domain/program/adhoc';
 import {
+  acceptDeload,
   bumpTodayWorkout,
   clearTodayWorkout,
   currentTodayWorkout,
+  dismissFlags,
   init,
+  logAdhoc,
+  pullToday,
   setStorage,
   setTodayWorkout,
+  startNewCycle,
   state,
   update,
 } from './store';
@@ -48,7 +54,7 @@ describe('init / update', () => {
     expect(Array.isArray(state.value?.movements)).toBe(true);
     expect(Array.isArray(state.value?.pool)).toBe(true);
     expect(state.value?.logs).toEqual([]);
-    expect(state.value?.schemaVersion).toBe(1);
+    expect(state.value?.schemaVersion).toBe(2);
   });
 
   it('loads existing state from storage instead of seeding', async () => {
@@ -120,5 +126,115 @@ describe('today workout', () => {
     expect(currentTodayWorkout(day2)).toBeNull(); // stale entry from a previous day
     setTodayWorkout('w2', day2);
     expect(currentTodayWorkout(day2)?.excluded).toEqual([]);
+  });
+});
+
+function squatPool(): PoolWorkout {
+  return {
+    id: 'w1',
+    name: 'Squat Day',
+    intensity: 'H',
+    blocks: [{ format: 'strength', sets: 5, movements: [{ movementId: 'squat', reps: 5 }] }],
+    cadenceDays: 0,
+    enabled: true,
+    source: 'manual',
+  };
+}
+
+describe('pullToday (SPEC 9.5/9.9)', () => {
+  it('stores the wave-transformed snapshot, not the raw pool entry', () => {
+    const now = new Date('2024-01-01T12:00:00Z');
+    const result = pullToday({
+      pool: [squatPool()],
+      movements: [{ id: 'squat', name: 'Squat', tags: ['squat'], equipment: [], cadenceDays: 0, unit: 'reps', loadable: true }],
+      logs: [],
+      settings: { availableEquipment: [], soundOn: true, vibrateOn: true, keepScreenOn: true },
+      now,
+      program: { cycleStartedAt: now.toISOString(), dismissedFlags: [] }, // week 1
+    });
+    expect(result.workout?.id).toBe('w1');
+    const today = currentTodayWorkout(now);
+    expect(today?.snapshot?.blocks[0].movements[0].targetRpe).toBe(7); // week 1
+    expect(today?.snapshot?.blocks[0].sets).toBe(5);
+  });
+
+  it('applies the deload wave when a deload is active', () => {
+    const now = new Date('2024-01-10T12:00:00Z');
+    const program = { cycleStartedAt: '2024-01-01T00:00:00.000Z', deloadWeekStartedAt: '2024-01-09T00:00:00.000Z', dismissedFlags: [] };
+    pullToday({
+      pool: [squatPool()],
+      movements: [{ id: 'squat', name: 'Squat', tags: ['squat'], equipment: [], cadenceDays: 0, unit: 'reps', loadable: true }],
+      logs: [],
+      settings: { availableEquipment: [], soundOn: true, vibrateOn: true, keepScreenOn: true },
+      now,
+      program,
+    });
+    const today = currentTodayWorkout(now);
+    expect(today?.snapshot?.blocks[0].movements[0].targetRpe).toBe(6);
+    expect(today?.snapshot?.notes).toBe('Deload week');
+  });
+});
+
+describe('logAdhoc / acceptDeload / dismissFlags / startNewCycle', () => {
+  function emptyStateWithProgram(): AppState {
+    return {
+      ...emptyState(),
+      schemaVersion: 2,
+      program: { cycleStartedAt: '2024-01-01T00:00:00.000Z', dismissedFlags: [] },
+    };
+  }
+
+  it('logAdhoc appends the log', async () => {
+    const storage = new MemoryStorage();
+    storage.saved = emptyStateWithProgram();
+    setStorage(storage);
+    await init();
+    const log: WorkoutLog = buildAdhocLog({
+      date: '2024-01-05T00:00:00.000Z',
+      entries: [{ movementId: 'squat', sets: [{ weight: 200, reps: 5 }] }],
+      id: 'adhoc-1',
+    });
+    await logAdhoc(log);
+    expect(state.value?.logs).toHaveLength(1);
+    expect(state.value?.logs[0].kind).toBe('adhoc');
+  });
+
+  it('acceptDeload sets program.deloadWeekStartedAt', async () => {
+    const storage = new MemoryStorage();
+    storage.saved = emptyStateWithProgram();
+    setStorage(storage);
+    await init();
+    const now = new Date('2024-02-01T00:00:00.000Z');
+    await acceptDeload(now);
+    expect(state.value?.program?.deloadWeekStartedAt).toBe(now.toISOString());
+  });
+
+  it('dismissFlags adds ids without duplicating existing ones', async () => {
+    const storage = new MemoryStorage();
+    storage.saved = {
+      ...emptyStateWithProgram(),
+      program: { cycleStartedAt: '2024-01-01T00:00:00.000Z', dismissedFlags: ['a'] },
+    };
+    setStorage(storage);
+    await init();
+    await dismissFlags(['a', 'b']);
+    expect(state.value?.program?.dismissedFlags.sort()).toEqual(['a', 'b']);
+  });
+
+  it('startNewCycle resets cycleStartedAt and clears deload/dismissed flags', async () => {
+    const storage = new MemoryStorage();
+    storage.saved = {
+      ...emptyStateWithProgram(),
+      program: {
+        cycleStartedAt: '2024-01-01T00:00:00.000Z',
+        deloadWeekStartedAt: '2024-01-20T00:00:00.000Z',
+        dismissedFlags: ['a'],
+      },
+    };
+    setStorage(storage);
+    await init();
+    const now = new Date('2024-02-01T00:00:00.000Z');
+    await startNewCycle(now);
+    expect(state.value?.program).toEqual({ cycleStartedAt: now.toISOString(), dismissedFlags: [] });
   });
 });

@@ -7,12 +7,18 @@ describe('buildSeedState', () => {
     expect(Array.isArray(state.movements)).toBe(true);
     expect(Array.isArray(state.pool)).toBe(true);
     expect(state.logs).toEqual([]);
-    expect(state.schemaVersion).toBe(1);
+    expect(state.schemaVersion).toBe(2);
   });
 
   it('defaults settings.availableEquipment to every Equipment value', async () => {
     const state = await buildSeedState();
     expect(state.settings.availableEquipment).toEqual(ALL_EQUIPMENT);
+  });
+
+  it('includes a fresh ProgramState (SPEC 9.1)', async () => {
+    const state = await buildSeedState();
+    expect(state.program?.cycleStartedAt).toBeTruthy();
+    expect(state.program?.dismissedFlags).toEqual([]);
   });
 });
 
@@ -23,6 +29,15 @@ describe('defaultSettings', () => {
     expect(s.vibrateOn).toBe(true);
     expect(s.keepScreenOn).toBe(true);
     expect(s.availableEquipment).toEqual(ALL_EQUIPMENT);
+  });
+
+  it('defaults the programming-layer settings (SPEC 9.1)', () => {
+    const s = defaultSettings();
+    expect(s.units).toBe('lb');
+    expect(s.deloadPolicy).toBe('fatigue');
+    expect(s.cycleWeeks).toBe(4);
+    expect(s.focus).toBe('balanced');
+    expect(s.masters).toBe(false);
   });
 });
 
