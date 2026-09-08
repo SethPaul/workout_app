@@ -45,6 +45,23 @@ export async function logAdhoc(log: WorkoutLog): Promise<void> {
   await update((s) => ({ ...s, logs: [...s.logs, log] }));
 }
 
+/**
+ * Merges `patch` into the WorkoutLog with `id` and persists it, stamping
+ * `editedAt` so History can show an "edited" hint. Used by the EditLog page
+ * to save changes to a saved log's results, score, RPE, notes, or timing.
+ */
+export async function updateLog(id: string, patch: Partial<WorkoutLog>, now: Date = new Date()): Promise<void> {
+  await update((s) => ({
+    ...s,
+    logs: s.logs.map((log) => (log.id === id ? { ...log, ...patch, editedAt: now.toISOString() } : log)),
+  }));
+}
+
+/** Permanently removes the WorkoutLog with `id`. */
+export async function deleteLog(id: string): Promise<void> {
+  await update((s) => ({ ...s, logs: s.logs.filter((log) => log.id !== id) }));
+}
+
 /** Starts a deload week now: sets `program.deloadWeekStartedAt` (SPEC 9.6). */
 export async function acceptDeload(now: Date = new Date()): Promise<void> {
   await update((s) => {

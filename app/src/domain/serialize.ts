@@ -144,6 +144,7 @@ function validateWorkoutLog(value: unknown, index: number): WorkoutLog {
     if (!LOG_KINDS.has(value.kind)) fail(`expected "${path}.kind" to be one of pool, adhoc, max-test`);
   }
   if (value.durationMin !== undefined) assertNumber(value.durationMin, `${path}.durationMin`);
+  if (value.editedAt !== undefined) assertString(value.editedAt, `${path}.editedAt`);
   return value as unknown as WorkoutLog;
 }
 

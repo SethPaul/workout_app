@@ -129,6 +129,8 @@ export interface WorkoutLog {
   // stored state.
   kind?: 'pool' | 'adhoc' | 'max-test';
   durationMin?: number; // derived from startedAt/finishedAt when both exist
+  // --- history editing additions ---
+  editedAt?: string; // ISO timestamp of the last edit via store.updateLog, if any
 }
 
 export interface Settings {
