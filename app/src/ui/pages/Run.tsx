@@ -1,82 +1,15 @@
 import { useEffect, useState } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
-import type { Block, Format, MovementResult, WorkoutLog, AppState, PoolWorkout } from '../../domain/types';
+import type { Block, Format, WorkoutLog } from '../../domain/types';
 import type { Cue, TimerEvent, TimerState } from '../../domain/timer';
-import { resolveSettings } from '../../domain/program/context';
-import { loadForBlockMovement } from '../../domain/program/rpe';
 import { clearTodayWorkout, state, update } from '../../state/store';
 import { clearRunSession, dispatchRun, runSession } from '../../state/run';
 import { resumeAudio, playCue } from '../audio';
 import { vibrateForCue } from '../vibrate';
 import { acquireWakeLock, releaseWakeLock } from '../wakelock';
-import { formatClock, movementById, movementLine, strengthSuggestionLine, uid } from '../helpers';
-
-interface SetDraft {
-  weight: string;
-  reps: string;
-}
-
-interface MovementDraft {
-  movementId: string;
-  loadable: boolean;
-  sets?: SetDraft[];
-  weight?: string;
-  reps?: string;
-  rpe: string; // SPEC 9.1/9.9: per-movement RPE of the hardest set, optional
-}
-
-interface ResultsDraft {
-  movements: MovementDraft[];
-  score: string;
-  rpe: string;
-  notes: string;
-}
-
-/** Suggested weight for a strength BlockMovement (SPEC 9.3/9.9), as a prefill string, or '' when there's no known max yet. */
-function suggestedWeightStr(appState: AppState, bm: { movementId: string; reps?: number; targetRpe?: number; loadPct?: number }): string {
-  const mv = movementById(appState, bm.movementId);
-  if (!mv || !mv.loadable) return '';
-  const units = resolveSettings(appState.settings).units;
-  const load = loadForBlockMovement(bm, mv, appState.logs, units, new Date());
-  return load === null ? '' : String(load);
-}
-
-function buildResultsDraft(appState: AppState, workout: PoolWorkout): ResultsDraft {
-  const seen = new Set<string>();
-  const movements: MovementDraft[] = [];
-
-  for (const block of workout.blocks) {
-    if (block.format !== 'strength') continue;
-    for (const bm of block.movements) {
-      if (seen.has(bm.movementId)) continue;
-      seen.add(bm.movementId);
-      const mv = movementById(appState, bm.movementId);
-      const suggested = suggestedWeightStr(appState, bm);
-      const sets: SetDraft[] = Array.from({ length: block.sets ?? 1 }, () => ({
-        weight: suggested,
-        reps: bm.reps !== undefined ? String(bm.reps) : '',
-      }));
-      movements.push({ movementId: bm.movementId, loadable: mv?.loadable ?? true, sets, rpe: '' });
-    }
-  }
-
-  for (const block of workout.blocks) {
-    for (const bm of block.movements) {
-      if (seen.has(bm.movementId)) continue;
-      seen.add(bm.movementId);
-      const mv = movementById(appState, bm.movementId);
-      movements.push({
-        movementId: bm.movementId,
-        loadable: mv?.loadable ?? false,
-        weight: '',
-        reps: bm.reps !== undefined ? String(bm.reps) : '',
-        rpe: '',
-      });
-    }
-  }
-
-  return { movements, score: '', rpe: '', notes: '' };
-}
+import { formatClock, movementLine, strengthSuggestionLine, uid } from '../helpers';
+import { buildResultsDraft, resultsFromDraft, type ResultsDraft } from '../resultsDraft';
+import { ResultsForm } from '../components/ResultsForm';
 
 function phaseHeading(format: Format, block: Block, timer: TimerState): string {
   const phase = timer.phase;
@@ -186,25 +119,7 @@ export function Run() {
 
   function handleSave() {
     if (!draft || !session) return;
-    const results: MovementResult[] = draft.movements.map((m) => {
-      const rpe = m.rpe.trim() ? Number(m.rpe) : undefined;
-      if (m.sets) {
-        return {
-          movementId: m.movementId,
-          sets: m.sets.map((s) => ({
-            weight: s.weight.trim() ? Number(s.weight) : undefined,
-            reps: s.reps.trim() ? Number(s.reps) : undefined,
-          })),
-          rpe,
-        };
-      }
-      return {
-        movementId: m.movementId,
-        weight: m.weight && m.weight.trim() ? Number(m.weight) : undefined,
-        reps: m.reps && m.reps.trim() ? Number(m.reps) : undefined,
-        rpe,
-      };
-    });
+    const results = resultsFromDraft(draft.movements);
     const log: WorkoutLog = {
       id: uid('log'),
       poolWorkoutId: session.poolWorkoutId,
@@ -260,156 +175,14 @@ export function Run() {
             Log results
           </span>
         </div>
+        <ResultsForm
+          snapshot={workoutSnapshot}
+          draft={draft}
+          onChange={setDraft}
+          settings={appState.settings}
+          movements={appState.movements}
+        />
         <div class="stack" style="padding-bottom:1rem">
-          {draft.movements.map((m, mi) => (
-            <div class="card stack" key={m.movementId}>
-              <div class="list-row-title">{movementById(appState, m.movementId)?.name ?? m.movementId}</div>
-              {m.sets ? (
-                <div class="stack">
-                  {m.sets.map((set, si) => (
-                    <div class="row" key={si}>
-                      <span class="muted" style="width:3.5rem">
-                        Set {si + 1}
-                      </span>
-                      {m.loadable && (
-                        <input
-                          type="number"
-                          inputMode="decimal"
-                          placeholder="lb/kg"
-                          value={set.weight}
-                          onInput={(e) => {
-                            const v = (e.target as HTMLInputElement).value;
-                            setDraft((d) => {
-                              if (!d) return d;
-                              const next = structuredClone(d);
-                              next.movements[mi].sets![si].weight = v;
-                              return next;
-                            });
-                          }}
-                        />
-                      )}
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        placeholder="reps"
-                        value={set.reps}
-                        onInput={(e) => {
-                          const v = (e.target as HTMLInputElement).value;
-                          setDraft((d) => {
-                            if (!d) return d;
-                            const next = structuredClone(d);
-                            next.movements[mi].sets![si].reps = v;
-                            return next;
-                          });
-                        }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div class="row">
-                  {m.loadable && (
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      placeholder="weight"
-                      value={m.weight}
-                      onInput={(e) => {
-                        const v = (e.target as HTMLInputElement).value;
-                        setDraft((d) => {
-                          if (!d) return d;
-                          const next = structuredClone(d);
-                          next.movements[mi].weight = v;
-                          return next;
-                        });
-                      }}
-                    />
-                  )}
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    placeholder="reps (optional)"
-                    value={m.reps}
-                    onInput={(e) => {
-                      const v = (e.target as HTMLInputElement).value;
-                      setDraft((d) => {
-                        if (!d) return d;
-                        const next = structuredClone(d);
-                        next.movements[mi].reps = v;
-                        return next;
-                      });
-                    }}
-                  />
-                </div>
-              )}
-              {m.loadable && (
-                <div class="field">
-                  <label for={`rpe-${m.movementId}`}>RPE (1–10, optional)</label>
-                  <input
-                    id={`rpe-${m.movementId}`}
-                    type="number"
-                    inputMode="decimal"
-                    min="1"
-                    max="10"
-                    step="0.5"
-                    placeholder="hardest set"
-                    value={m.rpe}
-                    onInput={(e) => {
-                      const v = (e.target as HTMLInputElement).value;
-                      setDraft((d) => {
-                        if (!d) return d;
-                        const next = structuredClone(d);
-                        next.movements[mi].rpe = v;
-                        return next;
-                      });
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          ))}
-
-          <div class="field">
-            <label for="score">Score</label>
-            <input
-              id="score"
-              type="text"
-              placeholder='e.g. "7 rounds + 3" or "12:34"'
-              value={draft.score}
-              onInput={(e) => {
-                const v = (e.target as HTMLInputElement).value;
-                setDraft((d) => (d ? { ...d, score: v } : d));
-              }}
-            />
-          </div>
-
-          <div class="field">
-            <label for="rpe">RPE (1–10)</label>
-            <input
-              id="rpe"
-              type="number"
-              min="1"
-              max="10"
-              value={draft.rpe}
-              onInput={(e) => {
-                const v = (e.target as HTMLInputElement).value;
-                setDraft((d) => (d ? { ...d, rpe: v } : d));
-              }}
-            />
-          </div>
-
-          <div class="field">
-            <label for="notes">Notes</label>
-            <textarea
-              id="notes"
-              value={draft.notes}
-              onInput={(e) => {
-                const v = (e.target as HTMLTextAreaElement).value;
-                setDraft((d) => (d ? { ...d, notes: v } : d));
-              }}
-            />
-          </div>
-
           <button class="btn btn-primary btn-big btn-block" onClick={handleSave}>
             Save
           </button>

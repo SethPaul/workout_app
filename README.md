@@ -23,4 +23,4 @@ npm run check    # typecheck + lint + tests
 npm run build    # production bundle in app/dist
 ```
 
-Hosted on Cloudflare Workers (static assets, see `app/wrangler.jsonc`), built from `main` on every push: root directory `app`, build command `npm ci && npm run build`, deploy command `npx wrangler deploy`. CI runs typecheck, lint, tests, and a build on pull requests.
+Hosted on Cloudflare Workers (static assets, see `app/wrangler.jsonc`), built from `main` on every push with build command `npm ci && npm run build` and deploy command `npx wrangler deploy`. The root `package.json` and `wrangler.jsonc` are a shim so the build works whether Cloudflare's root directory is `/` or `app`. CI runs typecheck, lint, tests, and a build on pull requests.

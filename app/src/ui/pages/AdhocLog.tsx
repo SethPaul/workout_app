@@ -2,7 +2,8 @@ import { useMemo, useState } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import { buildAdhocLog, type AdhocEntryInput, type AdhocSetInput } from '../../domain/program/adhoc';
 import { logAdhoc, state } from '../../state/store';
-import { resolveSettings } from '../../domain/program/context';
+import { resolveSettings, logKind } from '../../domain/program/context';
+import type { WorkoutLog } from '../../domain/types';
 
 interface SetDraft {
   weight: string;
@@ -34,21 +35,58 @@ function todayIsoDate(): string {
   return `${year}-${month}-${day}`;
 }
 
+/** `todayIsoDate`, but for an arbitrary ISO instant (used to prefill the date when editing). */
+function isoDateOf(iso: string): string {
+  const d = new Date(iso);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/** Reconstructs the editable entries for an existing adhoc/max-test log (EditLog). */
+function entriesFromLog(log: WorkoutLog): EntryDraft[] {
+  return log.results.map((r) => {
+    const sourceSets = r.sets && r.sets.length > 0 ? r.sets : [{ weight: r.weight, reps: r.reps }];
+    // SetResult has no per-set RPE — the log only keeps the movement's
+    // hardest-set RPE, so it's shown on every reconstructed set.
+    const rpe = r.rpe !== undefined ? String(r.rpe) : '';
+    return {
+      movementId: r.movementId,
+      sets: sourceSets.map((s) => ({
+        weight: s.weight !== undefined ? String(s.weight) : '',
+        reps: s.reps !== undefined ? String(s.reps) : '',
+        rpe,
+      })),
+    };
+  });
+}
+
+export interface AdhocLogProps {
+  /** When set, prefills the form from this log instead of starting blank (EditLog). */
+  initialLog?: WorkoutLog;
+  /** Called with the rebuilt log on save; defaults to `store.logAdhoc` (a new log). */
+  onSave?: (log: WorkoutLog) => void | Promise<void>;
+  /** Called after a successful save; defaults to navigating to /history. */
+  onSaved?: () => void;
+}
+
 /**
  * "Log something else" (SPEC 9.8): a form for ad-hoc and max-test logging —
  * movements picked one at a time (searchable, same pattern as the pool
  * editor's movement picker), a growable set list per movement, notes, and a
- * "This was a max test" toggle. Saves via `buildAdhocLog` + `store.logAdhoc`.
+ * "This was a max test" toggle. Saves via `buildAdhocLog` + `store.logAdhoc`
+ * by default, or via `onSave`/`onSaved` when editing an existing log.
  */
-export function AdhocLog() {
+export function AdhocLog({ initialLog, onSave, onSaved }: AdhocLogProps = {}) {
   const s = state.value!;
   const location = useLocation();
   const units = resolveSettings(s.settings).units;
 
-  const [date, setDate] = useState(todayIsoDate());
-  const [entries, setEntries] = useState<EntryDraft[]>([]);
-  const [notes, setNotes] = useState('');
-  const [maxTest, setMaxTest] = useState(false);
+  const [date, setDate] = useState(initialLog ? isoDateOf(initialLog.finishedAt) : todayIsoDate());
+  const [entries, setEntries] = useState<EntryDraft[]>(initialLog ? entriesFromLog(initialLog) : []);
+  const [notes, setNotes] = useState(initialLog?.notes ?? '');
+  const [maxTest, setMaxTest] = useState(initialLog ? logKind(initialLog) === 'max-test' : false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerQuery, setPickerQuery] = useState('');
 
@@ -110,18 +148,23 @@ export function AdhocLog() {
       entries: adhocEntries,
       notes: notes.trim() || undefined,
       maxTest,
+      id: initialLog?.id,
     });
-    await logAdhoc(log);
-    location.route('/history', true);
+    if (onSave) await onSave(log);
+    else await logAdhoc(log);
+    if (onSaved) onSaved();
+    else location.route('/history', true);
   }
+
+  const backHref = initialLog ? `/history/${initialLog.id}` : '/history';
 
   return (
     <div>
       <div class="top-bar">
-        <a class="icon-btn" href="/history" aria-label="Back">
+        <a class="icon-btn" href={backHref} aria-label="Back">
           ←
         </a>
-        <h1 class="page-title">Log something else</h1>
+        <h1 class="page-title">{initialLog ? 'Edit log' : 'Log something else'}</h1>
       </div>
 
       <div class="stack">

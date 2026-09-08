@@ -7,6 +7,7 @@ import {
   bumpTodayWorkout,
   clearTodayWorkout,
   currentTodayWorkout,
+  deleteLog,
   dismissFlags,
   init,
   logAdhoc,
@@ -16,6 +17,7 @@ import {
   startNewCycle,
   state,
   update,
+  updateLog,
 } from './store';
 
 class MemoryStorage implements Storage {
@@ -236,5 +238,69 @@ describe('logAdhoc / acceptDeload / dismissFlags / startNewCycle', () => {
     const now = new Date('2024-02-01T00:00:00.000Z');
     await startNewCycle(now);
     expect(state.value?.program).toEqual({ cycleStartedAt: now.toISOString(), dismissedFlags: [] });
+  });
+});
+
+describe('updateLog / deleteLog', () => {
+  function emptyStateWithProgram(): AppState {
+    return {
+      ...emptyState(),
+      schemaVersion: 2,
+      program: { cycleStartedAt: '2024-01-01T00:00:00.000Z', dismissedFlags: [] },
+    };
+  }
+
+  function seedLog(): WorkoutLog {
+    return buildAdhocLog({
+      date: '2024-01-05T00:00:00.000Z',
+      entries: [{ movementId: 'squat', sets: [{ weight: 200, reps: 5 }] }],
+      id: 'log-1',
+    });
+  }
+
+  it('updateLog merges the patch into the matching log and persists it', async () => {
+    const storage = new MemoryStorage();
+    storage.saved = { ...emptyStateWithProgram(), logs: [seedLog()] };
+    setStorage(storage);
+    await init();
+
+    const newFinishedAt = '2024-01-06T00:00:00.000Z';
+    const newResults = [{ movementId: 'squat', sets: [{ weight: 225, reps: 5 }] }];
+    await updateLog('log-1', { results: newResults, finishedAt: newFinishedAt });
+
+    expect(state.value?.logs).toHaveLength(1);
+    expect(state.value?.logs[0].results).toEqual(newResults);
+    expect(state.value?.logs[0].finishedAt).toBe(newFinishedAt);
+    expect(state.value?.logs[0].editedAt).toBeDefined();
+    // Untouched fields survive the merge.
+    expect(state.value?.logs[0].id).toBe('log-1');
+    expect(state.value?.logs[0].kind).toBe('adhoc');
+    // Persisted through to storage.
+    expect(storage.saved?.logs[0].results).toEqual(newResults);
+    expect(storage.saved?.logs[0].editedAt).toBeDefined();
+  });
+
+  it('updateLog leaves other logs untouched', async () => {
+    const storage = new MemoryStorage();
+    const other = buildAdhocLog({ date: '2024-01-02T00:00:00.000Z', entries: [], id: 'log-2' });
+    storage.saved = { ...emptyStateWithProgram(), logs: [seedLog(), other] };
+    setStorage(storage);
+    await init();
+
+    await updateLog('log-1', { notes: 'edited' });
+
+    expect(state.value?.logs.find((l) => l.id === 'log-2')?.editedAt).toBeUndefined();
+  });
+
+  it('deleteLog removes the matching log and persists it', async () => {
+    const storage = new MemoryStorage();
+    storage.saved = { ...emptyStateWithProgram(), logs: [seedLog()] };
+    setStorage(storage);
+    await init();
+
+    await deleteLog('log-1');
+
+    expect(state.value?.logs).toHaveLength(0);
+    expect(storage.saved?.logs).toHaveLength(0);
   });
 });

@@ -1,5 +1,5 @@
-import { useRoute } from 'preact-iso';
-import { state } from '../../state/store';
+import { useLocation, useRoute } from 'preact-iso';
+import { deleteLog, state } from '../../state/store';
 import { logKind } from '../../domain/program/context';
 import { BlockSummary } from '../components/BlockSummary';
 import { movementName } from '../helpers';
@@ -12,6 +12,7 @@ const KIND_LABELS: Record<'adhoc' | 'max-test', string> = {
 export function HistoryDetail() {
   const s = state.value!;
   const { params } = useRoute();
+  const location = useLocation();
   const log = s.logs.find((l) => l.id === params.id);
 
   if (!log) {
@@ -28,6 +29,13 @@ export function HistoryDetail() {
     Math.round((new Date(log.finishedAt).getTime() - new Date(log.startedAt).getTime()) / 60000),
   );
   const kind = logKind(log);
+  const logId = log.id;
+
+  async function handleDelete() {
+    if (!confirm('Delete this log? This cannot be undone.')) return;
+    await deleteLog(logId);
+    location.route('/history', true);
+  }
 
   return (
     <div>
@@ -36,6 +44,15 @@ export function HistoryDetail() {
           ←
         </a>
         <h1 class="page-title">{log.workoutSnapshot.name}</h1>
+      </div>
+
+      <div class="row" style="gap:0.5rem;margin-bottom:1rem">
+        <a class="btn" href={`/history/${log.id}/edit`}>
+          Edit
+        </a>
+        <button class="btn btn-danger" onClick={() => void handleDelete()}>
+          Delete
+        </button>
       </div>
 
       <div class="card stack" style="margin-bottom:1rem">
@@ -52,6 +69,7 @@ export function HistoryDetail() {
           {log.rpe !== undefined && <span>RPE {log.rpe}</span>}
         </div>
         {log.notes && <div class="muted">{log.notes}</div>}
+        {log.editedAt && <div class="muted" style="font-style:italic">Edited {new Date(log.editedAt).toLocaleString()}</div>}
       </div>
 
       <div class="section-title">Results</div>

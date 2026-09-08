@@ -281,3 +281,4 @@ assets/large-images/
 # Documentation builds
 docs/_build/
 docs/site/
+.wrangler/
