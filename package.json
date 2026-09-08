@@ -1,0 +1,14 @@
+{
+  "name": "workout_app",
+  "private": true,
+  "description": "Repo-root shim so hosted builds work whether the root directory is / or app/. The app lives in app/.",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build": "npm --prefix app ci && npm --prefix app run build",
+    "check": "npm --prefix app ci && npm --prefix app run check",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "4.129.1"
+  }
+}

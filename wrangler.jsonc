@@ -1,0 +1,11 @@
+{
+  // Repo-root mirror of app/wrangler.jsonc for hosted builds that run from /.
+  // Keep the two files in sync; the app's own config is the source of truth.
+  "$schema": "app/node_modules/wrangler/config-schema.json",
+  "name": "workout-app",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./app/dist",
+    "not_found_handling": "single-page-application"
+  }
+}
