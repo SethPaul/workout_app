@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { applyWave, cycleWeek, isDeloadWeek } from './cycle';
+import { applyWave, cycleWeek, effectiveCycleStart, isDeloadWeek, weekKind } from './cycle';
 import type { Movement, PoolWorkout, ProgramState, Settings } from '../types';
 
 const settings: Settings = { availableEquipment: [], soundOn: true, vibrateOn: true, keepScreenOn: true };
@@ -36,6 +36,70 @@ describe('isDeloadWeek', () => {
   it('false once 7+ days have elapsed', () => {
     const p = program({ deloadWeekStartedAt: '2024-02-01T00:00:00.000Z' });
     expect(isDeloadWeek(p, '2024-02-08T00:00:00.000Z')).toBe(false);
+  });
+});
+
+describe('weekKind', () => {
+  it('cycleWeeks 3: 1, 3 (peak at cycleWeeks-1), 2', () => {
+    expect(weekKind(1, 3)).toBe(1);
+    expect(weekKind(2, 3)).toBe(3);
+    expect(weekKind(3, 3)).toBe(2);
+  });
+
+  it('cycleWeeks 4: 1, 2, 3, 2 (SPEC 9.5)', () => {
+    expect(weekKind(1, 4)).toBe(1);
+    expect(weekKind(2, 4)).toBe(2);
+    expect(weekKind(3, 4)).toBe(3);
+    expect(weekKind(4, 4)).toBe(2);
+  });
+
+  it('cycleWeeks 5: 1, 2, 3 (peak), 2, 2', () => {
+    expect(weekKind(1, 5)).toBe(1);
+    expect(weekKind(2, 5)).toBe(2);
+    expect(weekKind(3, 5)).toBe(2);
+    expect(weekKind(4, 5)).toBe(3);
+    expect(weekKind(5, 5)).toBe(2);
+  });
+
+  it('cycleWeeks 6: 1, 2, 2, 2, 3 (peak), 2', () => {
+    expect(weekKind(1, 6)).toBe(1);
+    expect(weekKind(2, 6)).toBe(2);
+    expect(weekKind(3, 6)).toBe(2);
+    expect(weekKind(4, 6)).toBe(2);
+    expect(weekKind(5, 6)).toBe(3);
+    expect(weekKind(6, 6)).toBe(2);
+  });
+});
+
+describe('effectiveCycleStart / cycleWeek automatic rollover', () => {
+  const offSettings = (cycleWeeks = 4): Settings => ({ ...settings, deloadPolicy: 'off', cycleWeeks });
+
+  it("policy 'off': unchanged before a full cycleWeeks period has elapsed", () => {
+    const p = program({ cycleStartedAt: '2024-01-01T00:00:00.000Z' });
+    const now = '2024-01-22T00:00:00.000Z'; // 3 weeks in, cycleWeeks=4
+    expect(effectiveCycleStart(p, offSettings(4), now)).toBe(p.cycleStartedAt);
+    expect(cycleWeek(p, now, offSettings(4))).toBe(4);
+  });
+
+  it("policy 'off': rolls the start forward by whole cycleWeeks periods once exceeded", () => {
+    const p = program({ cycleStartedAt: '2024-01-01T00:00:00.000Z' });
+    const now = '2024-02-01T00:00:00.000Z'; // 31 days in, cycleWeeks=4 (28-day periods)
+    const rolled = effectiveCycleStart(p, offSettings(4), now);
+    expect(rolled).toBe('2024-01-29T00:00:00.000Z'); // one 4-week period later
+    // Without rollover this would be week 5+; with it, day 3 of the new cycle -> week 1.
+    expect(cycleWeek(p, now, offSettings(4))).toBe(1);
+  });
+
+  it("policies other than 'off' never roll over — the week keeps counting until a deload is accepted", () => {
+    const p = program({ cycleStartedAt: '2024-01-01T00:00:00.000Z' });
+    const now = '2024-03-01T00:00:00.000Z'; // well past cycleWeeks with no deload
+    const fatigueSettings: Settings = { ...settings, deloadPolicy: 'fatigue', cycleWeeks: 4 };
+    expect(effectiveCycleStart(p, fatigueSettings, now)).toBe(p.cycleStartedAt);
+  });
+
+  it('cycleWeek without a settings argument behaves exactly as before (no rollover)', () => {
+    const p = program({ cycleStartedAt: '2024-01-01T00:00:00.000Z' });
+    expect(cycleWeek(p, '2024-02-01T00:00:00.000Z')).toBe(5);
   });
 });
 
@@ -151,6 +215,18 @@ describe('applyWave', () => {
   it('deload: scales an amrap conditioning block duration x0.6', () => {
     const result = applyWave(strengthWorkout(), 2, true, settings, movements);
     expect(result.blocks[1].durationSec).toBe(360); // 600 * 0.6
+  });
+
+  it('deload: floors an amrap duration at 120s even from a short starting duration', () => {
+    const workout = strengthWorkout({
+      blocks: [
+        { format: 'strength', sets: 5, movements: [{ movementId: 'squat', reps: 5 }] },
+        { format: 'amrap', durationSec: 150, movements: [{ movementId: 'row', distanceM: 100 }] },
+      ],
+    });
+    const result = applyWave(workout, 2, true, settings, movements);
+    // 150 * 0.6 = 90, below the 120s floor.
+    expect(result.blocks[1].durationSec).toBe(120);
   });
 
   it('deload: scales interval rounds x0.6', () => {

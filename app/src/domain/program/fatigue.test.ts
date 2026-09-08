@@ -120,8 +120,15 @@ describe('fatigueFlags: missed-reps', () => {
 });
 
 describe('fatigueFlags: load-spike', () => {
-  it('flags when the last 7 days training load is >=1.3x the 28-day weekly mean', () => {
+  it('flags when the last 7 days training load is >=1.3x the 28-day weekly mean, given >=28 days of history', () => {
     const logs = [
+      // Pushes the earliest log to 35 days ago (>=28 days of history) without
+      // affecting the 7-day/28-day sums below (its age is outside both windows).
+      strengthLog('history', 35, 'squat', 5, [{ weight: 200, reps: 5 }], 7, {
+        startedAt: isoDaysAgo(35),
+        finishedAt: isoDaysAgo(35 - 1 / 24),
+        rpe: 7,
+      }),
       strengthLog('base1', 24, 'squat', 5, [{ weight: 200, reps: 5 }], 7, {
         startedAt: isoDaysAgo(24),
         finishedAt: isoDaysAgo(24 - 1 / 24), // 1 hour session
@@ -155,6 +162,26 @@ describe('fatigueFlags: load-spike', () => {
         rpe: 7,
       }),
     );
+    const flags = fatigueFlags(logs, NOW);
+    expect(flags.map((f) => f.id)).not.toContain('load-spike');
+  });
+
+  it('does not flag a new user with under 28 days of history, even at a high ratio', () => {
+    // Two logs only, 6 and 1 days ago: RPE 7 over 60 minutes each. With the
+    // old fixed "divide by 4 weeks" mean this reads as a load spike; with
+    // under 28 days of history on record it must not fire at all.
+    const logs = [
+      strengthLog('recent1', 6, 'squat', 5, [{ weight: 200, reps: 5 }], 7, {
+        startedAt: isoDaysAgo(6 + 1 / 24),
+        finishedAt: isoDaysAgo(6),
+        rpe: 7,
+      }),
+      strengthLog('recent2', 1, 'squat', 5, [{ weight: 200, reps: 5 }], 7, {
+        startedAt: isoDaysAgo(1 + 1 / 24),
+        finishedAt: isoDaysAgo(1),
+        rpe: 7,
+      }),
+    ];
     const flags = fatigueFlags(logs, NOW);
     expect(flags.map((f) => f.id)).not.toContain('load-spike');
   });

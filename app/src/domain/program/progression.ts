@@ -1,6 +1,6 @@
 import type { Block, BlockMovement, Movement, Settings, WorkoutLog } from '../types';
 import { resolveIncrement } from './rpe';
-import { resolveSettings } from './context';
+import { logKind, resolveSettings } from './context';
 
 export type ProgressionMode = 'linear' | 'double';
 export type ProgressionStatusValue = 'progress' | 'hold' | 'stall' | 'unknown';
@@ -23,10 +23,17 @@ export interface MovementSession {
   bm: BlockMovement;
 }
 
-/** Strength-block sessions for `movementId`, most recent first (SPEC 9.4). */
+/**
+ * Strength-block sessions for `movementId`, most recent first (SPEC 9.4).
+ * Pool sessions only: adhoc and max-test logs get a synthetic single-block
+ * snapshot with no prescribed reps/sets, so they can't be judged against a
+ * target here (or by the fatigue signals built on top of this) — max-test
+ * logs still feed `currentMax` directly, via e1rm.ts, unaffected by this.
+ */
 export function strengthSessionsForMovement(movementId: string, logs: WorkoutLog[]): MovementSession[] {
   const sessions: MovementSession[] = [];
   for (const log of logs) {
+    if (logKind(log) !== 'pool') continue;
     for (const block of log.workoutSnapshot.blocks) {
       if (block.format !== 'strength') continue;
       const bm = block.movements.find((m) => m.movementId === movementId);
@@ -76,9 +83,16 @@ function heaviestSetLoadAndReps(sets: { weight?: number; reps?: number }[]): { l
   return { load, reps };
 }
 
+/** Whether at least the prescribed `block.sets` were logged (no prescription on record always passes). */
+function metSetCount(session: MovementSession, setsLogged: number): boolean {
+  const prescribed = session.block.sets;
+  return prescribed === undefined || setsLogged >= prescribed;
+}
+
 function linearSuccess(session: MovementSession, targetRpe: number, repRangeMax: number): boolean {
   const sets = setsFor(session);
   if (sets.length === 0) return false;
+  if (!metSetCount(session, sets.length)) return false;
   const target = session.bm.reps ?? repRangeMax;
   const repsOk = sets.every((s) => s.reps !== undefined && s.reps >= target);
   const rpe = rpeFor(session);
@@ -89,6 +103,7 @@ function linearSuccess(session: MovementSession, targetRpe: number, repRangeMax:
 function doubleTopped(session: MovementSession, repRange: [number, number]): boolean {
   const sets = setsFor(session);
   if (sets.length === 0) return false;
+  if (!metSetCount(session, sets.length)) return false;
   return sets.every((s) => s.reps !== undefined && s.reps >= repRange[1]);
 }
 

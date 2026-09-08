@@ -1,7 +1,7 @@
 import { daysSince } from '../cadence';
 import type { ProgramState, Settings, WorkoutLog } from '../types';
 import { cycleWeek } from './cycle';
-import { resolveSettings } from './context';
+import { earliestLogDate, logKind, resolveSettings } from './context';
 import { e1rmHistory } from './e1rm';
 import { strengthSessionsForMovement } from './progression';
 
@@ -23,11 +23,25 @@ function distinctMovementIds(logs: WorkoutLog[]): string[] {
   return [...ids];
 }
 
+/**
+ * Pool-only logs. Progression/stall/fatigue signals that depend on
+ * prescribed reps or sets (e1rm-drop, rpe-creep, missed-reps, and — via
+ * `strengthSessionsForMovement` — progression status) must never look at
+ * adhoc or max-test logs: their synthetic single-block snapshots carry no
+ * prescribed reps/sets to compare against. `load-spike` is exempt (it's a
+ * duration x RPE signal with no prescription involved), so it deliberately
+ * keeps using the unfiltered log list.
+ */
+function poolLogs(logs: WorkoutLog[]): WorkoutLog[] {
+  return logs.filter((log) => logKind(log) === 'pool');
+}
+
 /** e1rm-drop:<movementId> — SPEC 9.6: e1rm >=5% below its 8-week peak in each of the last 2 sessions. */
 function e1rmDropFlags(logs: WorkoutLog[], now: string | Date): FatigueFlag[] {
+  const pool = poolLogs(logs);
   const flags: FatigueFlag[] = [];
-  for (const movementId of distinctMovementIds(logs)) {
-    const history = e1rmHistory(logs, movementId);
+  for (const movementId of distinctMovementIds(pool)) {
+    const history = e1rmHistory(pool, movementId);
     if (history.length < 2) continue;
     const peak = Math.max(...history.filter((p) => daysSince(p.date, now) <= E1RM_PEAK_WINDOW_DAYS).map((p) => p.e1rm));
     if (!Number.isFinite(peak) || peak <= 0) continue;
@@ -100,8 +114,18 @@ function durationMinutesOf(log: WorkoutLog): number {
   return (end - start) / 60000;
 }
 
-/** load-spike — SPEC 9.6: session-RPE x duration summed over 7 days >= 1.3x the 28-day weekly mean. */
+/**
+ * load-spike — SPEC 9.6: session-RPE x duration summed over 7 days >= 1.3x
+ * the 28-day weekly mean. That mean divides by a fixed 4 weeks regardless of
+ * how much history exists, so with under 28 days of logs it overstates how
+ * "normal" the recent load is and flags brand-new users on their second
+ * session. Require at least 28 local days between the earliest log and
+ * `now` before this signal fires at all.
+ */
 function loadSpikeFlag(logs: WorkoutLog[], now: string | Date): FatigueFlag[] {
+  const earliest = earliestLogDate(logs);
+  if (earliest === null || daysSince(earliest, now) < 28) return [];
+
   let last7 = 0;
   let last28 = 0;
   for (const log of logs) {

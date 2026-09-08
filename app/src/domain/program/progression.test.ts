@@ -24,12 +24,15 @@ function strengthLog(
   bmOverrides: { reps?: number; targetRpe?: number },
   sets: { weight: number; reps: number }[],
   rpe?: number,
+  options: { prescribedSets?: number; kind?: WorkoutLog['kind'] } = {},
 ): WorkoutLog {
   const workoutSnapshot: PoolWorkout = {
     id: `w-${id}`,
     name: `w-${id}`,
     intensity: 'M',
-    blocks: [{ format: 'strength', sets: sets.length, movements: [{ movementId, ...bmOverrides }] }],
+    blocks: [
+      { format: 'strength', sets: options.prescribedSets ?? sets.length, movements: [{ movementId, ...bmOverrides }] },
+    ],
     cadenceDays: 14,
     enabled: true,
     source: 'manual',
@@ -41,7 +44,7 @@ function strengthLog(
     startedAt: finishedAt,
     finishedAt,
     results: [{ movementId, sets, rpe }],
-    kind: 'pool',
+    kind: options.kind ?? 'pool',
   };
 }
 
@@ -171,5 +174,55 @@ describe('progressionStatus: double progression (non-barbell default)', () => {
     ];
     const result = progressionStatus(curl, logs, settings);
     expect(result.status).toBe('stall');
+  });
+});
+
+describe('progressionStatus: pool sessions only', () => {
+  const squat = movement('squat', { tags: ['squat'], equipment: ['barbell'] });
+
+  it('two consecutive max-test logs do not produce a stall (no pool sessions at all)', () => {
+    const logs = [
+      strengthLog(
+        'mt1',
+        '2024-01-01T00:00:00.000Z',
+        'squat',
+        { reps: 5, targetRpe: 8 },
+        [{ weight: 300, reps: 1 }],
+        undefined,
+        { kind: 'max-test' },
+      ),
+      strengthLog(
+        'mt2',
+        '2024-01-08T00:00:00.000Z',
+        'squat',
+        { reps: 5, targetRpe: 8 },
+        [{ weight: 305, reps: 1 }],
+        undefined,
+        { kind: 'max-test' },
+      ),
+    ];
+    const result = progressionStatus(squat, logs, settings);
+    expect(result.status).toBe('unknown');
+    expect(result.stallCount).toBe(0);
+  });
+
+  it('logging fewer sets than prescribed is not a success', () => {
+    const logs = [
+      strengthLog(
+        'l1',
+        '2024-01-01T00:00:00.000Z',
+        'squat',
+        { reps: 5, targetRpe: 8 },
+        [
+          { weight: 200, reps: 5 },
+          { weight: 200, reps: 5 },
+          { weight: 200, reps: 5 },
+        ],
+        8,
+        { prescribedSets: 5 }, // only 3 of 5 prescribed sets logged
+      ),
+    ];
+    const result = progressionStatus(squat, logs, settings);
+    expect(result.status).not.toBe('progress');
   });
 });

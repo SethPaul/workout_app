@@ -1,13 +1,53 @@
 import { daysSince } from '../cadence';
 import type { Block, BlockMovement, Movement, PoolWorkout, ProgramState, Settings } from '../types';
+import { resolveSettings } from './context';
+
+/**
+ * The cycle's effective start date (SPEC 9.5: "A new cycle starts ... after
+ * `cycleWeeks` weeks when no deload was taken and policy is 'off'").
+ *
+ * Under policy 'off' there is no fatigue/calendar deload to ever end the
+ * cycle, so nothing else advances `cycleStartedAt` — left alone, `cycleWeek`
+ * would count up forever. This rolls it forward by whole `cycleWeeks`
+ * periods so the wave (`weekKind`) keeps repeating 1,2,3,2,... instead of
+ * running off the end.
+ *
+ * Under 'fatigue' and 'calendar' policies this returns `cycleStartedAt`
+ * unchanged: the week number is meant to keep climbing past `cycleWeeks`
+ * while no deload has been accepted (that's what lets `deloadSuggested` in
+ * fatigue.ts apply its "1 flag + week >= cycleWeeks" rule and its week-6
+ * ceiling) — rollover for those policies happens only when a deload is
+ * accepted, which already resets `cycleStartedAt` elsewhere (see
+ * `state/store.ts`), not by this function.
+ */
+export function effectiveCycleStart(program: ProgramState, settings: Settings, now: string | Date): string {
+  const resolved = resolveSettings(settings);
+  if (resolved.deloadPolicy !== 'off') return program.cycleStartedAt;
+  const cycleWeeks = resolved.cycleWeeks;
+  if (!(cycleWeeks > 0)) return program.cycleStartedAt;
+
+  const elapsedWeeks = Math.floor(Math.max(0, daysSince(program.cycleStartedAt, now)) / 7);
+  const periodsElapsed = Math.floor(elapsedWeeks / cycleWeeks);
+  if (periodsElapsed <= 0) return program.cycleStartedAt;
+
+  const advanced = new Date(program.cycleStartedAt);
+  advanced.setDate(advanced.getDate() + periodsElapsed * cycleWeeks * 7);
+  return advanced.toISOString();
+}
 
 /**
  * 1-based week index of the current cycle (SPEC 9.5). Not clamped to
  * `settings.cycleWeeks` — callers (deload suggestion, wave lookup) decide
  * what a week beyond the nominal cycle length means.
+ *
+ * `settings` is optional (and, when passed, drives automatic rollover via
+ * `effectiveCycleStart`) so existing two-argument call sites keep
+ * typechecking; omitting it is equivalent to a non-'off' policy — the raw
+ * `cycleStartedAt` is used as-is, matching prior behavior.
  */
-export function cycleWeek(program: ProgramState, now: string | Date): number {
-  const days = Math.max(0, daysSince(program.cycleStartedAt, now));
+export function cycleWeek(program: ProgramState, now: string | Date, settings?: Settings): number {
+  const start = settings === undefined ? program.cycleStartedAt : effectiveCycleStart(program, settings, now);
+  const days = Math.max(0, daysSince(start, now));
   return Math.floor(days / 7) + 1;
 }
 
@@ -22,18 +62,17 @@ export function isDeloadWeek(program: ProgramState, now: string | Date): boolean
 }
 
 /**
- * SPEC 9.5 defines the wave explicitly only for weeks 1-4 of a 4-week
- * cycle (week 4 == week 2). For a cycle longer than 4 weeks, or any week
- * count past the nominal cycle length, this extends the same shape: week 3
- * is the peak week and repeats every other week after week 2, i.e.
- * 1,2,3,2,3,2,3,... — never left ambiguous, always one of the three
- * defined shapes.
+ * SPEC 9.5's wave shape, generalized to any `cycleWeeks`: week 1 is kind 1,
+ * the second-to-last week of the cycle (`cycleWeeks - 1`) is the kind-3 peak,
+ * and every other week — middle weeks and the final week alike — is kind 2.
+ * For `cycleWeeks` = 4 that's exactly the spec's 1,2,3,2. `week` beyond
+ * `cycleWeeks` (a cycle running long with no deload yet) keeps returning 2,
+ * i.e. it holds at the post-peak plateau rather than repeating the wave.
  */
-function weekKind(week: number): 1 | 2 | 3 {
+export function weekKind(week: number, cycleWeeks: number): 1 | 2 | 3 {
   if (week <= 1) return 1;
-  if (week === 2) return 2;
-  if (week === 3) return 3;
-  return week % 2 === 0 ? 2 : 3;
+  if (week === cycleWeeks - 1) return 3;
+  return 2;
 }
 
 function transformBlockMovement(bm: BlockMovement, kind: 1 | 2 | 3, deload: boolean, isOlympic: boolean): BlockMovement {
@@ -69,7 +108,7 @@ function transformStrengthBlock(
 /** Deload-only scaling for conditioning blocks (SPEC 9.5): amrap/rounds durations and interval rounds x0.6. */
 function transformConditioningBlockForDeload(block: Block): Block {
   if (block.format === 'amrap' && block.durationSec !== undefined) {
-    return { ...block, durationSec: Math.round(block.durationSec * 0.6) };
+    return { ...block, durationSec: Math.max(120, Math.round(block.durationSec * 0.6)) };
   }
   if (block.format === 'rounds') {
     if (block.timeCapSec !== undefined) return { ...block, timeCapSec: Math.round(block.timeCapSec * 0.6) };
@@ -100,9 +139,8 @@ export function applyWave(
   settings: Settings,
   movements: Movement[] = [],
 ): PoolWorkout {
-  void settings; // reserved: cycleWeeks/masters don't change the wave shape itself, only which week is passed in
   const movementById = new Map(movements.map((m) => [m.id, m]));
-  const kind = weekKind(week);
+  const kind = weekKind(week, resolveSettings(settings).cycleWeeks);
 
   const blocks = workout.blocks.map((block) => {
     if (block.format === 'strength') return transformStrengthBlock(block, kind, deload, movementById);

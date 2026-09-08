@@ -128,6 +128,45 @@ describe('suggestLoad', () => {
     const light = suggestLoad(squat, 8, 8, logs, 'lb', now)!;
     expect(heavy).toBeGreaterThan(light);
   });
+
+  function logFor(movementId: string, weight: number, reps: number, finishedAt: string): WorkoutLog {
+    return {
+      id: `${movementId}-${finishedAt}`,
+      poolWorkoutId: 'w1',
+      workoutSnapshot: {
+        id: 'w1',
+        name: 'w1',
+        intensity: 'M',
+        blocks: [{ format: 'strength', movements: [{ movementId }] }],
+        cadenceDays: 14,
+        enabled: true,
+        source: 'manual',
+      },
+      startedAt: finishedAt,
+      finishedAt,
+      results: [{ movementId, sets: [{ weight, reps }] }],
+    };
+  }
+
+  it('increment 0 (bodyweight): rounds the suggested load to a whole number, not a fraction', () => {
+    const pushup = movement('pushup', { tags: ['bodyweight'], equipment: ['none'], increment: 0 });
+    expect(resolveIncrement(pushup, 'lb')).toBe(0);
+    const logs = [logFor('pushup', 150, 5, '2024-01-01T00:00:00.000Z')];
+    const suggested = suggestLoad(pushup, 5, 8, logs, 'lb', '2024-01-15T00:00:00.000Z')!;
+    expect(suggested).not.toBeNull();
+    expect(Number.isInteger(suggested)).toBe(true);
+  });
+
+  it('kg with a 2.5 increment: rounds the suggested load to the nearest 1.25 kg step', () => {
+    const bench = movement('bench', { tags: ['push'], equipment: ['barbell'], increment: 2.5 });
+    expect(resolveIncrement(bench, 'kg')).toBe(2.5);
+    const logs = [logFor('bench', 90, 5, '2024-01-01T00:00:00.000Z')];
+    const suggested = suggestLoad(bench, 5, 8, logs, 'kg', '2024-01-15T00:00:00.000Z')!;
+    expect(suggested).not.toBeNull();
+    // step = increment / 2 = 1.25 kg; multiplying by 4 and checking it lands
+    // on a whole number avoids float-modulo noise (e.g. 106.25 % 1.25).
+    expect(Number.isInteger(suggested * 4)).toBe(true);
+  });
 });
 
 describe('loadForBlockMovement loadPct override', () => {
