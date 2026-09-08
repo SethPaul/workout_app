@@ -441,3 +441,111 @@ describe('selectWorkout weekly mandatory-day gate (C2)', () => {
     expect(result.needed).toBeNull();
   });
 });
+
+describe('selectWorkout focus multiplier (SPEC 9.7)', () => {
+  function strengthLed(id: string): PoolWorkout {
+    return {
+      id,
+      name: id,
+      intensity: 'M',
+      blocks: [{ format: 'strength', movements: [{ movementId: 'squat' }] }],
+      cadenceDays: 0,
+      enabled: true,
+      source: 'manual',
+    };
+  }
+
+  function conditioningOnly(id: string): PoolWorkout {
+    return {
+      id,
+      name: id,
+      intensity: 'M',
+      blocks: [{ format: 'amrap', movements: [{ movementId: 'row' }], durationSec: 600 }],
+      cadenceDays: 0,
+      enabled: true,
+      source: 'manual',
+    };
+  }
+
+  const movements = [movement('squat', { cadenceDays: 0 }), movement('row', { cadenceDays: 0 })];
+
+  it("focus 'strength' boosts a strength-led workout above an equally-scored conditioning one", () => {
+    const pool = [conditioningOnly('cond'), strengthLed('str')];
+    const settings: Settings = { ...settingsWith([]), focus: 'strength' };
+    const result = selectWorkout({ pool, movements, logs: [], settings, now: NOW, rng: () => 0 });
+    expect(result.candidates[0].id).toBe('str');
+  });
+
+  it("focus 'conditioning' boosts a conditioning-only workout above an equally-scored strength one", () => {
+    const pool = [conditioningOnly('cond'), strengthLed('str')];
+    const settings: Settings = { ...settingsWith([]), focus: 'conditioning' };
+    const result = selectWorkout({ pool, movements, logs: [], settings, now: NOW, rng: () => 0 });
+    expect(result.candidates[0].id).toBe('cond');
+  });
+
+  it("focus 'balanced' (or unset) leaves the two tied, so daysSince ordering decides", () => {
+    const pool = [conditioningOnly('cond'), strengthLed('str')];
+    const result = selectWorkout({ pool, movements, logs: [], settings: settingsWith([]), now: NOW, rng: () => 0 });
+    // Neither is ever-performed, so both score identically; the candidate
+    // slice should contain both rather than one dominating.
+    expect(result.candidates.map((c) => c.id).sort()).toEqual(['cond', 'str']);
+  });
+});
+
+describe('selectWorkout masters cadence extension (SPEC 9.7/R44)', () => {
+  const backSquat = movement('back_squat', { tags: ['squat', 'compound'], cadenceDays: 0 });
+  const frontSquat = movement('front_squat', { tags: ['squat', 'compound'], cadenceDays: 0 });
+
+  function strengthWorkout(id: string, movementId: string): PoolWorkout {
+    return {
+      id,
+      name: id,
+      intensity: 'M',
+      blocks: [{ format: 'strength', movements: [{ movementId }] }],
+      cadenceDays: 0,
+      enabled: true,
+      source: 'manual',
+    };
+  }
+
+  function heavyLog(movementId: string, finishedAt: string): WorkoutLog {
+    const snapshot = strengthWorkout(`logged-${movementId}`, movementId);
+    return {
+      id: `log-${movementId}-${finishedAt}`,
+      poolWorkoutId: snapshot.id,
+      workoutSnapshot: snapshot,
+      startedAt: finishedAt,
+      finishedAt,
+      results: [],
+    };
+  }
+
+  it('2 days is enough gap without masters (default squat cadence is 2)', () => {
+    const pool = [strengthWorkout('fs', 'front_squat')];
+    const logs = [heavyLog('back_squat', '2024-01-30T00:00:00.000Z')]; // 2 days ago
+    const result = selectWorkout({
+      pool,
+      movements: [backSquat, frontSquat],
+      logs,
+      settings: settingsWith(['barbell', 'rack']),
+      now: NOW,
+    });
+    expect(result.reason).toBe('ok');
+  });
+
+  it('masters extends the same gap to 3 days, blocking a 2-day gap', () => {
+    const pool = [strengthWorkout('fs', 'front_squat')];
+    const logs = [heavyLog('back_squat', '2024-01-30T00:00:00.000Z')]; // 2 days ago
+    const settings: Settings = { ...settingsWith(['barbell', 'rack']), masters: true };
+    const result = selectWorkout({ pool, movements: [backSquat, frontSquat], logs, settings, now: NOW });
+    expect(result.reason).toBe('pattern');
+  });
+
+  it('masters still allows a 3-day gap', () => {
+    const pool = [strengthWorkout('fs', 'front_squat')];
+    const logs = [heavyLog('back_squat', '2024-01-29T00:00:00.000Z')]; // 3 days ago
+    const settings: Settings = { ...settingsWith(['barbell', 'rack']), masters: true };
+    const result = selectWorkout({ pool, movements: [backSquat, frontSquat], logs, settings, now: NOW });
+    expect(result.reason).toBe('ok');
+  });
+});

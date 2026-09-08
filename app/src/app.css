@@ -468,6 +468,36 @@ a {
   color: var(--accent);
 }
 
+.banner-deload {
+  border-color: var(--chip-h-fg);
+  background: var(--chip-h-bg);
+  color: var(--chip-h-fg);
+}
+
+.banner-deload ul {
+  margin: 0.4rem 0;
+  padding-left: 1.1rem;
+}
+
+.cycle-chip {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
+}
+
+.cycle-chip.deload {
+  background: var(--chip-h-bg);
+  color: var(--chip-h-fg);
+  border-color: var(--chip-h-fg);
+}
+
 /* ---------- Run screen ---------- */
 
 .run-screen {
@@ -605,6 +635,47 @@ hr.sep {
   border: none;
   border-top: 1px solid var(--border);
   margin: 1rem 0;
+}
+
+.sparkline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.sparkline-labels {
+  font-size: 0.75rem;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.stat-row:last-child {
+  border-bottom: none;
+}
+
+.stat-label {
+  color: var(--fg-muted);
+}
+
+.stat-value {
+  font-weight: 700;
+}
+
+.chip-kind {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: var(--accent);
+  color: var(--accent-fg);
 }
 
 .icon-btn {

@@ -31,6 +31,12 @@ export function defaultSettings(): Settings {
     soundOn: true,
     vibrateOn: true,
     keepScreenOn: true,
+    // SPEC 9.1 programming-layer defaults.
+    units: 'lb',
+    deloadPolicy: 'fatigue',
+    cycleWeeks: 4,
+    focus: 'balanced',
+    masters: false,
   };
 }
 
@@ -75,6 +81,7 @@ export async function buildSeedState(): Promise<AppState> {
     pool,
     logs: [],
     settings: defaultSettings(),
-    schemaVersion: 1,
+    schemaVersion: 2,
+    program: { cycleStartedAt: new Date().toISOString(), dismissedFlags: [] },
   };
 }

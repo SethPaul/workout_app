@@ -1,4 +1,4 @@
-import type { Block, Movement, PoolWorkout } from './types';
+import type { Block, Movement, PoolWorkout, Settings } from './types';
 
 /**
  * Movement-pattern taxonomy used for the pattern-level cadence gate
@@ -19,6 +19,19 @@ export const PATTERN_CADENCE_DAYS: Record<Pattern, number> = {
   cardio: 0,
   plyo: 1,
 };
+
+/**
+ * Pattern cadence, extended for `settings.masters` (SPEC 9.7, R44): every
+ * entry >=2 days is extended to 3 (0-day core/cardio stay ungated).
+ */
+export function patternCadenceDays(settings: Settings): Record<Pattern, number> {
+  if (!settings.masters) return PATTERN_CADENCE_DAYS;
+  const extended = { ...PATTERN_CADENCE_DAYS };
+  for (const pattern of Object.keys(extended) as Pattern[]) {
+    if (extended[pattern] >= 2) extended[pattern] = 3;
+  }
+  return extended;
+}
 
 // Base rule: a movement tag maps directly to a pattern of the same name,
 // plus two extensions (mirrors profile.py):

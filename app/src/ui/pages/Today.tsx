@@ -1,9 +1,20 @@
 import { useState } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
-import { selectWorkout, type SelectReason } from '../../domain/select';
+import type { SelectReason } from '../../domain/select';
 import { estimateWorkoutSeconds, formatDurationMin } from '../../domain/estimate';
 import { weeklyNeed } from '../../domain/weekly';
-import { bumpTodayWorkout, currentTodayWorkout, setTodayWorkout, state, todayWorkout } from '../../state/store';
+import { cycleWeek, isDeloadWeek } from '../../domain/program/cycle';
+import { resolveProgram, resolveSettings } from '../../domain/program/context';
+import { fatigueFlags, deloadSuggested, type FatigueFlag } from '../../domain/program/fatigue';
+import {
+  acceptDeload,
+  bumpTodayWorkout,
+  currentTodayWorkout,
+  dismissFlags,
+  pullToday,
+  state,
+  todayWorkout,
+} from '../../state/store';
 import { beginRunSession } from '../../state/run';
 import { BlockSummary } from '../components/BlockSummary';
 import { INTENSITY_LABELS } from '../helpers';
@@ -31,25 +42,35 @@ export function Today() {
   void todayWorkout.value;
   const today = currentTodayWorkout();
   const [failReason, setFailReason] = useState<SelectReason | null>(null);
+  const now = new Date();
 
-  const workout: PoolWorkout | null = today?.workoutId
-    ? (s.pool.find((w) => w.id === today.workoutId) ?? null)
-    : null;
-  const needed = weeklyNeed(s.logs, new Date());
+  // SPEC 9.5/9.9: the card renders today's wave-transformed snapshot, not
+  // the raw pool entry — that's what carries the current week's targetRpe,
+  // set counts, and (during a deload) scaled-down prescription.
+  const workout: PoolWorkout | null = today?.snapshot ?? (today?.workoutId ? (s.pool.find((w) => w.id === today.workoutId) ?? null) : null);
+  const needed = weeklyNeed(s.logs, now);
+
+  const program = resolveProgram(s.program, s.logs, now);
+  const settings = resolveSettings(s.settings);
+  const week = cycleWeek(program, now);
+  const onDeload = isDeloadWeek(program, now);
+  const cycleChipLabel = onDeload ? 'Deload week' : `Week ${week} of ${settings.cycleWeeks}`;
+
+  const allFlags = fatigueFlags(s.logs, now);
+  const activeFlags: FatigueFlag[] = allFlags.filter((f) => !program.dismissedFlags.includes(f.id));
+  const showDeloadBanner = !onDeload && deloadSuggested(allFlags, program, s.settings, now);
 
   function runSelection(ignoreCadence: boolean) {
-    const t = currentTodayWorkout();
-    const result = selectWorkout({
+    const result = pullToday({
       pool: s.pool,
       movements: s.movements,
       logs: s.logs,
       settings: s.settings,
-      now: new Date(),
-      exclude: t?.excluded ?? [],
+      now,
+      program: s.program,
       ignoreCadence,
     });
     if (result.workout) {
-      setTodayWorkout(result.workout.id);
       setFailReason(null);
     } else {
       setFailReason(result.reason);
@@ -67,9 +88,40 @@ export function Today() {
     location.route('/run');
   }
 
+  function startDeload() {
+    void acceptDeload(now);
+  }
+
+  function notNow() {
+    void dismissFlags(activeFlags.map((f) => f.id));
+  }
+
   return (
     <div>
       <h1 class="page-title">Today</h1>
+
+      <div class={`cycle-chip${onDeload ? ' deload' : ''}`} style="margin-bottom:0.75rem">
+        {cycleChipLabel}
+      </div>
+
+      {showDeloadBanner && (
+        <div class="banner banner-deload" style="margin-bottom:1rem">
+          <strong>Deload suggested</strong>
+          <ul>
+            {activeFlags.map((f) => (
+              <li key={f.id}>{f.text}</li>
+            ))}
+          </ul>
+          <div class="btn-row">
+            <button class="btn" onClick={notNow}>
+              Not now
+            </button>
+            <button class="btn btn-primary" onClick={startDeload}>
+              Start deload week
+            </button>
+          </div>
+        </div>
+      )}
 
       {needed && <div class="banner banner-info">{NEEDED_MESSAGES[needed] ?? `${needed} day is due this week.`}</div>}
 
@@ -86,7 +138,7 @@ export function Today() {
             {workout.notes && <div class="muted">{workout.notes}</div>}
             <div class="stack">
               {workout.blocks.map((block, i) => (
-                <BlockSummary key={i} state={s} block={block} index={i} />
+                <BlockSummary key={i} state={s} block={block} index={i} suggestLoads />
               ))}
             </div>
           </div>

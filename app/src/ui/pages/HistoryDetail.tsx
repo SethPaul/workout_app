@@ -1,7 +1,13 @@
 import { useRoute } from 'preact-iso';
 import { state } from '../../state/store';
+import { logKind } from '../../domain/program/context';
 import { BlockSummary } from '../components/BlockSummary';
 import { movementName } from '../helpers';
+
+const KIND_LABELS: Record<'adhoc' | 'max-test', string> = {
+  adhoc: 'Logged',
+  'max-test': 'Max test',
+};
 
 export function HistoryDetail() {
   const s = state.value!;
@@ -21,6 +27,7 @@ export function HistoryDetail() {
     0,
     Math.round((new Date(log.finishedAt).getTime() - new Date(log.startedAt).getTime()) / 60000),
   );
+  const kind = logKind(log);
 
   return (
     <div>
@@ -34,7 +41,10 @@ export function HistoryDetail() {
       <div class="card stack" style="margin-bottom:1rem">
         <div class="row-between">
           <span class="muted">{new Date(log.finishedAt).toLocaleString()}</span>
-          <span class={`chip chip-${log.workoutSnapshot.intensity}`}>{log.workoutSnapshot.intensity}</span>
+          <div class="row" style="gap:0.4rem">
+            {kind !== 'pool' && <span class="chip-kind">{KIND_LABELS[kind]}</span>}
+            <span class={`chip chip-${log.workoutSnapshot.intensity}`}>{log.workoutSnapshot.intensity}</span>
+          </div>
         </div>
         <div class="row" style="gap:1rem">
           <span>{durationMin} min</span>

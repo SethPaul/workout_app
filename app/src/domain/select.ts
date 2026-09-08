@@ -1,5 +1,5 @@
 import { daysSince, lastPerformedMovement, lastPerformedWorkout } from './cadence';
-import { heavyMovementsInWorkout, movementPatterns, PATTERN_CADENCE_DAYS, type Pattern } from './patterns';
+import { heavyMovementsInWorkout, movementPatterns, patternCadenceDays, type Pattern } from './patterns';
 import type { Movement, PoolWorkout, Settings, WorkoutLog } from './types';
 import { dayType, weeklyNeed } from './weekly';
 
@@ -81,11 +81,13 @@ function patternCadenceOk(
   movementById: Map<string, Movement>,
   logs: WorkoutLog[],
   now: string | Date,
+  settings: Settings,
 ): boolean {
+  const cadenceDays = patternCadenceDays(settings);
   const heavy = heavyMovementsInWorkout(workout, movementById);
   for (const movement of heavy) {
     for (const pattern of movementPatterns(movement)) {
-      const requiredDays = PATTERN_CADENCE_DAYS[pattern];
+      const requiredDays = cadenceDays[pattern];
       if (requiredDays <= 0) continue;
       const last = lastHeavyPatternPerformance(logs, movementById, pattern);
       if (last === null) continue;
@@ -95,12 +97,35 @@ function patternCadenceOk(
   return true;
 }
 
+/**
+ * SPEC 9.7 focus multiplier: strength focus boosts workouts led by a
+ * strength/Power block; conditioning focus boosts `day:zone2`/`day:hiit`
+ * tagged workouts and workouts with no strength block at all. 'balanced' is
+ * a no-op.
+ */
+function focusMultiplier(workout: PoolWorkout, focus: Settings['focus']): number {
+  if (!focus || focus === 'balanced') return 1;
+
+  if (focus === 'strength') {
+    const firstBlock = workout.blocks[0];
+    const strengthLed = firstBlock !== undefined && (firstBlock.format === 'strength' || firstBlock.title === 'Power');
+    return strengthLed ? 1.5 : 1;
+  }
+
+  // 'conditioning'
+  const tags = workout.tags ?? [];
+  const taggedConditioning = tags.includes('day:zone2') || tags.includes('day:hiit');
+  const conditioningOnly = workout.blocks.every((b) => b.format !== 'strength');
+  return taggedConditioning || conditioningOnly ? 1.5 : 1;
+}
+
 function scoreWorkout(
   workout: PoolWorkout,
   movementById: Map<string, Movement>,
   logs: WorkoutLog[],
   now: string | Date,
   rng: () => number,
+  focus: Settings['focus'],
 ): number {
   const lastWorkout = lastPerformedWorkout(logs, workout.id);
   const workoutScore =
@@ -120,7 +145,7 @@ function scoreWorkout(
       ? 0
       : movementScores.reduce((a, b) => a + b, 0) / movementScores.length;
 
-  return workoutScore + meanMovementScore + rng() * RNG_WEIGHT;
+  return (workoutScore + meanMovementScore) * focusMultiplier(workout, focus) + rng() * RNG_WEIGHT;
 }
 
 /**
@@ -165,7 +190,7 @@ export function selectWorkout(input: SelectInput): SelectResult {
 
   const patternOk = input.ignoreCadence
     ? cadenceOk
-    : cadenceOk.filter((w) => patternCadenceOk(w, movementById, logs, now));
+    : cadenceOk.filter((w) => patternCadenceOk(w, movementById, logs, now, settings));
   if (patternOk.length === 0) {
     return { workout: null, reason: 'pattern', candidates: [], needed };
   }
@@ -177,7 +202,7 @@ export function selectWorkout(input: SelectInput): SelectResult {
   const gated = needMatches.length > 0 ? needMatches : patternOk;
 
   const scored = gated
-    .map((workout) => ({ workout, score: scoreWorkout(workout, movementById, logs, now, rng) }))
+    .map((workout) => ({ workout, score: scoreWorkout(workout, movementById, logs, now, rng, settings.focus) }))
     .sort((a, b) => b.score - a.score);
 
   const sliceSize = Math.max(3, Math.ceil(scored.length * 0.25));

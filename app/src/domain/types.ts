@@ -24,6 +24,9 @@ export type Equipment =
 
 export type Unit = 'reps' | 'meters' | 'calories' | 'seconds';
 
+/** SPEC 9.1: display/increment units. Logs always store the number as entered. */
+export type Units = 'lb' | 'kg';
+
 export interface Movement {
   id: string; // slug, e.g. "deadlift"
   name: string; // "Deadlift"
@@ -33,6 +36,13 @@ export interface Movement {
   cadenceDays: number; // minimum days between performances. Defaults: compound lifts 7, olympic 3, bodyweight/accessory 3, cardio 1
   unit: Unit; // default measure
   loadable: boolean; // true if weight is logged
+  // --- SPEC 9.1 additions (programming layer) ---
+  // Optional so state constructed before the programming layer existed (and
+  // UI code/tests this workstream does not own) keeps typechecking; program/*
+  // consumers resolve a default via program/context.ts's `resolveMode` etc.
+  progression?: 'linear' | 'double'; // default: linear for barbell lifts, double for everything else
+  repRange?: [number, number]; // double progression range, default [6, 8] accessory, [3, 5] main
+  increment?: number; // load step in settings.units; default by equipment/pattern, see program/rpe.ts
 }
 
 export type Format =
@@ -55,6 +65,7 @@ export interface BlockMovement {
   repScheme?: number[]; // optional explicit per-round reps, e.g. [21,15,9] or [50,40,30,20,10]
   loadPct?: number; // structured target load, 0-100 (% of 1RM)
   rir?: number; // reps in reserve target, 0-5
+  targetRpe?: number; // SPEC 9.1: default 8 for strength main/accessory lifts, 6 during deload
 }
 
 export interface Block {
@@ -96,11 +107,13 @@ export interface MovementResult {
   weight?: number; // load used, if loadable
   reps?: number; // total reps or reps per round
   notes?: string;
+  rpe?: number; // SPEC 9.1: per-movement RPE of the hardest set, 1-10
 }
 
 export interface WorkoutLog {
   id: string;
-  poolWorkoutId: string;
+  // Was required; SPEC 9.1 makes it optional (adhoc/max-test logs have none).
+  poolWorkoutId?: string;
   workoutSnapshot: PoolWorkout; // copy at time of execution (pool can be edited later)
   startedAt: string; // ISO
   finishedAt: string; // ISO
@@ -108,6 +121,14 @@ export interface WorkoutLog {
   results: MovementResult[];
   notes?: string;
   rpe?: number; // 1-10 optional
+  // --- SPEC 9.1 additions ---
+  // Optional (rather than the spec's bare `kind`) so pre-programming-layer
+  // WorkoutLog literals elsewhere in the app (this workstream does not own
+  // src/ui/) keep typechecking; treat an absent kind as 'pool' (see
+  // `program/context.ts`'s `logKind`). migrate() stamps it explicitly on
+  // stored state.
+  kind?: 'pool' | 'adhoc' | 'max-test';
+  durationMin?: number; // derived from startedAt/finishedAt when both exist
 }
 
 export interface Settings {
@@ -115,6 +136,23 @@ export interface Settings {
   soundOn: boolean;
   vibrateOn: boolean;
   keepScreenOn: boolean;
+  // --- SPEC 9.1 additions (programming layer) ---
+  // Optional (rather than the spec's bare fields) so Settings literals in
+  // code/tests outside this workstream's ownership (src/ui/) keep
+  // typechecking without edits; program/context.ts's `resolveSettings`
+  // fills every default in one place for internal consumers.
+  units?: Units; // default 'lb'
+  deloadPolicy?: 'fatigue' | 'calendar' | 'off'; // default 'fatigue'
+  cycleWeeks?: number; // default 4; calendar deload every cycleWeeks+1th week
+  focus?: 'balanced' | 'strength' | 'conditioning'; // default 'balanced'
+  masters?: boolean; // default false; true extends pattern cadence to 3 days (R44)
+}
+
+/** SPEC 9.1: stored program/cycle state. */
+export interface ProgramState {
+  cycleStartedAt: string; // ISO date of the current cycle's first session
+  deloadWeekStartedAt?: string; // set when a deload is accepted; cleared after 7 days
+  dismissedFlags: string[]; // fatigue flag ids the user dismissed this cycle
 }
 
 export interface AppState {
@@ -122,5 +160,10 @@ export interface AppState {
   pool: PoolWorkout[];
   logs: WorkoutLog[];
   settings: Settings;
-  schemaVersion: 1;
+  schemaVersion: 1 | 2;
+  // Optional so pre-programming-layer AppState literals (src/ui/ tests this
+  // workstream does not own) keep typechecking; migrate() always populates
+  // it for stored state, and program/context.ts's `resolveProgram` gives
+  // internal consumers a default when it's absent.
+  program?: ProgramState;
 }
