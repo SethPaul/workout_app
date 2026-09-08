@@ -38,7 +38,7 @@ describe('e1rm', () => {
   });
 
   it('is valid at the 1 and 10 rep boundaries', () => {
-    expect(e1rm(100, 1)).toBeCloseTo(100 * (1 + 1 / 30));
+    expect(e1rm(100, 1)).toBe(100); // a true single is the max, not Epley-inflated
     expect(e1rm(100, 10)).toBeCloseTo(100 * (1 + 10 / 30));
   });
 

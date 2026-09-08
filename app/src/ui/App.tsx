@@ -10,6 +10,7 @@ import { Movements } from './pages/Movements';
 import { MovementEditor } from './pages/MovementEditor';
 import { History } from './pages/History';
 import { HistoryDetail } from './pages/HistoryDetail';
+import { AdhocLog } from './pages/AdhocLog';
 import { Settings } from './pages/Settings';
 
 function NotFound() {
@@ -36,6 +37,7 @@ function AppShell() {
           <Route path="/movements" component={Movements} />
           <Route path="/movements/:id" component={MovementEditor} />
           <Route path="/history" component={History} />
+          <Route path="/history/adhoc" component={AdhocLog} />
           <Route path="/history/:id" component={HistoryDetail} />
           <Route path="/settings" component={Settings} />
           <Route default component={NotFound} />

@@ -1,7 +1,23 @@
-import type { AppState, Block } from '../../domain/types';
-import { FORMAT_LABELS, blockMetaLine, movementLine } from '../helpers';
+import type { AppState, Block, BlockMovement } from '../../domain/types';
+import { FORMAT_LABELS, blockMetaLine, movementLine, strengthSuggestionLine } from '../helpers';
 
-export function BlockSummary({ state, block, index }: { state: AppState; block: Block; index: number }) {
+export function BlockSummary({
+  state,
+  block,
+  index,
+  suggestLoads = false,
+}: {
+  state: AppState;
+  block: Block;
+  index: number;
+  /** When true, strength-block movement lines show the suggested load/RPE (SPEC 9.9) instead of the raw prescription. */
+  suggestLoads?: boolean;
+}) {
+  function line(bm: BlockMovement): string {
+    if (suggestLoads && block.format === 'strength') return strengthSuggestionLine(state, block, bm);
+    return movementLine(state, bm);
+  }
+
   return (
     <div class="block-preview">
       <div class="block-preview-title">
@@ -10,7 +26,7 @@ export function BlockSummary({ state, block, index }: { state: AppState; block: 
       <div class="block-preview-meta">{blockMetaLine(block)}</div>
       {block.movements.map((bm, i) => (
         <div class="movement-line" key={`${bm.movementId}-${i}`}>
-          {movementLine(state, bm)}
+          {line(bm)}
         </div>
       ))}
     </div>

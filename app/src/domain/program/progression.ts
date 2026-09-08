@@ -176,7 +176,10 @@ export function progressionStatus(movement: Movement, logs: WorkoutLog[], settin
     if (mode === 'linear') {
       nextLoad = lastLoad === null ? null : lastLoad + increment;
       nextReps = lastReps;
-      suggestion = `Add ${increment} to reach ${nextLoad ?? '?'} for ${nextReps ?? prescribedReps(latest, mode, repRange)} reps.`;
+      suggestion =
+        nextLoad === null
+          ? 'Log the load you used to get a next target.'
+          : `Add ${increment} to reach ${nextLoad} for ${nextReps ?? prescribedReps(latest, mode, repRange)} reps.`;
     } else if (doubleTopped(latest, repRange)) {
       nextLoad = lastLoad === null ? null : lastLoad + increment;
       nextReps = repRange[0];
@@ -184,12 +187,15 @@ export function progressionStatus(movement: Movement, logs: WorkoutLog[], settin
     } else {
       nextLoad = lastLoad;
       nextReps = Math.min((lastReps ?? repRange[0]) + 1, repRange[1]);
-      suggestion = `Add a rep: aim for ${nextReps} reps at ${nextLoad ?? '?'}.`;
+      suggestion = nextLoad === null ? `Add a rep: aim for ${nextReps} reps.` : `Add a rep: aim for ${nextReps} reps at ${nextLoad}.`;
     }
   } else if (status === 'hold') {
     nextLoad = lastLoad;
     nextReps = lastReps;
-    suggestion = `Repeat ${lastLoad ?? '?'} for ${lastReps ?? '?'} reps — one miss isn't a stall yet.`;
+    suggestion =
+      lastLoad === null || lastReps === null
+        ? "Repeat last session — one miss isn't a stall yet."
+        : `Repeat ${lastLoad} for ${lastReps} reps — one miss isn't a stall yet.`;
   } else {
     // stall
     const cutLoad = lastLoad === null ? null : Math.round((lastLoad * 0.9) / (increment > 0 ? increment / 2 : 1)) * (increment > 0 ? increment / 2 : 1);

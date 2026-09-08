@@ -2,12 +2,14 @@ import { useEffect, useState } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import type { Block, Format, MovementResult, WorkoutLog, AppState, PoolWorkout } from '../../domain/types';
 import type { Cue, TimerEvent, TimerState } from '../../domain/timer';
+import { resolveSettings } from '../../domain/program/context';
+import { loadForBlockMovement } from '../../domain/program/rpe';
 import { clearTodayWorkout, state, update } from '../../state/store';
 import { clearRunSession, dispatchRun, runSession } from '../../state/run';
 import { resumeAudio, playCue } from '../audio';
 import { vibrateForCue } from '../vibrate';
 import { acquireWakeLock, releaseWakeLock } from '../wakelock';
-import { formatClock, movementById, movementLine, uid } from '../helpers';
+import { formatClock, movementById, movementLine, strengthSuggestionLine, uid } from '../helpers';
 
 interface SetDraft {
   weight: string;
@@ -20,6 +22,7 @@ interface MovementDraft {
   sets?: SetDraft[];
   weight?: string;
   reps?: string;
+  rpe: string; // SPEC 9.1/9.9: per-movement RPE of the hardest set, optional
 }
 
 interface ResultsDraft {
@@ -27,6 +30,15 @@ interface ResultsDraft {
   score: string;
   rpe: string;
   notes: string;
+}
+
+/** Suggested weight for a strength BlockMovement (SPEC 9.3/9.9), as a prefill string, or '' when there's no known max yet. */
+function suggestedWeightStr(appState: AppState, bm: { movementId: string; reps?: number; targetRpe?: number; loadPct?: number }): string {
+  const mv = movementById(appState, bm.movementId);
+  if (!mv || !mv.loadable) return '';
+  const units = resolveSettings(appState.settings).units;
+  const load = loadForBlockMovement(bm, mv, appState.logs, units, new Date());
+  return load === null ? '' : String(load);
 }
 
 function buildResultsDraft(appState: AppState, workout: PoolWorkout): ResultsDraft {
@@ -39,11 +51,12 @@ function buildResultsDraft(appState: AppState, workout: PoolWorkout): ResultsDra
       if (seen.has(bm.movementId)) continue;
       seen.add(bm.movementId);
       const mv = movementById(appState, bm.movementId);
+      const suggested = suggestedWeightStr(appState, bm);
       const sets: SetDraft[] = Array.from({ length: block.sets ?? 1 }, () => ({
-        weight: '',
+        weight: suggested,
         reps: bm.reps !== undefined ? String(bm.reps) : '',
       }));
-      movements.push({ movementId: bm.movementId, loadable: mv?.loadable ?? true, sets });
+      movements.push({ movementId: bm.movementId, loadable: mv?.loadable ?? true, sets, rpe: '' });
     }
   }
 
@@ -57,6 +70,7 @@ function buildResultsDraft(appState: AppState, workout: PoolWorkout): ResultsDra
         loadable: mv?.loadable ?? false,
         weight: '',
         reps: bm.reps !== undefined ? String(bm.reps) : '',
+        rpe: '',
       });
     }
   }
@@ -173,6 +187,7 @@ export function Run() {
   function handleSave() {
     if (!draft || !session) return;
     const results: MovementResult[] = draft.movements.map((m) => {
+      const rpe = m.rpe.trim() ? Number(m.rpe) : undefined;
       if (m.sets) {
         return {
           movementId: m.movementId,
@@ -180,12 +195,14 @@ export function Run() {
             weight: s.weight.trim() ? Number(s.weight) : undefined,
             reps: s.reps.trim() ? Number(s.reps) : undefined,
           })),
+          rpe,
         };
       }
       return {
         movementId: m.movementId,
         weight: m.weight && m.weight.trim() ? Number(m.weight) : undefined,
         reps: m.reps && m.reps.trim() ? Number(m.reps) : undefined,
+        rpe,
       };
     });
     const log: WorkoutLog = {
@@ -325,6 +342,30 @@ export function Run() {
                   />
                 </div>
               )}
+              {m.loadable && (
+                <div class="field">
+                  <label for={`rpe-${m.movementId}`}>RPE (1–10, optional)</label>
+                  <input
+                    id={`rpe-${m.movementId}`}
+                    type="number"
+                    inputMode="decimal"
+                    min="1"
+                    max="10"
+                    step="0.5"
+                    placeholder="hardest set"
+                    value={m.rpe}
+                    onInput={(e) => {
+                      const v = (e.target as HTMLInputElement).value;
+                      setDraft((d) => {
+                        if (!d) return d;
+                        const next = structuredClone(d);
+                        next.movements[mi].rpe = v;
+                        return next;
+                      });
+                    }}
+                  />
+                </div>
+              )}
             </div>
           ))}
 
@@ -396,7 +437,7 @@ export function Run() {
             <div class="stack" style="text-align:left;width:100%">
               {block.movements.map((bm, i) => (
                 <div class="movement-line" key={i}>
-                  {movementLine(appState, bm)}
+                  {block.format === 'strength' ? strengthSuggestionLine(appState, block, bm) : movementLine(appState, bm)}
                 </div>
               ))}
             </div>
@@ -440,9 +481,9 @@ export function Run() {
         <p class="run-timer">{clock}</p>
         {(format === 'amrap' || format === 'rounds') && <p class="run-rounds">Rounds completed: {timer.roundsDone}</p>}
         <div class="run-movements">
-          {currentMovements.length > 0
-            ? currentMovements.map((bm, i) => <div key={i}>{movementLine(appState, bm)}</div>)
-            : block.movements.map((bm, i) => <div key={i}>{movementLine(appState, bm)}</div>)}
+          {(currentMovements.length > 0 ? currentMovements : block.movements).map((bm, i) => (
+            <div key={i}>{format === 'strength' ? strengthSuggestionLine(appState, block, bm) : movementLine(appState, bm)}</div>
+          ))}
         </div>
         {!running && <p class="status-pill">Paused</p>}
       </div>

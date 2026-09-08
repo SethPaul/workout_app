@@ -13,6 +13,8 @@ export const E1RM_WINDOW_DAYS = 56;
 export function e1rm(weight: number, reps: number): number | null {
   if (!Number.isFinite(weight) || !Number.isFinite(reps)) return null;
   if (reps < 1 || reps > 10) return null;
+  // A true single is the max; Epley would inflate it by 3.3%.
+  if (reps === 1) return weight;
   return weight * (1 + reps / 30);
 }
 

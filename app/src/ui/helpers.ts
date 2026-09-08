@@ -1,4 +1,7 @@
-import type { AppState, Block, BlockMovement, Equipment, Format, Movement } from '../domain/types';
+import type { AppState, Block, BlockMovement, Equipment, Format, Movement, Units } from '../domain/types';
+import { resolveSettings } from '../domain/program/context';
+import { loadForBlockMovement } from '../domain/program/rpe';
+import { progressionStatus } from '../domain/program/progression';
 
 /** Formats a millisecond duration as clock time — "M:SS" or "H:MM:SS". */
 export function formatClock(ms: number): string {
@@ -113,6 +116,39 @@ export function blockMetaLine(block: Block): string {
     case 'death_by':
       return 'Death by (1 rep/min, +1 each minute)';
   }
+}
+
+/** Formats a weight in the given settings units (SPEC 9.9: "labels wherever a weight appears"). */
+export function fmtWeight(weight: number | null | undefined, units: Units): string {
+  if (weight === null || weight === undefined || !Number.isFinite(weight)) return '—';
+  const rounded = Math.round(weight * 100) / 100;
+  return `${rounded} ${units}`;
+}
+
+/**
+ * One line describing a strength-block movement's suggested load and target
+ * RPE (SPEC 9.3/9.4/9.9), e.g. "Back Squat 5x5 @ 225 lb · RPE 8". Falls back
+ * to `movementLine` for non-loadable movements, and to a calibration prompt
+ * when there's no known max yet. `loadPct`, when set on the BlockMovement,
+ * overrides the RPE-table lookup (9.3); a detected stall (9.4) overrides the
+ * suggested load with the ~10% cut `progressionStatus` recommends.
+ */
+export function strengthSuggestionLine(appState: AppState, block: Block, bm: BlockMovement, now: Date = new Date()): string {
+  const movement = movementById(appState, bm.movementId);
+  if (!movement || !movement.loadable) return movementLine(appState, bm);
+
+  const resolved = resolveSettings(appState.settings);
+  const sets = block.sets ?? 1;
+  const reps = bm.reps;
+  const targetRpe = bm.targetRpe ?? 8;
+  const repsLabel = reps !== undefined ? `${sets}x${reps}` : `${sets} set${sets === 1 ? '' : 's'}`;
+
+  let load = loadForBlockMovement(bm, movement, appState.logs, resolved.units, now);
+  const prog = progressionStatus(movement, appState.logs, appState.settings);
+  if (prog.status === 'stall' && prog.nextLoad !== null) load = prog.nextLoad;
+
+  if (load === null) return `${movement.name} ${repsLabel} · log a set to calibrate`;
+  return `${movement.name} ${repsLabel} @ ${fmtWeight(load, resolved.units)} · RPE ${targetRpe}`;
 }
 
 export function uid(prefix: string): string {
