@@ -579,3 +579,83 @@ the catalog, and if not, add it properly (not with blind defaults) without leavi
      matches an existing movement, that movement is used instead of creating a duplicate.
 4. A created movement's row on the logging page keeps a small link to `/movements/<id>` ("edit")
    so cadence, tags or aliases can be fixed later without hunting for it.
+
+### 10.8 Entered workouts join the pool; pool workouts are startable (supersedes 10.3 `build.ts`, 10.4, 10.5)
+
+Reframing: a class the coach gives us is just a workout we didn't have yet. So the entry screen
+becomes **Enter a workout** (`/enter`), general in wording, whose product is a **`PoolWorkout`** —
+not a separate log kind. Results are logged by the existing Run screen (which already supports
+logging during the workout), so there is one way to run and one way to log.
+
+Two flows, both ending on `/run`:
+1. **Search the pool → pick a workout → Start.**
+2. **Search the pool → not found → enter a new workout → it is saved to the pool → Start.**
+
+**Removed**: `WorkoutLog.kind: 'vasa'`, `VasaMeta`, `WorkoutLog.vasa`, `buildVasaLog`,
+`lastVasaSets`, `store.logVasa`, and every "Vasa" label in History/HistoryDetail/EditLog. Logs from
+these workouts are ordinary `kind: 'pool'` logs with a `poolWorkoutId`. Kept: `Movement.libraries`
+(the Vasa library facet), `Movement.region`, `BodyRegion`, `VasaStyle`, `'band'`, search, the
+New movement sheet, schemaVersion 3.
+
+**Pool workout shape** (`src/domain/vasa/pool.ts`):
+```ts
+export interface EnteredMovement { movementId: string; sets?: number; reps?: number; seconds?: number; }
+export interface EnteredBlock { role: 'main' | 'accessory' | 'finisher'; title: string; movements: EnteredMovement[]; }
+export interface BuildEnteredWorkoutInput {
+  name?: string;               // default: defaultWorkoutName(...)
+  date: string;                // YYYY-MM-DD (for the default name)
+  region: BodyRegion; style?: VasaStyle;
+  blocks: EnteredBlock[]; notes?: string; id?: string;
+}
+export function defaultWorkoutName(region, style, date): string;   // "Lower · Build · Sep 15" (no style: "Lower · Sep 15")
+export function buildEnteredWorkout(input): PoolWorkout;
+export function workoutRegion(w: PoolWorkout): BodyRegion | null;  // from a `region:<r>` tag
+export function workoutStyle(w: PoolWorkout): VasaStyle | null;    // from a `style:<s>` tag
+export function isEnteredWorkout(w: PoolWorkout): boolean;         // tags include 'vasa'
+export function searchPool(pool: PoolWorkout[], movements: Movement[], query: string,
+  opts: { region: BodyRegion; logs: WorkoutLog[]; now: Date; limit?: number }): PoolWorkout[];
+```
+- `buildEnteredWorkout`: empty blocks dropped. main/accessory → `format: 'strength'`, `sets` =
+  the largest `sets` among its movements, default 3; each movement carries `reps`/`seconds` when
+  given. finisher → `format: 'amrap'`, `durationSec: 120`. `id` = `entered-<generated>` unless
+  given, `intensity: 'M'`, `cadenceDays: 14`, `enabled: true`, `source: 'manual'`,
+  `tags: ['vasa', 'region:<r>', 'style:<s>'?]`, `notes`.
+- `searchPool`: `search.ts` exports `textMatchScore(query, candidates: string[]): number` (the 10.7
+  tiers over arbitrary strings). A workout's candidates are its name, its tags, and the names of
+  its movements. Non-empty query: score 0 excludes. Boosts: `workoutRegion` equals `opts.region`
+  +8 (only when region !== 'full'); entered workout +4; last performed within 30 days +3 (recently
+  entered class workouts float up); disabled −5 (still shown). Ties by name. Default limit 8; the UI
+  passes 20 with a query.
+
+**Store** (`src/state/store.ts`):
+- `addPoolWorkout(w: PoolWorkout)`: appends to `pool` and adds every referenced movement to the
+  `vasa` library (`withLibrary`) when `isEnteredWorkout(w)`.
+- `chooseTodayWorkout(id: string, now = new Date()): PoolWorkout | null`: sets today's workout to
+  the pool entry with that id. The snapshot is `applyWave(...)` (SPEC 9.5) for ordinary pool
+  workouts, but the untouched workout for entered ones (the coach's prescription is not waved).
+  Returns the snapshot. Clears any bumped exclusions for that id.
+
+**Screen `/enter`** (`src/ui/pages/EnterWorkout.tsx`, replaces `Vasa.tsx`; draft module renamed
+`src/ui/enterDraft.ts` with the same persistence key semantics under `workout_app.enterDraft`):
+1. Top bar "Enter a workout". A search input "Search the pool…" (autofocus). Results from
+   `searchPool` with the day's region (`regionForDate(today)`, no chips needed here): name, a
+   one-line block summary (`blockMetaLine`/movement names, first 3 movements + "…"), last done or
+   "never". Tapping a row expands it in place: the full `BlockSummary` list and two buttons,
+   **Start** (primary: `chooseTodayWorkout` then `beginRunSession(state, snapshot)` then
+   `route('/run')`, with the same "already in progress" confirm as Today) and **Make it today's**
+   (`chooseTodayWorkout` then `route('/')`).
+2. Under the results, always: **Enter a new workout** button (wording "Not here? Enter a new
+   workout" when a query has no results). It opens the composer below the search (search collapses
+   to a single line "← Back to search").
+3. Composer: name input (placeholder shows `defaultWorkoutName`), date, region chips (default by
+   weekday, re-defaults on date change unless touched), style chips (optional), the four block
+   cards (Main, Accessory 1, Accessory 2, Finisher (2 min)) with the 10.7 picker and New movement
+   sheet unchanged. A main/accessory movement row is one line: name · `sets` input · "×" · `reps`
+   input (both optional, numeric) · remove. A finisher row: name · `seconds` input (optional,
+   placeholder "seconds") · remove. Notes textarea. Draft persisted on every change.
+4. Buttons: **Save & start** (primary; enabled once any block has a movement): `buildEnteredWorkout`
+   → `addPoolWorkout` → `chooseTodayWorkout(id)` → `beginRunSession` → `/run`, clearing the draft.
+   **Save to pool** (secondary): same without starting; routes to `/pool/<id>`. **Discard** (ghost).
+5. Entry points: Today's button becomes **Enter a workout** (href `/enter`); History's second
+   button is removed (History keeps "Log something else"). Pool page rows keep linking to the
+   editor; the editor gains a **Make it today's** button (`chooseTodayWorkout` → `/`).
