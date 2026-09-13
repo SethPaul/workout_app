@@ -2,7 +2,12 @@ import { describe, it, expect } from 'vitest';
 import { createTimer, timerReducer, type Cue, type TimerState } from './timer';
 import type { Block } from './types';
 
-function runTicks(state: TimerState, startNow: number, count: number, stepMs = 100): { state: TimerState; cues: Cue[] } {
+function runTicks(
+  state: TimerState,
+  startNow: number,
+  count: number,
+  stepMs = 100,
+): { state: TimerState; cues: Cue[] } {
   let s = state;
   const cues: Cue[] = [];
   for (let i = 1; i <= count; i++) {
@@ -24,6 +29,8 @@ describe('timer: strength', () => {
     let state = createTimer([block], 0);
     expect(state.phase.label).toBe('Set 1/2');
     expect(state.phase.kind).toBe('work');
+    expect(state.phase.setIndex).toBe(1);
+    expect(state.phase.setCount).toBe(2);
 
     state = timerReducer(state, { type: 'start', now: 0 });
     expect(state.status).toBe('running');
@@ -32,10 +39,15 @@ describe('timer: strength', () => {
     state = timerReducer(state, { type: 'next', now: 100 });
     expect(state.phase.kind).toBe('rest');
     expect(state.phase.remainingMs).toBe(2000);
+    // Rest after set 1 carries the set just completed, and the total.
+    expect(state.phase.setIndex).toBe(1);
+    expect(state.phase.setCount).toBe(2);
 
     const { state: afterRest, cues } = runTicks(state, 100, 25); // 2500ms of ticking
     expect(afterRest.phase.label).toBe('Set 2/2');
     expect(afterRest.phase.kind).toBe('work');
+    expect(afterRest.phase.setIndex).toBe(2);
+    expect(afterRest.phase.setCount).toBe(2);
     expect(cues.some((c) => c.type === 'bell')).toBe(true);
     expect(cues.filter((c) => c.type === 'countdown').length).toBeGreaterThan(0);
 
@@ -57,10 +69,13 @@ describe('timer: emom', () => {
     state = timerReducer(state, { type: 'start', now: 0 });
     expect(state.pendingCues.some((c) => c.type === 'beep')).toBe(true);
     expect(state.phase.label).toBe('Round 1/2');
+    expect(state.phase.round).toBe(1);
+    expect(state.phase.roundCount).toBe(2);
 
     const { state: afterRound1, cues } = runTicks(state, 0, 11); // 1100ms
     expect(cues.some((c) => c.type === 'beep')).toBe(true); // beep starting round 2
     expect(afterRound1.phase.label).toBe('Round 2/2');
+    expect(afterRound1.phase.round).toBe(2);
 
     const { state: afterRound2 } = runTicks(afterRound1, 1100, 11);
     expect(afterRound2.status).toBe('finished');
@@ -87,6 +102,8 @@ describe('timer: tabata', () => {
     const { state: afterWork, cues } = runTicks(state, 0, 11);
     expect(afterWork.phase.kind).toBe('rest');
     expect(cues.some((c) => c.type === 'bell')).toBe(true);
+    expect(afterWork.phase.round).toBe(1); // round just completed
+    expect(afterWork.phase.roundCount).toBe(2);
 
     const { state: afterRest } = runTicks(afterWork, 1100, 11);
     expect(afterRest.phase.kind).toBe('work'); // round 2/2, no trailing rest after it
@@ -148,10 +165,13 @@ describe('timer: interval', () => {
 
     const { state: afterWork1 } = runTicks(state, 0, 11);
     expect(afterWork1.phase.label).toBe('Round 1/2 rest');
+    expect(afterWork1.phase.round).toBe(1);
+    expect(afterWork1.phase.roundCount).toBe(2);
 
     const { state: afterRest1 } = runTicks(afterWork1, 1100, 11);
     expect(afterRest1.phase.label).toBe('Round 2/2 work');
     expect(afterRest1.phase.kind).toBe('work');
+    expect(afterRest1.phase.round).toBe(2);
 
     const { state: afterWork2 } = runTicks(afterRest1, 2200, 11);
     expect(afterWork2.status).toBe('finished');
@@ -234,7 +254,11 @@ describe('timer: rounds', () => {
 describe('timer: chipper', () => {
   const block: Block = {
     format: 'chipper',
-    movements: [{ movementId: 'row', distanceM: 500 }, { movementId: 'situp', reps: 50 }, { movementId: 'squat', reps: 50 }],
+    movements: [
+      { movementId: 'row', distanceM: 500 },
+      { movementId: 'situp', reps: 50 },
+      { movementId: 'squat', reps: 50 },
+    ],
   };
 
   it('advances movements on next and finishes after the last one', () => {
@@ -278,7 +302,10 @@ describe('timer: emom alternate', () => {
   it('alternates two movements A,B,A,B across 4 rounds', () => {
     const block: Block = {
       format: 'emom',
-      movements: [{ movementId: 'a', reps: 5 }, { movementId: 'b', reps: 8 }],
+      movements: [
+        { movementId: 'a', reps: 5 },
+        { movementId: 'b', reps: 8 },
+      ],
       rounds: 4,
       intervalSec: 1,
       alternate: true,

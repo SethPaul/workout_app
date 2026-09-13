@@ -12,7 +12,8 @@ export interface ResultsFormProps {
 
 function isStrengthBlockMovement(snapshot: PoolWorkout, movementId: string): boolean {
   return snapshot.blocks.some(
-    (block) => block.format === 'strength' && block.movements.some((bm) => bm.movementId === movementId),
+    (block) =>
+      block.format === 'strength' && block.movements.some((bm) => bm.movementId === movementId),
   );
 }
 
@@ -30,14 +31,25 @@ export function ResultsForm(props: ResultsFormProps) {
     onChange(next);
   }
 
+  const idCounts = new Map<string, number>();
+  for (const m of draft.movements)
+    idCounts.set(m.movementId, (idCounts.get(m.movementId) ?? 0) + 1);
+
   return (
     <div class="stack" style="padding-bottom:1rem">
       {draft.movements.map((m, mi) => {
         const mv = movements.find((x) => x.id === m.movementId);
         const loadable = mv ? mv.loadable : isStrengthBlockMovement(snapshot, m.movementId);
+        const block = snapshot.blocks[m.blockIndex];
+        const showBlockSubtitle = (idCounts.get(m.movementId) ?? 0) > 1;
         return (
-          <div class="card stack" key={m.movementId}>
+          <div class="card stack" key={`${m.blockIndex}-${m.movementId}`}>
             <div class="list-row-title">{mv?.name ?? m.movementId}</div>
+            {showBlockSubtitle && (
+              <div class="muted" style="font-size:0.8rem;margin-top:-0.4rem">
+                {block?.title || `Block ${m.blockIndex + 1}`}
+              </div>
+            )}
             {m.sets ? (
               <div class="stack">
                 {m.sets.map((set, si) => (
@@ -106,9 +118,9 @@ export function ResultsForm(props: ResultsFormProps) {
             )}
             {loadable && (
               <div class="field">
-                <label for={`rpe-${m.movementId}`}>RPE (1–10, optional)</label>
+                <label for={`rpe-${m.blockIndex}-${m.movementId}`}>RPE (1–10, optional)</label>
                 <input
-                  id={`rpe-${m.movementId}`}
+                  id={`rpe-${m.blockIndex}-${m.movementId}`}
                   type="number"
                   inputMode="decimal"
                   min="1"

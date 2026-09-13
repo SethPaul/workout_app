@@ -1,4 +1,12 @@
-import type { AppState, Block, BlockMovement, Equipment, Format, Movement, Units } from '../domain/types';
+import type {
+  AppState,
+  Block,
+  BlockMovement,
+  Equipment,
+  Format,
+  Movement,
+  Units,
+} from '../domain/types';
 import { resolveSettings } from '../domain/program/context';
 import { loadForBlockMovement } from '../domain/program/rpe';
 import { progressionStatus } from '../domain/program/progression';
@@ -92,6 +100,7 @@ export function movementLine(state: AppState, bm: BlockMovement): string {
   const targets: string[] = [];
   if (bm.loadPct !== undefined) targets.push(`@ ${bm.loadPct}%`);
   if (bm.rir !== undefined) targets.push(`RIR ${bm.rir}`);
+  if (bm.targetRpe !== undefined) targets.push(`RPE ${bm.targetRpe}`);
   if (targets.length > 0) line = line ? `${line} ${targets.join(', ')}` : targets.join(', ');
   return line ? `${name} — ${line}` : name;
 }
@@ -133,7 +142,12 @@ export function fmtWeight(weight: number | null | undefined, units: Units): stri
  * overrides the RPE-table lookup (9.3); a detected stall (9.4) overrides the
  * suggested load with the ~10% cut `progressionStatus` recommends.
  */
-export function strengthSuggestionLine(appState: AppState, block: Block, bm: BlockMovement, now: Date = new Date()): string {
+export function strengthSuggestionLine(
+  appState: AppState,
+  block: Block,
+  bm: BlockMovement,
+  now: Date = new Date(),
+): string {
   const movement = movementById(appState, bm.movementId);
   if (!movement || !movement.loadable) return movementLine(appState, bm);
 
@@ -152,6 +166,9 @@ export function strengthSuggestionLine(appState: AppState, block: Block, bm: Blo
 }
 
 export function uid(prefix: string): string {
-  const rand = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const rand =
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   return `${prefix}-${rand}`;
 }

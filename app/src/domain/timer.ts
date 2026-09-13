@@ -23,6 +23,16 @@ export interface Phase {
   repsDue?: number;
   remainingMs?: number;
   elapsedMs: number;
+  // Structured set/round context (in addition to `label`) so callers can
+  // build their own heading instead of parsing the label with a regex.
+  /** strength work/rest phases: the set number (rest after set s carries setIndex: s). */
+  setIndex?: number;
+  /** strength work/rest phases: total prescribed sets. */
+  setCount?: number;
+  /** emom/interval/tabata work/rest phases: the round number. */
+  round?: number;
+  /** emom/interval/tabata work/rest phases: total rounds. */
+  roundCount?: number;
 }
 
 export type TimerStatus = 'idle' | 'running' | 'paused' | 'between-blocks' | 'finished';
@@ -32,6 +42,10 @@ interface InternalPhase {
   label: string;
   movementIds: string[];
   repsDue?: number;
+  setIndex?: number;
+  setCount?: number;
+  round?: number;
+  roundCount?: number;
   /** undefined = event-paced (advanced via `next`) or an open stopwatch. */
   durationMs?: number;
   beepOnStart?: boolean;
@@ -112,6 +126,8 @@ function buildInternalBlock(block: Block): InternalBlock {
           label: `Set ${s}/${sets}`,
           movementIds,
           repsDue,
+          setIndex: s,
+          setCount: sets,
           bellOnStart: s === sets && sets > 1,
         });
         if (s < sets) {
@@ -119,6 +135,8 @@ function buildInternalBlock(block: Block): InternalBlock {
             kind: 'rest',
             label: 'Rest',
             movementIds: [],
+            setIndex: s, // the set just completed
+            setCount: sets,
             durationMs: restSec * 1000,
             countdownTicks: true,
             tenSecondCue: restSec * 1000 > 10_000,
@@ -146,6 +164,8 @@ function buildInternalBlock(block: Block): InternalBlock {
           label: `Round ${r}/${rounds}`,
           movementIds: roundMovementIds,
           repsDue,
+          round: r,
+          roundCount: rounds,
           durationMs: intervalSec * 1000,
           beepOnStart: true,
           countdownTicks: true,
@@ -168,6 +188,8 @@ function buildInternalBlock(block: Block): InternalBlock {
             label: `${movementLabel(mv)} ${r}/${rounds}`,
             movementIds: [mv.movementId],
             repsDue: mv.reps,
+            round: r,
+            roundCount: rounds,
             durationMs: workSec * 1000,
             beepOnStart: true,
             tenSecondCue: workSec * 1000 > 10_000,
@@ -180,6 +202,8 @@ function buildInternalBlock(block: Block): InternalBlock {
               kind: 'rest',
               label: 'Rest',
               movementIds: [],
+              round: r, // the round just completed
+              roundCount: rounds,
               durationMs: restSec * 1000,
               bellOnStart: true,
               tenSecondCue: restSec * 1000 > 10_000,
@@ -200,6 +224,8 @@ function buildInternalBlock(block: Block): InternalBlock {
           kind: 'work',
           label: `Round ${r}/${rounds} work`,
           movementIds,
+          round: r,
+          roundCount: rounds,
           durationMs: workSec * 1000,
           beepOnStart: true,
           tenSecondCue: workSec * 1000 > 10_000,
@@ -209,6 +235,8 @@ function buildInternalBlock(block: Block): InternalBlock {
             kind: 'rest',
             label: `Round ${r}/${rounds} rest`,
             movementIds: [],
+            round: r,
+            roundCount: rounds,
             durationMs: restSec * 1000,
             bellOnStart: true,
             tenSecondCue: restSec * 1000 > 10_000,
@@ -255,7 +283,9 @@ function buildInternalBlock(block: Block): InternalBlock {
       const phases: InternalPhase[] = [
         {
           kind: 'stopwatch',
-          label: first ? `Movement 1/${block.movements.length}: ${movementLabel(first)}` : 'Chipper',
+          label: first
+            ? `Movement 1/${block.movements.length}: ${movementLabel(first)}`
+            : 'Chipper',
           movementIds: first ? [first.movementId] : [],
           bellAtElapsedMs: timeCapMs,
         },
@@ -286,6 +316,10 @@ function setPhaseFromInternal(state: TimerState, phase: InternalPhase): void {
     repsDue: phase.repsDue,
     remainingMs: phase.durationMs,
     elapsedMs: 0,
+    setIndex: phase.setIndex,
+    setCount: phase.setCount,
+    round: phase.round,
+    roundCount: phase.roundCount,
   };
   state._phaseElapsedMs = 0;
   state._cueFiredMarks = [];
@@ -452,7 +486,11 @@ function applyNext(state: TimerState, now: number): void {
     } else {
       state._chipperIndex = idx;
       const id = block.chipperMovementIds![idx];
-      state.phase = { ...state.phase, movementIds: [id], label: `Movement ${idx + 1}/${total}: ${id}` };
+      state.phase = {
+        ...state.phase,
+        movementIds: [id],
+        label: `Movement ${idx + 1}/${total}: ${id}`,
+      };
     }
     return;
   }

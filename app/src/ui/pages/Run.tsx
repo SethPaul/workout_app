@@ -1,41 +1,54 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import type { Block, Format, WorkoutLog } from '../../domain/types';
 import type { Cue, TimerEvent, TimerState } from '../../domain/timer';
 import { clearTodayWorkout, state, update } from '../../state/store';
-import { clearRunSession, dispatchRun, runSession } from '../../state/run';
+import { clearRunSession, dispatchRun, runSession, updateRunDraft } from '../../state/run';
 import { resumeAudio, playCue } from '../audio';
 import { vibrateForCue } from '../vibrate';
 import { acquireWakeLock, releaseWakeLock } from '../wakelock';
 import { formatClock, movementLine, strengthSuggestionLine, uid } from '../helpers';
-import { buildResultsDraft, resultsFromDraft, type ResultsDraft } from '../resultsDraft';
+import { resultsFromDraft } from '../resultsDraft';
 import { ResultsForm } from '../components/ResultsForm';
+import { BlockLogDetails, SetEntry } from '../components/SetEntry';
 
 function phaseHeading(format: Format, block: Block, timer: TimerState): string {
   const phase = timer.phase;
   switch (format) {
     case 'strength': {
-      if (phase.kind === 'rest') return 'Rest';
-      const match = /Set (\d+)\/(\d+)/.exec(phase.label);
-      return `Set ${match ? match[1] : '1'} of ${block.sets ?? 1}`;
+      const set = phase.setIndex ?? 1;
+      const count = phase.setCount ?? block.sets ?? 1;
+      return phase.kind === 'rest'
+        ? `Rest · after set ${set} of ${count}`
+        : `Set ${set} of ${count}`;
     }
     case 'emom': {
-      const match = /Round (\d+)\/(\d+)/.exec(phase.label);
-      return `Round ${match ? match[1] : '1'} of ${block.rounds ?? 1}`;
+      const round = phase.round ?? 1;
+      const count = phase.roundCount ?? block.rounds ?? 1;
+      return `Round ${round} of ${count}`;
     }
     case 'tabata':
-    case 'interval':
-      return phase.kind === 'rest' ? 'Rest' : 'Work';
+    case 'interval': {
+      const count = phase.roundCount ?? block.rounds ?? 1;
+      if (phase.round === undefined) return phase.kind === 'rest' ? 'Rest' : 'Work';
+      return phase.kind === 'rest'
+        ? `Rest · round ${phase.round} of ${count}`
+        : `Round ${phase.round} of ${count}`;
+    }
     case 'amrap':
       return 'AMRAP';
     case 'rounds':
-      return block.rounds ? `Round ${timer.roundsDone + 1} of ${block.rounds}` : `Round ${timer.roundsDone + 1}`;
+      return block.rounds
+        ? `Round ${timer.roundsDone + 1} of ${block.rounds}`
+        : `Round ${timer.roundsDone + 1}`;
     case 'chipper': {
       const idx = timer._chipperIndex ?? 0;
       return `Movement ${idx + 1} of ${block.movements.length}`;
     }
     case 'death_by':
-      return phase.repsDue !== undefined ? `Minute ${phase.repsDue} — ${phase.repsDue} reps` : phase.label;
+      return phase.repsDue !== undefined
+        ? `Minute ${phase.repsDue} — ${phase.repsDue} reps`
+        : phase.label;
   }
 }
 
@@ -50,7 +63,6 @@ export function Run() {
   const location = useLocation();
   const session = runSession.value;
   const appState = state.value!;
-  const [draft, setDraft] = useState<ResultsDraft | null>(null);
 
   useEffect(() => {
     if (!session) location.route('/', true);
@@ -61,7 +73,8 @@ export function Run() {
       const s = runSession.value;
       if (!s || s.timer.status !== 'running') return;
       const timer = dispatchRun({ type: 'tick', now: Date.now() });
-      if (timer) playCues(timer.pendingCues, appState.settings.soundOn, appState.settings.vibrateOn);
+      if (timer)
+        playCues(timer.pendingCues, appState.settings.soundOn, appState.settings.vibrateOn);
     }, 100);
     return () => clearInterval(id);
   }, []);
@@ -83,8 +96,7 @@ export function Run() {
   }, []);
 
   useEffect(() => {
-    if (session && session.timer.status === 'finished' && !draft) {
-      setDraft(buildResultsDraft(appState, session.workoutSnapshot));
+    if (session && session.timer.status === 'finished') {
       releaseWakeLock();
     }
   }, [session?.timer.status]);
@@ -118,18 +130,18 @@ export function Run() {
   }
 
   function handleSave() {
-    if (!draft || !session) return;
-    const results = resultsFromDraft(draft.movements);
+    if (!session) return;
+    const results = resultsFromDraft(session.draft.movements);
     const log: WorkoutLog = {
       id: uid('log'),
       poolWorkoutId: session.poolWorkoutId,
       workoutSnapshot: session.workoutSnapshot,
       startedAt: session.startedAt,
       finishedAt: new Date().toISOString(),
-      score: draft.score.trim() || undefined,
+      score: session.draft.score.trim() || undefined,
       results,
-      notes: draft.notes.trim() || undefined,
-      rpe: draft.rpe.trim() ? Number(draft.rpe) : undefined,
+      notes: session.draft.notes.trim() || undefined,
+      rpe: session.draft.rpe.trim() ? Number(session.draft.rpe) : undefined,
     };
     void update((s) => ({ ...s, logs: [...s.logs, log] })).then(() => {
       clearTodayWorkout();
@@ -154,7 +166,9 @@ export function Run() {
         </div>
         <div class="run-body">
           <p class="run-phase-label">Ready</p>
-          <p>{workoutSnapshot.blocks.length} block{workoutSnapshot.blocks.length === 1 ? '' : 's'}</p>
+          <p>
+            {workoutSnapshot.blocks.length} block{workoutSnapshot.blocks.length === 1 ? '' : 's'}
+          </p>
         </div>
         <div class="run-controls">
           <button class="btn btn-primary btn-big" onClick={handleStart}>
@@ -167,7 +181,6 @@ export function Run() {
 
   // ---- finished: results form ----
   if (timer.status === 'finished') {
-    if (!draft) return null;
     return (
       <div class="run-screen">
         <div class="run-top">
@@ -177,8 +190,8 @@ export function Run() {
         </div>
         <ResultsForm
           snapshot={workoutSnapshot}
-          draft={draft}
-          onChange={setDraft}
+          draft={session.draft}
+          onChange={(next) => updateRunDraft(() => next)}
           settings={appState.settings}
           movements={appState.movements}
         />
@@ -203,14 +216,14 @@ export function Run() {
           <span class="run-top-spacer" />
         </div>
         <div class="run-body next-block-card">
-          <p class="run-phase-label">
-            Next: {block?.title || `Block ${timer.blockIndex + 1}`}
-          </p>
+          <p class="run-phase-label">Next: {block?.title || `Block ${timer.blockIndex + 1}`}</p>
           {block && (
             <div class="stack" style="text-align:left;width:100%">
               {block.movements.map((bm, i) => (
                 <div class="movement-line" key={i}>
-                  {block.format === 'strength' ? strengthSuggestionLine(appState, block, bm) : movementLine(appState, bm)}
+                  {block.format === 'strength'
+                    ? strengthSuggestionLine(appState, block, bm)
+                    : movementLine(appState, bm)}
                 </div>
               ))}
             </div>
@@ -230,8 +243,13 @@ export function Run() {
   const format = block.format;
   const running = timer.status === 'running';
   const heading = phaseHeading(format, block, timer);
-  const clock = timer.phase.remainingMs !== undefined ? formatClock(timer.phase.remainingMs) : formatClock(timer.phase.elapsedMs);
-  const currentMovements = block.movements.filter((bm) => timer.phase.movementIds.includes(bm.movementId));
+  const clock =
+    timer.phase.remainingMs !== undefined
+      ? formatClock(timer.phase.remainingMs)
+      : formatClock(timer.phase.elapsedMs);
+  const currentMovements = block.movements.filter((bm) =>
+    timer.phase.movementIds.includes(bm.movementId),
+  );
 
   const canRoundDone = format === 'amrap' || format === 'rounds';
   const canNext = format === 'chipper' || (format === 'strength' && timer.phase.kind === 'work');
@@ -252,12 +270,37 @@ export function Run() {
       <div class="run-body">
         <p class="run-phase-label">{heading}</p>
         <p class="run-timer">{clock}</p>
-        {(format === 'amrap' || format === 'rounds') && <p class="run-rounds">Rounds completed: {timer.roundsDone}</p>}
+        {(format === 'amrap' || format === 'rounds') && (
+          <p class="run-rounds">Rounds completed: {timer.roundsDone}</p>
+        )}
         <div class="run-movements">
           {(currentMovements.length > 0 ? currentMovements : block.movements).map((bm, i) => (
-            <div key={i}>{format === 'strength' ? strengthSuggestionLine(appState, block, bm) : movementLine(appState, bm)}</div>
+            <div key={i}>
+              {format === 'strength'
+                ? strengthSuggestionLine(appState, block, bm)
+                : movementLine(appState, bm)}
+            </div>
           ))}
         </div>
+        {format === 'strength' && (
+          <SetEntry
+            appState={appState}
+            block={block}
+            blockIndex={timer.blockIndex}
+            currentSet={timer.phase.setIndex ?? 1}
+            draft={session.draft}
+            onChange={(next) => updateRunDraft(() => next)}
+          />
+        )}
+        {format !== 'strength' && (
+          <BlockLogDetails
+            appState={appState}
+            block={block}
+            blockIndex={timer.blockIndex}
+            draft={session.draft}
+            onChange={(next) => updateRunDraft(() => next)}
+          />
+        )}
         {!running && <p class="status-pill">Paused</p>}
       </div>
       <div class="run-controls">
@@ -265,7 +308,11 @@ export function Run() {
           {running ? 'Pause' : 'Resume'}
         </button>
         {canRoundDone && (
-          <button class="btn btn-primary btn-big" onClick={() => fire('roundDone')} disabled={!running}>
+          <button
+            class="btn btn-primary btn-big"
+            onClick={() => fire('roundDone')}
+            disabled={!running}
+          >
             +1 Round
           </button>
         )}

@@ -119,6 +119,42 @@ describe('fatigueFlags: missed-reps', () => {
   });
 });
 
+describe('fatigueFlags: movement duplicated across blocks in one log', () => {
+  it('missed-reps matches the strength-block result by blockIndex, ignoring a same-movementId result from another block', () => {
+    function duplicateBlockLog(id: string, daysAgo: number): WorkoutLog {
+      const workoutSnapshot: PoolWorkout = {
+        id: `w-${id}`,
+        name: `w-${id}`,
+        intensity: 'M',
+        blocks: [
+          { format: 'strength', sets: 1, movements: [{ movementId: 'clean', reps: 5 }] },
+          { format: 'amrap', durationSec: 300, movements: [{ movementId: 'clean', reps: 10 }] },
+        ],
+        cadenceDays: 7,
+        enabled: true,
+        source: 'manual',
+      };
+      const finishedAt = isoDaysAgo(daysAgo);
+      return {
+        id,
+        poolWorkoutId: workoutSnapshot.id,
+        workoutSnapshot,
+        startedAt: finishedAt,
+        finishedAt,
+        kind: 'pool',
+        results: [
+          { movementId: 'clean', blockIndex: 0, sets: [{ weight: 135, reps: 3 }] }, // missed (target 5)
+          // Conditioning-block result for the same id hits plenty of reps; must not mask the miss.
+          { movementId: 'clean', blockIndex: 1, weight: 65, reps: 20 },
+        ],
+      };
+    }
+    const logs = [duplicateBlockLog('s1', 14), duplicateBlockLog('s2', 7)];
+    const flags = fatigueFlags(logs, NOW);
+    expect(flags.map((f) => f.id)).toContain('missed-reps:clean');
+  });
+});
+
 describe('fatigueFlags: load-spike', () => {
   it('flags when the last 7 days training load is >=1.3x the 28-day weekly mean, given >=28 days of history', () => {
     const logs = [

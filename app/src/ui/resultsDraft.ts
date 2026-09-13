@@ -12,6 +12,7 @@ export interface SetDraft {
 /** One movement's editable results (SPEC 9.9 results form / EditLog). */
 export interface MovementDraft {
   movementId: string;
+  blockIndex: number; // index into workout.blocks — one draft entry per (block, movement)
   sets?: SetDraft[]; // present for strength-block movements: one entry per set
   weight?: string; // present for non-strength (single-entry) movements
   reps?: string;
@@ -49,40 +50,36 @@ function suggestedWeightStr(
 
 /**
  * Builds a fresh results draft for a workout about to be logged (Run's
- * "finished" screen): one entry per movement, strength-block movements get
- * one set per prescribed set (prefilled with the suggested load), everything
- * else gets a single weight/reps entry.
+ * "finished" screen, and now also usable mid-workout): one entry per
+ * (block, movement) pair in block order — a movement appearing in more than
+ * one block (e.g. cleans in both a strength block and a conditioning block)
+ * gets one entry per block rather than being deduped. Strength-block
+ * movements get one set per prescribed set (prefilled with the suggested
+ * load), everything else gets a single weight/reps entry.
  */
 export function buildResultsDraft(appState: AppState, workout: PoolWorkout): ResultsDraft {
-  const seen = new Set<string>();
   const movements: MovementDraft[] = [];
 
-  for (const block of workout.blocks) {
-    if (block.format !== 'strength') continue;
+  workout.blocks.forEach((block, blockIndex) => {
     for (const bm of block.movements) {
-      if (seen.has(bm.movementId)) continue;
-      seen.add(bm.movementId);
-      const suggested = suggestedWeightStr(appState, bm);
-      const sets: SetDraft[] = Array.from({ length: block.sets ?? 1 }, () => ({
-        weight: suggested,
-        reps: bm.reps !== undefined ? String(bm.reps) : '',
-      }));
-      movements.push({ movementId: bm.movementId, sets, rpe: '' });
+      if (block.format === 'strength') {
+        const suggested = suggestedWeightStr(appState, bm);
+        const sets: SetDraft[] = Array.from({ length: block.sets ?? 1 }, () => ({
+          weight: suggested,
+          reps: bm.reps !== undefined ? String(bm.reps) : '',
+        }));
+        movements.push({ movementId: bm.movementId, blockIndex, sets, rpe: '' });
+      } else {
+        movements.push({
+          movementId: bm.movementId,
+          blockIndex,
+          weight: '',
+          reps: bm.reps !== undefined ? String(bm.reps) : '',
+          rpe: '',
+        });
+      }
     }
-  }
-
-  for (const block of workout.blocks) {
-    for (const bm of block.movements) {
-      if (seen.has(bm.movementId)) continue;
-      seen.add(bm.movementId);
-      movements.push({
-        movementId: bm.movementId,
-        weight: '',
-        reps: bm.reps !== undefined ? String(bm.reps) : '',
-        rpe: '',
-      });
-    }
-  }
+  });
 
   return { movements, score: '', rpe: '', notes: '' };
 }
@@ -93,16 +90,27 @@ export function buildResultsDraft(appState: AppState, workout: PoolWorkout): Res
  * values rather than suggesting a load.
  */
 export function draftFromLog(log: WorkoutLog): ResultsDraft {
+  /** First block in the snapshot containing this movement, for results saved before blockIndex existed. */
+  function inferBlockIndex(movementId: string): number {
+    const idx = log.workoutSnapshot.blocks.findIndex((b) =>
+      b.movements.some((bm) => bm.movementId === movementId),
+    );
+    return idx >= 0 ? idx : 0;
+  }
+
   const movements: MovementDraft[] = log.results.map((r) => {
+    const blockIndex = r.blockIndex ?? inferBlockIndex(r.movementId);
     if (r.sets) {
       return {
         movementId: r.movementId,
+        blockIndex,
         sets: r.sets.map((s) => ({ weight: numToStr(s.weight), reps: numToStr(s.reps) })),
         rpe: numToStr(r.rpe),
       };
     }
     return {
       movementId: r.movementId,
+      blockIndex,
       weight: numToStr(r.weight),
       reps: numToStr(r.reps),
       rpe: numToStr(r.rpe),
@@ -124,12 +132,14 @@ export function resultsFromDraft(movements: MovementDraft[]): MovementResult[] {
     if (m.sets) {
       return {
         movementId: m.movementId,
+        blockIndex: m.blockIndex,
         sets: m.sets.map((s) => ({ weight: numOrUndef(s.weight), reps: numOrUndef(s.reps) })),
         rpe,
       };
     }
     return {
       movementId: m.movementId,
+      blockIndex: m.blockIndex,
       weight: numOrUndef(m.weight),
       reps: numOrUndef(m.reps),
       rpe,

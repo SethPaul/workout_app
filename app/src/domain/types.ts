@@ -108,6 +108,12 @@ export interface MovementResult {
   reps?: number; // total reps or reps per round
   notes?: string;
   rpe?: number; // SPEC 9.1: per-movement RPE of the hardest set, 1-10
+  // Index into workoutSnapshot.blocks identifying which block this result
+  // came from — a movement appearing in more than one block (e.g. cleans in
+  // both a strength block and a conditioning block) gets one MovementResult
+  // per block instead of being deduped. Optional so older logs (saved before
+  // this field existed) still typecheck and read back correctly.
+  blockIndex?: number;
 }
 
 export interface WorkoutLog {

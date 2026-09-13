@@ -42,12 +42,26 @@ function bestSetE1rm(sets: { weight?: number; reps?: number }[]): number | null 
 export function e1rmHistory(logs: WorkoutLog[], movementId: string): E1rmPoint[] {
   const points: E1rmPoint[] = [];
   for (const log of logs) {
-    const result = log.results.find((r) => r.movementId === movementId);
-    if (!result) continue;
-    const sets = result.sets && result.sets.length > 0 ? result.sets : [{ weight: result.weight, reps: result.reps }];
-    const best = bestSetE1rm(sets);
+    // A movement can appear in more than one block of the same log (e.g.
+    // cleans in both a strength block and a conditioning block) — consider
+    // every matching result and take the best e1rm across all of them.
+    const results = log.results.filter((r) => r.movementId === movementId);
+    if (results.length === 0) continue;
+    let best: number | null = null;
+    for (const result of results) {
+      const sets =
+        result.sets && result.sets.length > 0
+          ? result.sets
+          : [{ weight: result.weight, reps: result.reps }];
+      const setBest = bestSetE1rm(sets);
+      if (setBest !== null && (best === null || setBest > best)) best = setBest;
+    }
     if (best === null) continue;
-    points.push({ date: log.finishedAt, e1rm: best, source: logKind(log) === 'max-test' ? 'max-test' : 'estimate' });
+    points.push({
+      date: log.finishedAt,
+      e1rm: best,
+      source: logKind(log) === 'max-test' ? 'max-test' : 'estimate',
+    });
   }
   return points.sort((a, b) => a.date.localeCompare(b.date));
 }
@@ -57,10 +71,16 @@ export function e1rmHistory(logs: WorkoutLog[], movementId: string): E1rmPoint[]
  * days wins outright; otherwise the max estimated 1RM over the last 8 weeks;
  * otherwise null (nothing recent to calibrate off).
  */
-export function currentMax(logs: WorkoutLog[], movementId: string, now: string | Date): number | null {
+export function currentMax(
+  logs: WorkoutLog[],
+  movementId: string,
+  now: string | Date,
+): number | null {
   const history = e1rmHistory(logs, movementId);
 
-  const recentMaxTests = history.filter((p) => p.source === 'max-test' && daysSince(p.date, now) <= E1RM_WINDOW_DAYS);
+  const recentMaxTests = history.filter(
+    (p) => p.source === 'max-test' && daysSince(p.date, now) <= E1RM_WINDOW_DAYS,
+  );
   if (recentMaxTests.length > 0) {
     return Math.max(...recentMaxTests.map((p) => p.e1rm));
   }

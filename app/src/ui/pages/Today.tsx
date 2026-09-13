@@ -86,7 +86,7 @@ export function Today() {
 
   function start() {
     if (!workout) return;
-    beginRunSession(workout);
+    beginRunSession(s, workout);
     location.route('/run');
   }
 

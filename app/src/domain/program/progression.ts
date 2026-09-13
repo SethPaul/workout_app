@@ -16,11 +16,12 @@ export interface ProgressionResult {
   suggestion: string;
 }
 
-/** A strength-block session for one movement: the log, the block, and its BlockMovement entry. */
+/** A strength-block session for one movement: the log, the block, its BlockMovement entry, and the block's index in the snapshot. */
 export interface MovementSession {
   log: WorkoutLog;
   block: Block;
   bm: BlockMovement;
+  blockIndex: number;
 }
 
 /**
@@ -30,30 +31,48 @@ export interface MovementSession {
  * target here (or by the fatigue signals built on top of this) — max-test
  * logs still feed `currentMax` directly, via e1rm.ts, unaffected by this.
  */
-export function strengthSessionsForMovement(movementId: string, logs: WorkoutLog[]): MovementSession[] {
+export function strengthSessionsForMovement(
+  movementId: string,
+  logs: WorkoutLog[],
+): MovementSession[] {
   const sessions: MovementSession[] = [];
   for (const log of logs) {
     if (logKind(log) !== 'pool') continue;
-    for (const block of log.workoutSnapshot.blocks) {
-      if (block.format !== 'strength') continue;
+    log.workoutSnapshot.blocks.forEach((block, blockIndex) => {
+      if (block.format !== 'strength') return;
       const bm = block.movements.find((m) => m.movementId === movementId);
-      if (!bm) continue;
-      sessions.push({ log, block, bm });
-    }
+      if (!bm) return;
+      sessions.push({ log, block, bm, blockIndex });
+    });
   }
   return sessions.sort((a, b) => b.log.finishedAt.localeCompare(a.log.finishedAt));
 }
 
+/**
+ * The result for this session's movement: when the movement appears in more
+ * than one block of the same log (e.g. cleans in both a strength block and a
+ * conditioning block), prefer the result whose blockIndex matches this
+ * session's block; fall back to the first result by movementId for older
+ * results saved before blockIndex existed. Exported for fatigue.ts, which
+ * builds its flags on top of the same `MovementSession` list.
+ */
+export function resultFor(session: MovementSession) {
+  const candidates = session.log.results.filter((r) => r.movementId === session.bm.movementId);
+  if (candidates.length === 0) return undefined;
+  return candidates.find((r) => r.blockIndex === session.blockIndex) ?? candidates[0];
+}
+
 function setsFor(session: MovementSession): { weight?: number; reps?: number }[] {
-  const result = session.log.results.find((r) => r.movementId === session.bm.movementId);
+  const result = resultFor(session);
   if (!result) return [];
   if (result.sets && result.sets.length > 0) return result.sets;
-  if (result.weight !== undefined || result.reps !== undefined) return [{ weight: result.weight, reps: result.reps }];
+  if (result.weight !== undefined || result.reps !== undefined)
+    return [{ weight: result.weight, reps: result.reps }];
   return [];
 }
 
 function rpeFor(session: MovementSession): number | undefined {
-  return session.log.results.find((r) => r.movementId === session.bm.movementId)?.rpe;
+  return resultFor(session)?.rpe;
 }
 
 function defaultMode(movement: Movement): ProgressionMode {
@@ -65,12 +84,19 @@ function defaultRepRange(movement: Movement): [number, number] {
 }
 
 /** Prescribed reps for a session, falling back to the movement's rep range floor. */
-function prescribedReps(session: MovementSession, mode: ProgressionMode, repRange: [number, number]): number {
+function prescribedReps(
+  session: MovementSession,
+  mode: ProgressionMode,
+  repRange: [number, number],
+): number {
   if (session.bm.reps !== undefined) return session.bm.reps;
   return mode === 'double' ? repRange[0] : repRange[1];
 }
 
-function heaviestSetLoadAndReps(sets: { weight?: number; reps?: number }[]): { load: number | null; reps: number | null } {
+function heaviestSetLoadAndReps(sets: { weight?: number; reps?: number }[]): {
+  load: number | null;
+  reps: number | null;
+} {
   let load: number | null = null;
   let reps: number | null = null;
   for (const set of sets) {
@@ -116,7 +142,11 @@ function sessionBest(session: MovementSession): { load: number | null; reps: num
  * Progression status and next-target suggestion for a movement (SPEC 9.4,
  * R30-R33), based on its last two strength-block sessions.
  */
-export function progressionStatus(movement: Movement, logs: WorkoutLog[], settings: Settings): ProgressionResult {
+export function progressionStatus(
+  movement: Movement,
+  logs: WorkoutLog[],
+  settings: Settings,
+): ProgressionResult {
   const resolved = resolveSettings(settings);
   const mode = movement.progression ?? defaultMode(movement);
   const repRange = movement.repRange ?? defaultRepRange(movement);
@@ -146,7 +176,11 @@ export function progressionStatus(movement: Movement, logs: WorkoutLog[], settin
     const session = sessions[i];
     let progressed: boolean;
     if (mode === 'linear') {
-      progressed = linearSuccess(session, session.bm.targetRpe ?? 8, prescribedReps(session, mode, repRange));
+      progressed = linearSuccess(
+        session,
+        session.bm.targetRpe ?? 8,
+        prescribedReps(session, mode, repRange),
+      );
     } else {
       // double: a session "progressed" if it topped its rep range (load will
       // step next time), or if it out-did the session before it.
@@ -166,7 +200,8 @@ export function progressionStatus(movement: Movement, logs: WorkoutLog[], settin
     stallCount++;
   }
 
-  const status: ProgressionStatusValue = stallCount >= 2 ? 'stall' : stallCount === 1 ? 'hold' : 'progress';
+  const status: ProgressionStatusValue =
+    stallCount >= 2 ? 'stall' : stallCount === 1 ? 'hold' : 'progress';
 
   let nextLoad: number | null = lastLoad;
   let nextReps: number | null = lastReps;
@@ -187,7 +222,10 @@ export function progressionStatus(movement: Movement, logs: WorkoutLog[], settin
     } else {
       nextLoad = lastLoad;
       nextReps = Math.min((lastReps ?? repRange[0]) + 1, repRange[1]);
-      suggestion = nextLoad === null ? `Add a rep: aim for ${nextReps} reps.` : `Add a rep: aim for ${nextReps} reps at ${nextLoad}.`;
+      suggestion =
+        nextLoad === null
+          ? `Add a rep: aim for ${nextReps} reps.`
+          : `Add a rep: aim for ${nextReps} reps at ${nextLoad}.`;
     }
   } else if (status === 'hold') {
     nextLoad = lastLoad;
@@ -198,7 +236,11 @@ export function progressionStatus(movement: Movement, logs: WorkoutLog[], settin
         : `Repeat ${lastLoad} for ${lastReps} reps — one miss isn't a stall yet.`;
   } else {
     // stall
-    const cutLoad = lastLoad === null ? null : Math.round((lastLoad * 0.9) / (increment > 0 ? increment / 2 : 1)) * (increment > 0 ? increment / 2 : 1);
+    const cutLoad =
+      lastLoad === null
+        ? null
+        : Math.round((lastLoad * 0.9) / (increment > 0 ? increment / 2 : 1)) *
+          (increment > 0 ? increment / 2 : 1);
     nextLoad = cutLoad;
     nextReps = mode === 'double' ? repRange[0] : lastReps;
     suggestion =
