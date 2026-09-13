@@ -8,10 +8,12 @@ import {
   VASA_STYLES,
   VASA_STYLE_LABELS,
 } from '../../domain/vasa/library';
-import { REGION_LABELS } from '../../domain/vasa/region';
+import { REGION_LABELS, movementRegion } from '../../domain/vasa/region';
+import { EQUIPMENT_LABELS } from '../helpers';
 import { resolveSettings } from '../../domain/program/context';
 import { logVasa, state, update } from '../../state/store';
-import type { BodyRegion, SetResult, VasaStyle } from '../../domain/types';
+import { NewMovementSheet } from '../components/NewMovementSheet';
+import type { BodyRegion, Equipment, SetResult, Unit, VasaStyle } from '../../domain/types';
 import {
   draftHasAnyMovement,
   draftToLogInput,
@@ -40,6 +42,13 @@ function shortDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
+/** SPEC 10.7 item 1: picker result subtitle — "<Region> · <equipment, ...>" or "No equipment". */
+function equipmentSummary(equipment: Equipment[]): string {
+  const named = equipment.filter((e) => e !== 'none');
+  if (named.length === 0) return 'No equipment';
+  return named.map((e) => EQUIPMENT_LABELS[e]).join(', ');
+}
+
 /**
  * Vasa LFT quick-logging screen (SPEC 10.5). Optimised for one-thumb entry
  * between sets: a draft is restored from localStorage on mount and written
@@ -58,6 +67,7 @@ export function Vasa() {
   );
   const [openPicker, setOpenPicker] = useState<number | null>(null);
   const [pickerQuery, setPickerQuery] = useState('');
+  const [pickerMode, setPickerMode] = useState<'search' | 'create'>('search');
 
   function setDraft(updater: VasaDraft | ((prev: VasaDraft) => VasaDraft)) {
     setDraftState((prev) => {
@@ -93,11 +103,13 @@ export function Vasa() {
   function openPickerFor(blockIndex: number) {
     setOpenPicker(blockIndex);
     setPickerQuery('');
+    setPickerMode('search');
   }
 
   function closePicker() {
     setOpenPicker(null);
     setPickerQuery('');
+    setPickerMode('search');
   }
 
   function addMovementToBlock(blockIndex: number, movementId: string) {
@@ -115,16 +127,24 @@ export function Vasa() {
     closePicker();
   }
 
-  async function createAndAdd(blockIndex: number, query: string) {
-    const name = query.trim();
-    if (!name) return;
-    // Finisher movements (core, carries) belong to every day, not the one
-    // the class happened to be on; main/accessory creations take the day's region.
-    const region: BodyRegion = draft.blocks[blockIndex].role === 'finisher' ? 'full' : draft.region;
+  /** SPEC 10.7 item 3: Add on the New movement sheet — creates via `newVasaMovement` and adds it. */
+  async function createAndAdd(
+    blockIndex: number,
+    input: {
+      name: string;
+      region: BodyRegion;
+      equipment: Equipment[];
+      loadable: boolean;
+      unit: Unit;
+    },
+  ) {
     const movement = newVasaMovement({
-      name,
-      region,
+      name: input.name,
+      region: input.region,
       existingIds: s.movements.map((m) => m.id),
+      loadable: input.loadable,
+      equipment: input.equipment.length ? input.equipment : ['none'],
+      unit: input.unit,
     });
     await update((cur) => ({ ...cur, movements: [...cur.movements, movement] }));
     addMovementToBlock(blockIndex, movement.id);
@@ -237,7 +257,12 @@ export function Vasa() {
     return (
       <div class="card stack" key={movement.movementId}>
         <div class="row-between">
-          <span class="list-row-title">{name}</span>
+          <span class="row">
+            <span class="list-row-title">{name}</span>
+            <a class="muted" href={`/movements/${movement.movementId}`}>
+              edit
+            </a>
+          </span>
           <button
             class="icon-btn"
             onClick={() => removeMovement(blockIndex, movement.movementId)}
@@ -310,7 +335,12 @@ export function Vasa() {
     return (
       <div class="card stack" key={movement.movementId}>
         <div class="row-between">
-          <span class="list-row-title">{name}</span>
+          <span class="row">
+            <span class="list-row-title">{name}</span>
+            <a class="muted" href={`/movements/${movement.movementId}`}>
+              edit
+            </a>
+          </span>
           <button
             class="icon-btn"
             onClick={() => removeMovement(blockIndex, movement.movementId)}
@@ -333,18 +363,44 @@ export function Vasa() {
     );
   }
 
+  /** Default region for a movement created from this block (SPEC 10.7 item 3, 10.5 item 2). */
+  function defaultRegionFor(blockIndex: number): BodyRegion {
+    return draft.blocks[blockIndex].role === 'finisher' ? 'full' : draft.region;
+  }
+
   function renderPicker(blockIndex: number) {
     const block = draft.blocks[blockIndex];
+
+    if (pickerMode === 'create') {
+      return (
+        <NewMovementSheet
+          initialName={pickerQuery}
+          defaultRegion={defaultRegionFor(blockIndex)}
+          blockTitle={block.title}
+          movements={s.movements}
+          onUseExisting={(movementId) => addMovementToBlock(blockIndex, movementId)}
+          onCreate={(input) => createAndAdd(blockIndex, input)}
+          onBack={() => setPickerMode('search')}
+        />
+      );
+    }
+
     const alreadyAdded = new Set(block.movements.map((m) => m.movementId));
     const candidates = s.movements.filter((m) => !alreadyAdded.has(m.id));
+    const trimmedQuery = pickerQuery.trim();
     const results = searchMovements(candidates, pickerQuery, {
       region: draft.region,
       logs: s.logs,
       now: new Date(),
-      limit: 8,
+      limit: trimmedQuery === '' ? 8 : 20,
     });
-    const trimmedQuery = pickerQuery.trim();
     const showCreate = trimmedQuery !== '' && !hasExactName(s.movements, pickerQuery);
+
+    const createRow = (
+      <button class="list-row" key="create" onClick={() => setPickerMode('create')}>
+        <span class="list-row-main list-row-title">Create &ldquo;{trimmedQuery}&rdquo;</span>
+      </button>
+    );
 
     return (
       <div class="card stack">
@@ -356,21 +412,25 @@ export function Vasa() {
           onInput={(e) => setPickerQuery((e.target as HTMLInputElement).value)}
         />
         <div class="list" style="max-height:220px;overflow-y:auto">
+          {showCreate && results.length === 0 && createRow}
           {results.map((m) => (
             <button
               class="list-row"
               key={m.id}
               onClick={() => addMovementToBlock(blockIndex, m.id)}
             >
-              <span class="list-row-main list-row-title">{m.name}</span>
-              {inLibrary(m, 'vasa') && <span class="chip-kind">Vasa</span>}
+              <div class="list-row-main">
+                <div class="row" style="gap:0.4rem">
+                  <div class="list-row-title">{m.name}</div>
+                  {inLibrary(m, 'vasa') && <span class="chip-kind">Vasa</span>}
+                </div>
+                <div class="list-row-sub">
+                  {REGION_LABELS[movementRegion(m)]} · {equipmentSummary(m.equipment)}
+                </div>
+              </div>
             </button>
           ))}
-          {showCreate && (
-            <button class="list-row" onClick={() => void createAndAdd(blockIndex, pickerQuery)}>
-              <span class="list-row-main list-row-title">Create &ldquo;{trimmedQuery}&rdquo;</span>
-            </button>
-          )}
+          {showCreate && results.length > 0 && createRow}
           {results.length === 0 && !showCreate && <div class="muted">No matches.</div>}
         </div>
         <button class="btn btn-ghost" onClick={closePicker}>

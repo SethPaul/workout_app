@@ -60,7 +60,20 @@ function mainBlockCard(): HTMLElement {
   return screen.getByText('Main').closest('.card') as HTMLElement;
 }
 
-describe('Vasa ("/vasa" screen, SPEC 10.5)', () => {
+/** Opens the Main block's picker and types `query` into the search box. */
+function searchMain(query: string) {
+  const main = mainBlockCard();
+  fireEvent.click(within(main).getByRole('button', { name: '+ Add movement' }));
+  fireEvent.input(screen.getByPlaceholderText(/Search movements/i), { target: { value: query } });
+}
+
+/** Opens the New movement sheet from the Main block by searching for `query` and tapping Create. */
+function openCreateSheet(query: string) {
+  searchMain(query);
+  fireEvent.click(screen.getByRole('button', { name: new RegExp(`Create.*${query}`) }));
+}
+
+describe('Vasa ("/vasa" screen, SPEC 10.5, 10.7)', () => {
   beforeEach(() => {
     setStorage(new MemoryStorage());
     state.value = fixtureState();
@@ -96,13 +109,8 @@ describe('Vasa ("/vasa" screen, SPEC 10.5)', () => {
 
   it('adds a movement via the picker, enters a weight, and persists the draft', () => {
     renderPage();
-    const main = mainBlockCard();
-
-    fireEvent.click(within(main).getByRole('button', { name: '+ Add movement' }));
-    fireEvent.input(screen.getByPlaceholderText(/Search movements/i), {
-      target: { value: 'Squat' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Back Squat' }));
+    searchMain('Squat');
+    fireEvent.click(screen.getByRole('button', { name: /Back Squat/ }));
 
     fireEvent.input(screen.getByPlaceholderText('weight (lb)'), { target: { value: '185' } });
     fireEvent.input(screen.getByPlaceholderText('reps'), { target: { value: '8' } });
@@ -114,15 +122,40 @@ describe('Vasa ("/vasa" screen, SPEC 10.5)', () => {
     });
   });
 
-  it('the "Create" row adds a new vasa-library movement and adds it to the block', async () => {
+  it('shows a region · equipment subtitle under each picker result (SPEC 10.7 item 1)', () => {
     renderPage();
-    const main = mainBlockCard();
+    searchMain('Squat');
+    const row = screen.getByRole('button', { name: /Back Squat/ });
+    // Back Squat: tags squat+legs -> region "Lower"; no equipment -> "No equipment".
+    expect(within(row).getByText('Lower · No equipment')).toBeInTheDocument();
+  });
 
-    fireEvent.click(within(main).getByRole('button', { name: '+ Add movement' }));
+  it('the Create row is first when there are no matches, last when there are (SPEC 10.7 item 2)', () => {
+    renderPage();
+    searchMain('Zzzznomatch');
+    let rows = within(mainBlockCard())
+      .getAllByRole('button')
+      .filter((el) => el.className === 'list-row');
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toHaveTextContent(/Create/);
+
     fireEvent.input(screen.getByPlaceholderText(/Search movements/i), {
-      target: { value: 'Wall Ball' },
+      target: { value: 'Squat' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /Create/ }));
+    rows = within(mainBlockCard())
+      .getAllByRole('button')
+      .filter((el) => el.className === 'list-row');
+    expect(rows.length).toBeGreaterThan(1);
+    expect(rows[rows.length - 1]).toHaveTextContent(/Create/);
+    expect(rows[0]).toHaveTextContent('Back Squat');
+  });
+
+  it('the Create row opens the New movement sheet, which adds a new vasa-library movement to the block', async () => {
+    renderPage();
+    openCreateSheet('Wall Ball');
+
+    expect(screen.getByDisplayValue('Wall Ball')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Add to Main' }));
 
     await waitFor(() =>
       expect(state.value?.movements.some((m) => m.name === 'Wall Ball')).toBe(true),
@@ -135,7 +168,7 @@ describe('Vasa ("/vasa" screen, SPEC 10.5)', () => {
     expect(stored?.blocks[0].movements[0].movementId).toBe(created.id);
   });
 
-  it("a movement created from the Finisher picker is full-body, not the day's region", async () => {
+  it("a movement created from the Finisher sheet defaults to Full body, not the day's region", async () => {
     const draft = newVasaDraft(new Date());
     draft.region = 'lower';
     draft.regionTouched = true;
@@ -149,10 +182,93 @@ describe('Vasa ("/vasa" screen, SPEC 10.5)', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: /Create/ }));
 
+    // Full body is the sheet's default region for a Finisher-block creation.
+    expect(screen.getByRole('button', { name: 'Full body', pressed: true })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add to Finisher (2 min)' }));
+
     await waitFor(() =>
       expect(state.value?.movements.some((m) => m.name === 'Dead Bug')).toBe(true),
     );
     expect(state.value!.movements.find((m) => m.name === 'Dead Bug')!.region).toBe('full');
+  });
+
+  it('selecting equipment chips in the sheet carries through to the created movement', async () => {
+    renderPage();
+    openCreateSheet('Band Pull Apart');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Bands' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add to Main' }));
+
+    await waitFor(() =>
+      expect(state.value?.movements.some((m) => m.name === 'Band Pull Apart')).toBe(true),
+    );
+    const created = state.value!.movements.find((m) => m.name === 'Band Pull Apart')!;
+    expect(created.equipment).toEqual(['band']);
+  });
+
+  it('turning "Log weight" off makes the created movement non-loadable', async () => {
+    renderPage();
+    openCreateSheet('Hollow Hold');
+
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: 'Add to Main' }));
+
+    await waitFor(() =>
+      expect(state.value?.movements.some((m) => m.name === 'Hollow Hold')).toBe(true),
+    );
+    expect(state.value!.movements.find((m) => m.name === 'Hollow Hold')!.loadable).toBe(false);
+  });
+
+  it("choosing the Seconds measure sets the created movement's unit", async () => {
+    renderPage();
+    openCreateSheet('Side Plank');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Seconds' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add to Main' }));
+
+    await waitFor(() =>
+      expect(state.value?.movements.some((m) => m.name === 'Side Plank')).toBe(true),
+    );
+    expect(state.value!.movements.find((m) => m.name === 'Side Plank')!.unit).toBe('seconds');
+  });
+
+  it('Back on the sheet returns to search with the query intact', () => {
+    renderPage();
+    openCreateSheet('Wall Ball');
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+
+    expect(screen.getByPlaceholderText(/Search movements/i)).toHaveValue('Wall Ball');
+  });
+
+  it('tapping an "Already have" chip adds the existing movement instead of creating one', async () => {
+    renderPage();
+    // No exact match for "Back Sq", but it word-prefix-matches "Back Squat".
+    openCreateSheet('Back Sq');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Back Squat' }));
+
+    await waitFor(() =>
+      expect(within(mainBlockCard()).getByText('Back Squat')).toBeInTheDocument(),
+    );
+    expect(state.value!.movements).toHaveLength(2); // nothing new created
+    const stored = readVasaDraft();
+    expect(stored?.blocks[0].movements[0].movementId).toBe('squat');
+  });
+
+  it('editing the sheet name to an exact existing name uses that movement on Add (no duplicate)', async () => {
+    renderPage();
+    openCreateSheet('Wall Ball');
+
+    fireEvent.input(screen.getByDisplayValue('Wall Ball'), { target: { value: 'Back Squat' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add to Main' }));
+
+    await waitFor(() =>
+      expect(within(mainBlockCard()).getByText('Back Squat')).toBeInTheDocument(),
+    );
+    expect(state.value!.movements).toHaveLength(2); // reused "squat", nothing created
+    const stored = readVasaDraft();
+    expect(stored?.blocks[0].movements[0].movementId).toBe('squat');
   });
 
   it('"+ Set" prefills the new set from the previous one', () => {
@@ -160,7 +276,7 @@ describe('Vasa ("/vasa" screen, SPEC 10.5)', () => {
     const main = mainBlockCard();
 
     fireEvent.click(within(main).getByRole('button', { name: '+ Add movement' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Back Squat' }));
+    fireEvent.click(screen.getByRole('button', { name: /Back Squat/ }));
 
     fireEvent.input(screen.getByPlaceholderText('weight (lb)'), { target: { value: '185' } });
     fireEvent.input(screen.getByPlaceholderText('reps'), { target: { value: '8' } });
@@ -181,7 +297,7 @@ describe('Vasa ("/vasa" screen, SPEC 10.5)', () => {
     const main = mainBlockCard();
 
     fireEvent.click(within(main).getByRole('button', { name: '+ Add movement' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Back Squat' }));
+    fireEvent.click(screen.getByRole('button', { name: /Back Squat/ }));
     fireEvent.input(screen.getByPlaceholderText('weight (lb)'), { target: { value: '185' } });
     fireEvent.input(screen.getByPlaceholderText('reps'), { target: { value: '8' } });
 
@@ -220,5 +336,17 @@ describe('Vasa ("/vasa" screen, SPEC 10.5)', () => {
     expect(within(mainBlockCard()).getByText('Back Squat')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('weight (lb)')).toHaveValue(135);
     expect(screen.getByPlaceholderText('reps')).toHaveValue(5);
+  });
+
+  it('a movement row has a small "edit" link to /movements/<id>', () => {
+    const draft = newVasaDraft(new Date());
+    draft.blocks[0].movements = [
+      { movementId: 'squat', sets: [{ weight: '', reps: '' }], note: '' },
+    ];
+    writeVasaDraft(draft);
+    renderPage();
+
+    const link = within(mainBlockCard()).getByRole('link', { name: 'edit' });
+    expect(link).toHaveAttribute('href', '/movements/squat');
   });
 });
