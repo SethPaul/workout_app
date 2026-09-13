@@ -4,6 +4,7 @@ import { exportState, importState } from '../../domain/serialize';
 import { resolveSettings, type DeloadPolicy, type Focus } from '../../domain/program/context';
 import { clearTodayWorkout, startNewCycle, state, update } from '../../state/store';
 import { buildSeedState } from '../../storage/seed';
+import { playTestTone } from '../audio';
 import { EQUIPMENT_LABELS } from '../helpers';
 
 const ALL_EQUIPMENT = Object.keys(EQUIPMENT_LABELS) as Equipment[];
@@ -28,7 +29,12 @@ export function Settings() {
   }
 
   async function handleStartNewCycle() {
-    if (!confirm('Start a new cycle now? This resets the cycle week and clears any active deload or dismissed flags.')) return;
+    if (
+      !confirm(
+        'Start a new cycle now? This resets the cycle week and clears any active deload or dismissed flags.',
+      )
+    )
+      return;
     await startNewCycle();
   }
 
@@ -43,6 +49,10 @@ export function Settings() {
 
   function toggleSetting(key: 'soundOn' | 'vibrateOn' | 'keepScreenOn', on: boolean) {
     void update((cur) => ({ ...cur, settings: { ...cur.settings, [key]: on } }));
+  }
+
+  function setSoundVolume(v: number) {
+    void update((cur) => ({ ...cur, settings: { ...cur.settings, soundVolume: v } }));
   }
 
   function exportJson() {
@@ -82,7 +92,8 @@ export function Settings() {
   }
 
   async function resetToSeed() {
-    if (!confirm('Reset all data to the built-in seed workouts? Your logs and edits will be lost.')) return;
+    if (!confirm('Reset all data to the built-in seed workouts? Your logs and edits will be lost.'))
+      return;
     const seeded = await buildSeedState();
     await update(() => seeded);
     clearTodayWorkout();
@@ -99,12 +110,17 @@ export function Settings() {
           <select
             id="units"
             value={settings.units}
-            onChange={(e) => patchSettings(() => ({ units: (e.target as HTMLSelectElement).value as Units }))}
+            onChange={(e) =>
+              patchSettings(() => ({ units: (e.target as HTMLSelectElement).value as Units }))
+            }
           >
             <option value="lb">Pounds (lb)</option>
             <option value="kg">Kilograms (kg)</option>
           </select>
-          <div class="muted">Changing units doesn't convert anything — it only relabels weights and sets the default load increments. Logs keep the number as entered.</div>
+          <div class="muted">
+            Changing units doesn't convert anything — it only relabels weights and sets the default
+            load increments. Logs keep the number as entered.
+          </div>
         </div>
 
         <div class="field">
@@ -112,7 +128,11 @@ export function Settings() {
           <select
             id="deload-policy"
             value={settings.deloadPolicy}
-            onChange={(e) => patchSettings(() => ({ deloadPolicy: (e.target as HTMLSelectElement).value as DeloadPolicy }))}
+            onChange={(e) =>
+              patchSettings(() => ({
+                deloadPolicy: (e.target as HTMLSelectElement).value as DeloadPolicy,
+              }))
+            }
           >
             {(Object.keys(DELOAD_POLICY_LABELS) as DeloadPolicy[]).map((p) => (
               <option value={p} key={p}>
@@ -144,7 +164,9 @@ export function Settings() {
           <select
             id="focus"
             value={settings.focus}
-            onChange={(e) => patchSettings(() => ({ focus: (e.target as HTMLSelectElement).value as Focus }))}
+            onChange={(e) =>
+              patchSettings(() => ({ focus: (e.target as HTMLSelectElement).value as Focus }))
+            }
           >
             {(Object.keys(FOCUS_LABELS) as Focus[]).map((f) => (
               <option value={f} key={f}>
@@ -159,7 +181,9 @@ export function Settings() {
           <input
             type="checkbox"
             checked={settings.masters}
-            onChange={(e) => patchSettings(() => ({ masters: (e.target as HTMLInputElement).checked }))}
+            onChange={(e) =>
+              patchSettings(() => ({ masters: (e.target as HTMLInputElement).checked }))
+            }
             style="width:24px;height:24px"
           />
         </label>
@@ -195,6 +219,27 @@ export function Settings() {
             style="width:24px;height:24px"
           />
         </label>
+        <div class="field">
+          <label for="sound-volume">
+            Volume ({Math.round((s.settings.soundVolume ?? 1) * 100)}%)
+          </label>
+          <div class="volume-row">
+            <input
+              id="sound-volume"
+              class="volume-slider"
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              disabled={!s.settings.soundOn}
+              value={Math.round((s.settings.soundVolume ?? 1) * 100)}
+              onInput={(e) => setSoundVolume(Number((e.target as HTMLInputElement).value) / 100)}
+            />
+            <button class="btn" disabled={!s.settings.soundOn} onClick={() => playTestTone()}>
+              Test
+            </button>
+          </div>
+        </div>
         <label class="toggle-row">
           <span>Vibration cues</span>
           <input

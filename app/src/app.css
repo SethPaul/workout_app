@@ -408,6 +408,18 @@ a {
   border-bottom: none;
 }
 
+.volume-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.volume-slider {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--accent);
+}
+
 .switch {
   width: 46px;
   height: 28px;

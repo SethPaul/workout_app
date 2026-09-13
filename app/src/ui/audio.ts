@@ -3,6 +3,8 @@ import type { Cue } from '../domain/timer';
 type AudioContextCtor = typeof AudioContext;
 
 let ctx: AudioContext | null = null;
+let masterGain: GainNode | null = null;
+let volume = 1;
 
 function getCtor(): AudioContextCtor | undefined {
   if (typeof window === 'undefined') return undefined;
@@ -23,11 +25,17 @@ export function resumeAudio(): void {
   try {
     const Ctor = getCtor();
     if (!Ctor) return;
-    if (!ctx) ctx = new Ctor();
+    if (!ctx) {
+      ctx = new Ctor();
+      masterGain = ctx.createGain();
+      masterGain.gain.value = volume;
+      masterGain.connect(ctx.destination);
+    }
     if (ctx.state === 'suspended') void ctx.resume();
   } catch {
     // Web Audio unavailable — cues will silently no-op.
     ctx = null;
+    masterGain = null;
   }
 }
 
@@ -36,7 +44,22 @@ export function isAudioReady(): boolean {
   return ctx !== null && ctx.state === 'running';
 }
 
-function playTone(freq: number, durationMs: number, opts: { decay?: boolean; gain?: number } = {}): void {
+/** Sets the master volume (0-1) applied to all cues played from now on. */
+export function setVolume(v: number): void {
+  volume = Math.min(1, Math.max(0, v));
+  if (masterGain) masterGain.gain.value = volume;
+}
+
+/** Returns the current master volume (0-1). */
+export function getVolume(): number {
+  return volume;
+}
+
+function playTone(
+  freq: number,
+  durationMs: number,
+  opts: { decay?: boolean; gain?: number } = {},
+): void {
   if (!ctx) return;
   try {
     const osc = ctx.createOscillator();
@@ -55,7 +78,7 @@ function playTone(freq: number, durationMs: number, opts: { decay?: boolean; gai
       gainNode.gain.linearRampToValueAtTime(0.0001, t0 + dur);
     }
     osc.connect(gainNode);
-    gainNode.connect(ctx.destination);
+    gainNode.connect(masterGain ?? ctx.destination);
     osc.start(t0);
     osc.stop(t0 + dur + 0.02);
   } catch {
@@ -78,6 +101,12 @@ function playDoubleBeep(): void {
 
 function playCountdownTick(final: boolean): void {
   playTone(final ? 1320 : 880, final ? 220 : 120);
+}
+
+/** Plays the bell cue so a user can preview the current volume, e.g. from Settings. */
+export function playTestTone(): void {
+  resumeAudio();
+  playBell();
 }
 
 /** Plays the tone for one timer Cue (see domain/timer.ts). Silent no-op until resumeAudio() has run. */

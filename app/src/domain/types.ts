@@ -136,6 +136,7 @@ export interface WorkoutLog {
 export interface Settings {
   availableEquipment: Equipment[]; // default: everything
   soundOn: boolean;
+  soundVolume?: number; // 0-1 master volume for timer cues; default 1
   vibrateOn: boolean;
   keepScreenOn: boolean;
   // --- SPEC 9.1 additions (programming layer) ---
