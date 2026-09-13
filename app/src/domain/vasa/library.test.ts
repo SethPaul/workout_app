@@ -124,6 +124,24 @@ describe('newVasaMovement', () => {
     expect(m.region).toBe('upper');
   });
 
+  it('defaults unit to reps and tags to an empty array', () => {
+    const m = newVasaMovement({ name: 'Dead Bug', region: 'full', existingIds: [] });
+    expect(m.unit).toBe('reps');
+    expect(m.tags).toEqual([]);
+  });
+
+  it('honors an explicit unit/tags override', () => {
+    const m = newVasaMovement({
+      name: 'Plank',
+      region: 'full',
+      existingIds: [],
+      unit: 'seconds',
+      tags: ['core'],
+    });
+    expect(m.unit).toBe('seconds');
+    expect(m.tags).toEqual(['core']);
+  });
+
   it('honors an explicit equipment/loadable override', () => {
     const m = newVasaMovement({
       name: 'Hip Thrust',

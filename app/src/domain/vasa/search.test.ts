@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { searchMovements, hasExactName } from './search';
+import {
+  searchMovements,
+  hasExactName,
+  similarMovements,
+  normalizeText,
+  singular,
+  expandAbbreviation,
+} from './search';
 import type { Movement, WorkoutLog, PoolWorkout } from '../types';
 
 function movement(id: string, name: string, overrides: Partial<Movement> = {}): Movement {
@@ -177,5 +184,152 @@ describe('hasExactName', () => {
     const movements = [movement('squat', 'Back Squat')];
     expect(hasExactName(movements, 'squat')).toBe(false);
     expect(hasExactName(movements, 'front squat')).toBe(false);
+  });
+
+  it('treats "pull up" and "Pull-up" as an exact match either direction', () => {
+    const movements = [movement('pullup', 'Pull-up')];
+    expect(hasExactName(movements, 'pull up')).toBe(true);
+    expect(hasExactName(movements, 'Pull Up')).toBe(true);
+  });
+
+  it('treats "dead bugs" as an exact match of "Dead Bug" (singularized)', () => {
+    const movements = [movement('dead_bug', 'Dead Bug')];
+    expect(hasExactName(movements, 'dead bugs')).toBe(true);
+  });
+});
+
+describe('normalizeText', () => {
+  it('lowercases and folds punctuation/hyphens/whitespace to single spaces', () => {
+    expect(normalizeText('Pull-up')).toBe('pull up');
+    expect(normalizeText('  Incline   Dumbbell_Fly! ')).toBe('incline dumbbell fly');
+  });
+
+  it('leaves a single run-together word untouched', () => {
+    expect(normalizeText('pullup')).toBe('pullup');
+  });
+});
+
+describe('singular', () => {
+  it('turns a trailing "ies" into "y"', () => {
+    expect(singular('flies')).toBe('fly');
+  });
+
+  it('strips one trailing "s"', () => {
+    expect(singular('flys')).toBe('fly');
+    expect(singular('bugs')).toBe('bug');
+  });
+
+  it('does not strip "s" from a word ending in "ss" or 3 characters or shorter', () => {
+    expect(singular('press')).toBe('press');
+    expect(singular('legs')).toBe('leg');
+    expect(singular('abs')).toBe('abs'); // 3 chars, left alone
+  });
+});
+
+describe('expandAbbreviation', () => {
+  it('expands a token that is exactly a known abbreviation', () => {
+    expect(expandAbbreviation('db')).toEqual(['dumbbell']);
+    expect(expandAbbreviation('rdl')).toEqual(['romanian', 'deadlift']);
+    expect(expandAbbreviation('kb')).toEqual(['kettlebell']);
+  });
+
+  it('leaves a non-abbreviation token unchanged', () => {
+    expect(expandAbbreviation('dumbbell')).toEqual(['dumbbell']);
+  });
+
+  it('does not expand a token that only contains an abbreviation', () => {
+    expect(expandAbbreviation('dbx')).toEqual(['dbx']);
+  });
+});
+
+describe('searchMovements match tiers (SPEC 10.7)', () => {
+  it('matches "pull up" against "Pull-up" (hyphen/space fold to the same normalized text)', () => {
+    const m = movement('pullup', 'Pull-up');
+    const results = searchMovements([m], 'pull up', { region: 'full', logs: [], now: NOW });
+    expect(results.map((r) => r.id)).toEqual(['pullup']);
+  });
+
+  it('matches "pullup" against "Pull-up" via the space-stripped substring tier', () => {
+    const m = movement('pullup', 'Pull-up');
+    const results = searchMovements([m], 'pullup', { region: 'full', logs: [], now: NOW });
+    expect(results.map((r) => r.id)).toEqual(['pullup']);
+  });
+
+  it('"inc db fly" scores an ordered word-prefix match above an unordered one', () => {
+    const ordered = movement('incline_db_fly', 'Incline Dumbbell Fly');
+    const unordered = movement('db_incline_fly', 'Dumbbell Incline Fly');
+    const results = searchMovements([unordered, ordered], 'inc db fly', {
+      region: 'full',
+      logs: [],
+      now: NOW,
+    });
+    expect(results.map((r) => r.id)).toEqual(['incline_db_fly', 'db_incline_fly']);
+  });
+
+  it('scores an unordered word-prefix match (query tokens out of order) above a mismatch', () => {
+    const m = movement('db_incline_fly', 'Dumbbell Incline Fly');
+    const noMatch = movement('bench', 'Bench Press');
+    const results = searchMovements([noMatch, m], 'inc db fly', {
+      region: 'full',
+      logs: [],
+      now: NOW,
+    });
+    expect(results.map((r) => r.id)).toEqual(['db_incline_fly']);
+  });
+
+  it('"rdl" finds "Romanian Deadlift" via abbreviation expansion', () => {
+    const m = movement('rdl', 'Romanian Deadlift');
+    const results = searchMovements([m], 'rdl', { region: 'full', logs: [], now: NOW });
+    expect(results.map((r) => r.id)).toEqual(['rdl']);
+  });
+
+  it('"kb swing" finds "Kettlebell Swing" via abbreviation expansion', () => {
+    const m = movement('kb_swing', 'Kettlebell Swing');
+    const results = searchMovements([m], 'kb swing', { region: 'full', logs: [], now: NOW });
+    expect(results.map((r) => r.id)).toEqual(['kb_swing']);
+  });
+
+  it('"flys" and "flies" both match "Fly" (singularization)', () => {
+    const m = movement('fly', 'Fly');
+    expect(
+      searchMovements([m], 'flys', { region: 'full', logs: [], now: NOW }).map((r) => r.id),
+    ).toEqual(['fly']);
+    expect(
+      searchMovements([m], 'flies', { region: 'full', logs: [], now: NOW }).map((r) => r.id),
+    ).toEqual(['fly']);
+  });
+
+  it('excludes a movement with no match at any tier when the query is non-empty', () => {
+    const m = movement('squat', 'Back Squat');
+    const results = searchMovements([m], 'xyz', { region: 'full', logs: [], now: NOW });
+    expect(results).toEqual([]);
+  });
+});
+
+describe('similarMovements', () => {
+  it('ranks by match tier alone, ignoring library/region/recency/availability boosts', () => {
+    // "Fly" is an exact match (100) for a default-library movement; "Incline
+    // Fly" is only an ordered word-prefix match (60) even though it is in
+    // the vasa library, which would normally add +10.
+    const exactDefault = movement('fly', 'Fly', { libraries: ['default'] });
+    const prefixVasa = movement('incline_fly', 'Incline Fly', { libraries: ['vasa'] });
+    const results = similarMovements([prefixVasa, exactDefault], 'fly');
+    expect(results.map((r) => r.id)).toEqual(['fly', 'incline_fly']);
+  });
+
+  it('returns only the top `limit` matches (default 3)', () => {
+    const movements = Array.from({ length: 5 }, (_, i) => movement(`m${i}`, `Row ${i}`));
+    expect(similarMovements(movements, 'row')).toHaveLength(3);
+    expect(similarMovements(movements, 'row', 2)).toHaveLength(2);
+  });
+
+  it('excludes movements with no match at any tier', () => {
+    const m = movement('squat', 'Back Squat');
+    expect(similarMovements([m], 'xyz')).toEqual([]);
+  });
+
+  it('returns nothing for an empty query', () => {
+    const m = movement('squat', 'Back Squat');
+    expect(similarMovements([m], '')).toEqual([]);
   });
 });

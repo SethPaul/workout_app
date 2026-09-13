@@ -1,5 +1,5 @@
 import { slugify } from '../slug';
-import type { BodyRegion, Equipment, Movement, MovementLibrary, VasaStyle } from '../types';
+import type { BodyRegion, Equipment, Movement, MovementLibrary, Unit, VasaStyle } from '../types';
 
 /** SPEC 10.3: `m.libraries`, defaulting an absent value to `['default']`. */
 export function movementLibraries(m: Movement): MovementLibrary[] {
@@ -57,6 +57,8 @@ export interface NewVasaMovementInput {
   existingIds: string[];
   loadable?: boolean;
   equipment?: Equipment[];
+  unit?: Unit;
+  tags?: string[];
 }
 
 /** Makes `base` unique against `existingIds` by appending `_2`, `_3`, ... as needed. */
@@ -69,19 +71,20 @@ function uniqueId(base: string, existingIds: string[]): string {
 }
 
 /**
- * SPEC 10.3: builds a fresh Movement for the "Create <name>" flow in the
- * Vasa movement picker — added straight to the `vasa` library with no tags
- * (the user picked a region explicitly, so nothing needs to be inferred).
+ * SPEC 10.3/10.7: builds a fresh Movement for the "Create <name>" flow in the
+ * Vasa movement picker — added straight to the `vasa` library (the user
+ * picked a region explicitly, so nothing needs to be inferred). `unit`
+ * defaults to `'reps'` and `tags` to `[]`.
  */
 export function newVasaMovement(input: NewVasaMovementInput): Movement {
   const id = uniqueId(slugify(input.name), input.existingIds);
   return {
     id,
     name: input.name,
-    tags: [],
+    tags: input.tags ?? [],
     equipment: input.equipment ?? ['none'],
     cadenceDays: 3,
-    unit: 'reps',
+    unit: input.unit ?? 'reps',
     loadable: input.loadable ?? true,
     libraries: ['vasa'],
     region: input.region,
