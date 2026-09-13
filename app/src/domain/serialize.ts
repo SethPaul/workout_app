@@ -8,7 +8,6 @@ import type {
   MovementLibrary,
   PoolWorkout,
   Settings,
-  VasaMeta,
   WorkoutLog,
 } from './types';
 
@@ -68,7 +67,6 @@ function assertCadenceDays(value: unknown, path: string): asserts value is numbe
 }
 
 const BODY_REGIONS = new Set<string>(['lower', 'upper', 'full']);
-const VASA_STYLES = new Set<string>(['build', 'pump', 'power', 'brawn']);
 
 function assertBodyRegion(value: unknown, path: string): asserts value is BodyRegion {
   assertString(value, path);
@@ -158,19 +156,7 @@ function validatePoolWorkout(value: unknown, index: number): PoolWorkout {
   return value as unknown as PoolWorkout;
 }
 
-const LOG_KINDS = new Set(['pool', 'adhoc', 'max-test', 'vasa']);
-
-/** SPEC 10.2: `{ region: BodyRegion; style?: VasaStyle }`, present iff `kind === 'vasa'`. */
-function assertVasaMeta(value: unknown, path: string): asserts value is VasaMeta {
-  if (!isPlainObject(value)) fail(`${path} must be an object`);
-  assertBodyRegion(value.region, `${path}.region`);
-  if (value.style !== undefined) {
-    assertString(value.style, `${path}.style`);
-    if (!VASA_STYLES.has(value.style)) {
-      fail(`expected "${path}.style" to be one of build, pump, power, brawn`);
-    }
-  }
-}
+const LOG_KINDS = new Set(['pool', 'adhoc', 'max-test']);
 
 function validateWorkoutLog(value: unknown, index: number): WorkoutLog {
   const path = `logs[${index}]`;
@@ -186,13 +172,11 @@ function validateWorkoutLog(value: unknown, index: number): WorkoutLog {
   if (value.kind !== undefined) {
     assertString(value.kind, `${path}.kind`);
     if (!LOG_KINDS.has(value.kind)) {
-      fail(`expected "${path}.kind" to be one of pool, adhoc, max-test, vasa`);
+      fail(`expected "${path}.kind" to be one of pool, adhoc, max-test`);
     }
   }
   if (value.durationMin !== undefined) assertNumber(value.durationMin, `${path}.durationMin`);
   if (value.editedAt !== undefined) assertString(value.editedAt, `${path}.editedAt`);
-  // SPEC 10.2: present iff kind === 'vasa'.
-  if (value.vasa !== undefined) assertVasaMeta(value.vasa, `${path}.vasa`);
   return value as unknown as WorkoutLog;
 }
 

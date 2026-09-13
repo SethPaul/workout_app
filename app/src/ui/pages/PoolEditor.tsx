@@ -1,10 +1,28 @@
 import { useMemo, useState } from 'preact/hooks';
 import { useLocation, useRoute } from 'preact-iso';
-import type { Block, BlockMovement, Equipment, Format, Intensity, Movement, PoolWorkout, Unit } from '../../domain/types';
-import { state, update } from '../../state/store';
+import type {
+  Block,
+  BlockMovement,
+  Equipment,
+  Format,
+  Intensity,
+  Movement,
+  PoolWorkout,
+  Unit,
+} from '../../domain/types';
+import { chooseTodayWorkout, state, update } from '../../state/store';
 import { EQUIPMENT_LABELS, FORMAT_LABELS, INTENSITY_LABELS, slugify, uid } from '../helpers';
 
-const FORMATS: Format[] = ['strength', 'emom', 'tabata', 'interval', 'amrap', 'rounds', 'chipper', 'death_by'];
+const FORMATS: Format[] = [
+  'strength',
+  'emom',
+  'tabata',
+  'interval',
+  'amrap',
+  'rounds',
+  'chipper',
+  'death_by',
+];
 const ALL_EQUIPMENT = Object.keys(EQUIPMENT_LABELS) as Equipment[];
 const ALL_UNITS: Unit[] = ['reps', 'meters', 'calories', 'seconds'];
 
@@ -40,7 +58,9 @@ export function PoolEditor() {
   const isNew = params.id === undefined;
   const existing = !isNew ? s.pool.find((w) => w.id === params.id) : undefined;
 
-  const [draft, setDraft] = useState<PoolWorkout>(() => (existing ? structuredClone(existing) : blankWorkout()));
+  const [draft, setDraft] = useState<PoolWorkout>(() =>
+    existing ? structuredClone(existing) : blankWorkout(),
+  );
   const [tagInput, setTagInput] = useState('');
   const [pickerBlockIndex, setPickerBlockIndex] = useState<number | null>(null);
   const [pickerQuery, setPickerQuery] = useState('');
@@ -117,7 +137,11 @@ export function PoolEditor() {
     });
   }
 
-  function patchMovement(blockIndex: number, movementIndex: number, fn: (bm: BlockMovement) => void) {
+  function patchMovement(
+    blockIndex: number,
+    movementIndex: number,
+    fn: (bm: BlockMovement) => void,
+  ) {
     patch((d) => {
       fn(d.blocks[blockIndex].movements[movementIndex]);
     });
@@ -128,7 +152,9 @@ export function PoolEditor() {
     const q = pickerQuery.trim().toLowerCase();
     const list = q
       ? s.movements.filter(
-          (m) => m.name.toLowerCase().includes(q) || (m.aliases ?? []).some((a) => a.toLowerCase().includes(q)),
+          (m) =>
+            m.name.toLowerCase().includes(q) ||
+            (m.aliases ?? []).some((a) => a.toLowerCase().includes(q)),
         )
       : s.movements;
     return list.slice(0, 25);
@@ -150,10 +176,20 @@ export function PoolEditor() {
       unit: newMovement.unit,
       loadable: newMovement.loadable,
     };
-    await update((cur) => ({ ...cur, movements: [...cur.movements.filter((m) => m.id !== id), movement] }));
+    await update((cur) => ({
+      ...cur,
+      movements: [...cur.movements.filter((m) => m.id !== id), movement],
+    }));
     if (pickerBlockIndex !== null) addMovementToBlock(pickerBlockIndex, id);
     setShowNewMovement(false);
-    setNewMovement({ name: '', equipment: [], tags: '', cadenceDays: '7', unit: 'reps', loadable: true });
+    setNewMovement({
+      name: '',
+      equipment: [],
+      tags: '',
+      cadenceDays: '7',
+      unit: 'reps',
+      loadable: true,
+    });
   }
 
   async function save() {
@@ -177,6 +213,12 @@ export function PoolEditor() {
     location.route('/pool', true);
   }
 
+  /** SPEC 10.8 item 5: sets this pool workout as today's and returns to Today. */
+  function makeToday() {
+    chooseTodayWorkout(draft.id);
+    location.route('/', true);
+  }
+
   return (
     <div>
       <div class="top-bar">
@@ -185,6 +227,12 @@ export function PoolEditor() {
         </a>
         <h1 class="page-title">{isNew ? 'New Workout' : 'Edit Workout'}</h1>
       </div>
+
+      {!isNew && (
+        <button class="btn btn-block" style="margin-bottom:1rem" onClick={makeToday}>
+          Make it today&rsquo;s
+        </button>
+      )}
 
       <div class="stack">
         <div class="field">
@@ -203,7 +251,9 @@ export function PoolEditor() {
             <select
               id="intensity"
               value={draft.intensity}
-              onChange={(e) => patch((d) => (d.intensity = (e.target as HTMLSelectElement).value as Intensity))}
+              onChange={(e) =>
+                patch((d) => (d.intensity = (e.target as HTMLSelectElement).value as Intensity))
+              }
             >
               {(['H', 'M', 'L'] as const).map((i) => (
                 <option value={i} key={i}>
@@ -218,7 +268,9 @@ export function PoolEditor() {
               id="cadence"
               type="number"
               value={draft.cadenceDays}
-              onInput={(e) => patch((d) => (d.cadenceDays = Number((e.target as HTMLInputElement).value) || 0))}
+              onInput={(e) =>
+                patch((d) => (d.cadenceDays = Number((e.target as HTMLInputElement).value) || 0))
+              }
             />
           </div>
         </div>
@@ -275,7 +327,12 @@ export function PoolEditor() {
               <div class="row-between">
                 <strong>Block {bi + 1}</strong>
                 <div class="row">
-                  <button class="icon-btn" onClick={() => moveBlock(bi, -1)} disabled={bi === 0} aria-label="Move up">
+                  <button
+                    class="icon-btn"
+                    onClick={() => moveBlock(bi, -1)}
+                    disabled={bi === 0}
+                    aria-label="Move up"
+                  >
                     ↑
                   </button>
                   <button
@@ -286,7 +343,11 @@ export function PoolEditor() {
                   >
                     ↓
                   </button>
-                  <button class="icon-btn" onClick={() => removeBlock(bi)} aria-label="Remove block">
+                  <button
+                    class="icon-btn"
+                    onClick={() => removeBlock(bi)}
+                    aria-label="Remove block"
+                  >
                     🗑
                   </button>
                 </div>
@@ -308,7 +369,10 @@ export function PoolEditor() {
                 <select
                   value={block.format}
                   onChange={(e) =>
-                    patch((d) => (d.blocks[bi].format = (e.target as HTMLSelectElement).value as Format))
+                    patch(
+                      (d) =>
+                        (d.blocks[bi].format = (e.target as HTMLSelectElement).value as Format),
+                    )
                   }
                 >
                   {FORMATS.map((f) => (
@@ -331,7 +395,11 @@ export function PoolEditor() {
                     <div class="card stack" key={mi} style="padding:0.6rem">
                       <div class="row-between">
                         <span class="list-row-title">{mv?.name ?? bm.movementId}</span>
-                        <button class="icon-btn" onClick={() => removeMovementFromBlock(bi, mi)} aria-label="Remove movement">
+                        <button
+                          class="icon-btn"
+                          onClick={() => removeMovementFromBlock(bi, mi)}
+                          aria-label="Remove movement"
+                        >
                           ×
                         </button>
                       </div>
@@ -341,7 +409,11 @@ export function PoolEditor() {
                           placeholder="reps"
                           value={bm.reps ?? ''}
                           onInput={(e) =>
-                            patchMovement(bi, mi, (m) => (m.reps = numOrUndef((e.target as HTMLInputElement).value)))
+                            patchMovement(
+                              bi,
+                              mi,
+                              (m) => (m.reps = numOrUndef((e.target as HTMLInputElement).value)),
+                            )
                           }
                         />
                         <input
@@ -349,7 +421,12 @@ export function PoolEditor() {
                           placeholder="distance (m)"
                           value={bm.distanceM ?? ''}
                           onInput={(e) =>
-                            patchMovement(bi, mi, (m) => (m.distanceM = numOrUndef((e.target as HTMLInputElement).value)))
+                            patchMovement(
+                              bi,
+                              mi,
+                              (m) =>
+                                (m.distanceM = numOrUndef((e.target as HTMLInputElement).value)),
+                            )
                           }
                         />
                         <input
@@ -357,7 +434,11 @@ export function PoolEditor() {
                           placeholder="seconds"
                           value={bm.seconds ?? ''}
                           onInput={(e) =>
-                            patchMovement(bi, mi, (m) => (m.seconds = numOrUndef((e.target as HTMLInputElement).value)))
+                            patchMovement(
+                              bi,
+                              mi,
+                              (m) => (m.seconds = numOrUndef((e.target as HTMLInputElement).value)),
+                            )
                           }
                         />
                       </div>
@@ -366,7 +447,11 @@ export function PoolEditor() {
                         placeholder="load note (e.g. heavy, 70% 1RM)"
                         value={bm.loadNote ?? ''}
                         onInput={(e) =>
-                          patchMovement(bi, mi, (m) => (m.loadNote = (e.target as HTMLInputElement).value || undefined))
+                          patchMovement(
+                            bi,
+                            mi,
+                            (m) => (m.loadNote = (e.target as HTMLInputElement).value || undefined),
+                          )
                         }
                       />
                     </div>
@@ -385,7 +470,11 @@ export function PoolEditor() {
                   />
                   <div class="list" style="max-height:220px;overflow-y:auto">
                     {pickerMatches.map((m) => (
-                      <button class="list-row" key={m.id} onClick={() => addMovementToBlock(bi, m.id)}>
+                      <button
+                        class="list-row"
+                        key={m.id}
+                        onClick={() => addMovementToBlock(bi, m.id)}
+                      >
                         <span class="list-row-main list-row-title">{m.name}</span>
                       </button>
                     ))}
@@ -405,7 +494,12 @@ export function PoolEditor() {
                         type="text"
                         placeholder="Name"
                         value={newMovement.name}
-                        onInput={(e) => setNewMovement((n) => ({ ...n, name: (e.target as HTMLInputElement).value }))}
+                        onInput={(e) =>
+                          setNewMovement((n) => ({
+                            ...n,
+                            name: (e.target as HTMLInputElement).value,
+                          }))
+                        }
                       />
                       <div class="tag-list">
                         {ALL_EQUIPMENT.map((eq) => (
@@ -417,7 +511,9 @@ export function PoolEditor() {
                                 const checked = (e.target as HTMLInputElement).checked;
                                 setNewMovement((n) => ({
                                   ...n,
-                                  equipment: checked ? [...n.equipment, eq] : n.equipment.filter((x) => x !== eq),
+                                  equipment: checked
+                                    ? [...n.equipment, eq]
+                                    : n.equipment.filter((x) => x !== eq),
                                 }));
                               }}
                             />
@@ -429,7 +525,12 @@ export function PoolEditor() {
                         type="text"
                         placeholder="tags (comma separated)"
                         value={newMovement.tags}
-                        onInput={(e) => setNewMovement((n) => ({ ...n, tags: (e.target as HTMLInputElement).value }))}
+                        onInput={(e) =>
+                          setNewMovement((n) => ({
+                            ...n,
+                            tags: (e.target as HTMLInputElement).value,
+                          }))
+                        }
                       />
                       <div class="row">
                         <input
@@ -437,13 +538,19 @@ export function PoolEditor() {
                           placeholder="cadence days"
                           value={newMovement.cadenceDays}
                           onInput={(e) =>
-                            setNewMovement((n) => ({ ...n, cadenceDays: (e.target as HTMLInputElement).value }))
+                            setNewMovement((n) => ({
+                              ...n,
+                              cadenceDays: (e.target as HTMLInputElement).value,
+                            }))
                           }
                         />
                         <select
                           value={newMovement.unit}
                           onChange={(e) =>
-                            setNewMovement((n) => ({ ...n, unit: (e.target as HTMLSelectElement).value as Unit }))
+                            setNewMovement((n) => ({
+                              ...n,
+                              unit: (e.target as HTMLSelectElement).value as Unit,
+                            }))
                           }
                         >
                           {ALL_UNITS.map((u) => (
@@ -459,7 +566,10 @@ export function PoolEditor() {
                           type="checkbox"
                           checked={newMovement.loadable}
                           onChange={(e) =>
-                            setNewMovement((n) => ({ ...n, loadable: (e.target as HTMLInputElement).checked }))
+                            setNewMovement((n) => ({
+                              ...n,
+                              loadable: (e.target as HTMLInputElement).checked,
+                            }))
                           }
                           style="width:24px;height:24px"
                         />
@@ -496,7 +606,13 @@ export function PoolEditor() {
   );
 }
 
-function FormatFields({ block, onChange }: { block: Block; onChange: (fn: (b: Block) => void) => void }) {
+function FormatFields({
+  block,
+  onChange,
+}: {
+  block: Block;
+  onChange: (fn: (b: Block) => void) => void;
+}) {
   switch (block.format) {
     case 'strength':
       return (
@@ -506,7 +622,9 @@ function FormatFields({ block, onChange }: { block: Block; onChange: (fn: (b: Bl
             <input
               type="number"
               value={block.sets ?? ''}
-              onInput={(e) => onChange((b) => (b.sets = numOrUndef((e.target as HTMLInputElement).value)))}
+              onInput={(e) =>
+                onChange((b) => (b.sets = numOrUndef((e.target as HTMLInputElement).value)))
+              }
             />
           </div>
           <div class="field" style="flex:1">
@@ -514,7 +632,9 @@ function FormatFields({ block, onChange }: { block: Block; onChange: (fn: (b: Bl
             <input
               type="number"
               value={block.restSec ?? ''}
-              onInput={(e) => onChange((b) => (b.restSec = numOrUndef((e.target as HTMLInputElement).value)))}
+              onInput={(e) =>
+                onChange((b) => (b.restSec = numOrUndef((e.target as HTMLInputElement).value)))
+              }
             />
           </div>
         </div>
@@ -528,7 +648,9 @@ function FormatFields({ block, onChange }: { block: Block; onChange: (fn: (b: Bl
               <input
                 type="number"
                 value={block.rounds ?? ''}
-                onInput={(e) => onChange((b) => (b.rounds = numOrUndef((e.target as HTMLInputElement).value)))}
+                onInput={(e) =>
+                  onChange((b) => (b.rounds = numOrUndef((e.target as HTMLInputElement).value)))
+                }
               />
             </div>
             <div class="field" style="flex:1">
@@ -536,7 +658,11 @@ function FormatFields({ block, onChange }: { block: Block; onChange: (fn: (b: Bl
               <input
                 type="number"
                 value={block.intervalSec ?? ''}
-                onInput={(e) => onChange((b) => (b.intervalSec = numOrUndef((e.target as HTMLInputElement).value)))}
+                onInput={(e) =>
+                  onChange(
+                    (b) => (b.intervalSec = numOrUndef((e.target as HTMLInputElement).value)),
+                  )
+                }
               />
             </div>
           </div>
@@ -545,7 +671,9 @@ function FormatFields({ block, onChange }: { block: Block; onChange: (fn: (b: Bl
             <input
               type="checkbox"
               checked={!!block.alternate}
-              onChange={(e) => onChange((b) => (b.alternate = (e.target as HTMLInputElement).checked))}
+              onChange={(e) =>
+                onChange((b) => (b.alternate = (e.target as HTMLInputElement).checked))
+              }
               style="width:24px;height:24px"
             />
           </label>
@@ -560,7 +688,9 @@ function FormatFields({ block, onChange }: { block: Block; onChange: (fn: (b: Bl
               type="number"
               placeholder="8"
               value={block.rounds ?? ''}
-              onInput={(e) => onChange((b) => (b.rounds = numOrUndef((e.target as HTMLInputElement).value)))}
+              onInput={(e) =>
+                onChange((b) => (b.rounds = numOrUndef((e.target as HTMLInputElement).value)))
+              }
             />
           </div>
           <div class="field" style="flex:1">
@@ -569,7 +699,9 @@ function FormatFields({ block, onChange }: { block: Block; onChange: (fn: (b: Bl
               type="number"
               placeholder="20"
               value={block.workSec ?? ''}
-              onInput={(e) => onChange((b) => (b.workSec = numOrUndef((e.target as HTMLInputElement).value)))}
+              onInput={(e) =>
+                onChange((b) => (b.workSec = numOrUndef((e.target as HTMLInputElement).value)))
+              }
             />
           </div>
           <div class="field" style="flex:1">
@@ -578,7 +710,9 @@ function FormatFields({ block, onChange }: { block: Block; onChange: (fn: (b: Bl
               type="number"
               placeholder="10"
               value={block.restSec ?? ''}
-              onInput={(e) => onChange((b) => (b.restSec = numOrUndef((e.target as HTMLInputElement).value)))}
+              onInput={(e) =>
+                onChange((b) => (b.restSec = numOrUndef((e.target as HTMLInputElement).value)))
+              }
             />
           </div>
         </div>
@@ -591,7 +725,9 @@ function FormatFields({ block, onChange }: { block: Block; onChange: (fn: (b: Bl
             <input
               type="number"
               value={block.rounds ?? ''}
-              onInput={(e) => onChange((b) => (b.rounds = numOrUndef((e.target as HTMLInputElement).value)))}
+              onInput={(e) =>
+                onChange((b) => (b.rounds = numOrUndef((e.target as HTMLInputElement).value)))
+              }
             />
           </div>
           <div class="field" style="flex:1">
@@ -599,7 +735,9 @@ function FormatFields({ block, onChange }: { block: Block; onChange: (fn: (b: Bl
             <input
               type="number"
               value={block.workSec ?? ''}
-              onInput={(e) => onChange((b) => (b.workSec = numOrUndef((e.target as HTMLInputElement).value)))}
+              onInput={(e) =>
+                onChange((b) => (b.workSec = numOrUndef((e.target as HTMLInputElement).value)))
+              }
             />
           </div>
           <div class="field" style="flex:1">
@@ -607,7 +745,9 @@ function FormatFields({ block, onChange }: { block: Block; onChange: (fn: (b: Bl
             <input
               type="number"
               value={block.restSec ?? ''}
-              onInput={(e) => onChange((b) => (b.restSec = numOrUndef((e.target as HTMLInputElement).value)))}
+              onInput={(e) =>
+                onChange((b) => (b.restSec = numOrUndef((e.target as HTMLInputElement).value)))
+              }
             />
           </div>
         </div>
@@ -619,7 +759,9 @@ function FormatFields({ block, onChange }: { block: Block; onChange: (fn: (b: Bl
           <input
             type="number"
             value={block.durationSec ?? ''}
-            onInput={(e) => onChange((b) => (b.durationSec = numOrUndef((e.target as HTMLInputElement).value)))}
+            onInput={(e) =>
+              onChange((b) => (b.durationSec = numOrUndef((e.target as HTMLInputElement).value)))
+            }
           />
         </div>
       );
@@ -631,7 +773,9 @@ function FormatFields({ block, onChange }: { block: Block; onChange: (fn: (b: Bl
             <input
               type="number"
               value={block.rounds ?? ''}
-              onInput={(e) => onChange((b) => (b.rounds = numOrUndef((e.target as HTMLInputElement).value)))}
+              onInput={(e) =>
+                onChange((b) => (b.rounds = numOrUndef((e.target as HTMLInputElement).value)))
+              }
             />
           </div>
           <div class="field" style="flex:1">
@@ -639,7 +783,9 @@ function FormatFields({ block, onChange }: { block: Block; onChange: (fn: (b: Bl
             <input
               type="number"
               value={block.timeCapSec ?? ''}
-              onInput={(e) => onChange((b) => (b.timeCapSec = numOrUndef((e.target as HTMLInputElement).value)))}
+              onInput={(e) =>
+                onChange((b) => (b.timeCapSec = numOrUndef((e.target as HTMLInputElement).value)))
+              }
             />
           </div>
         </div>
@@ -651,11 +797,17 @@ function FormatFields({ block, onChange }: { block: Block; onChange: (fn: (b: Bl
           <input
             type="number"
             value={block.timeCapSec ?? ''}
-            onInput={(e) => onChange((b) => (b.timeCapSec = numOrUndef((e.target as HTMLInputElement).value)))}
+            onInput={(e) =>
+              onChange((b) => (b.timeCapSec = numOrUndef((e.target as HTMLInputElement).value)))
+            }
           />
         </div>
       );
     case 'death_by':
-      return <p class="muted">Minute 1 = 1 rep, +1 rep each minute until failure. Set starting reps per movement below.</p>;
+      return (
+        <p class="muted">
+          Minute 1 = 1 rep, +1 rep each minute until failure. Set starting reps per movement below.
+        </p>
+      );
   }
 }

@@ -6,6 +6,7 @@ import {
   normalizeText,
   singular,
   expandAbbreviation,
+  textMatchScore,
 } from './search';
 import type { Movement, WorkoutLog, PoolWorkout } from '../types';
 
@@ -331,5 +332,36 @@ describe('similarMovements', () => {
   it('returns nothing for an empty query', () => {
     const m = movement('squat', 'Back Squat');
     expect(similarMovements([m], '')).toEqual([]);
+  });
+});
+
+describe('textMatchScore (SPEC 10.7/10.8: nameMatchScore factored out for arbitrary strings)', () => {
+  it('scores an exact normalized+singularized match 100', () => {
+    expect(textMatchScore('dead bugs', ['Dead Bug'])).toBe(100);
+  });
+
+  it('scores an ordered word-prefix match 60', () => {
+    expect(textMatchScore('inc db fly', ['Incline Dumbbell Fly'])).toBe(60);
+  });
+
+  it('scores an unordered word-prefix match 50', () => {
+    expect(textMatchScore('fly inc', ['Incline Dumbbell Fly'])).toBe(50);
+  });
+
+  it('scores a space-stripped substring match 20', () => {
+    expect(textMatchScore('pullup', ['Pull-up'])).toBe(20);
+  });
+
+  it('scores 0 (no match) for an empty query or no matching candidate', () => {
+    expect(textMatchScore('', ['Back Squat'])).toBe(0);
+    expect(textMatchScore('xyz', ['Back Squat'])).toBe(0);
+  });
+
+  it('takes the best score across multiple candidates', () => {
+    expect(textMatchScore('back squat', ['vasa', 'region:lower', 'Back Squat'])).toBe(100);
+  });
+
+  it('empty candidate strings are ignored, not treated as a match', () => {
+    expect(textMatchScore('back squat', ['', 'Back Squat'])).toBe(100);
   });
 });

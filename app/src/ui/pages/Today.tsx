@@ -229,8 +229,8 @@ export function Today() {
         </div>
       )}
 
-      <a class="btn btn-block" href="/vasa" style="margin-top:1rem">
-        Log a Vasa class
+      <a class="btn btn-block" href="/enter" style="margin-top:1rem">
+        Enter a workout
       </a>
     </div>
   );

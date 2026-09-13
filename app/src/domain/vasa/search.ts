@@ -128,12 +128,15 @@ function unorderedPrefixMatch(queryWords: string[], candidateWords: string[]): b
 }
 
 /**
- * SPEC 10.7: the best of the match tiers for `query` against a movement's
- * name and every alias (best candidate wins): exact 100, ordered word-prefix
- * 60, unordered word-prefix 50, space-stripped substring 20, else 0 (no
- * match — the movement is excluded from `searchMovements` results).
+ * SPEC 10.7/10.8: the best of the match tiers for `query` against any of
+ * `candidates` (best candidate wins): exact 100, ordered word-prefix 60,
+ * unordered word-prefix 50, space-stripped substring 20, else 0 (no match —
+ * the caller excludes the item from its results). Shared by
+ * `searchMovements`'s `nameMatchScore` (candidates: name + aliases) and
+ * `domain/vasa/pool.ts`'s `searchPool` (candidates: a workout's name, tags,
+ * and movement names).
  */
-function nameMatchScore(m: Movement, query: string): number {
+export function textMatchScore(query: string, candidates: string[]): number {
   const qRaw = rawWords(query);
   if (qRaw.length === 0) return 0;
   const qKey = wordsKey(qRaw);
@@ -141,7 +144,7 @@ function nameMatchScore(m: Movement, query: string): number {
   const qExpanded = expandedWords(query);
 
   let best = 0;
-  for (const candidate of [m.name, ...(m.aliases ?? [])]) {
+  for (const candidate of candidates) {
     const cWords = rawWords(candidate);
     if (cWords.length === 0) continue;
     if (wordsKey(cWords) === qKey) return 100;
@@ -150,6 +153,14 @@ function nameMatchScore(m: Movement, query: string): number {
     if (best < 20 && cWords.join('').includes(qStripped)) best = 20;
   }
   return best;
+}
+
+/**
+ * SPEC 10.7: the best of the match tiers for `query` against a movement's
+ * name and every alias (best candidate wins) — see `textMatchScore`.
+ */
+function nameMatchScore(m: Movement, query: string): number {
+  return textMatchScore(query, [m.name, ...(m.aliases ?? [])]);
 }
 
 /**

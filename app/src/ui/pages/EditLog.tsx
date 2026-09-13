@@ -110,11 +110,9 @@ export function EditLog() {
     );
   }
 
-  // vasa logs use the generic results editor too (SPEC 10.5): their
-  // workoutSnapshot is strength/amrap blocks like a pool workout, and
-  // EditPoolLog's updateLog patch preserves kind/vasa untouched. Only
-  // adhoc/max-test (built by buildAdhocLog, no snapshot blocks) need the
-  // dedicated AdhocLog form.
+  // Only adhoc/max-test (built by buildAdhocLog, no snapshot blocks) need
+  // the dedicated AdhocLog form; every other kind (pool, and pool-derived
+  // entered-workout logs, SPEC 10.8) uses the generic results editor.
   const kind = logKind(log);
   if (kind === 'adhoc' || kind === 'max-test') {
     return <EditAdhocLog log={log} />;

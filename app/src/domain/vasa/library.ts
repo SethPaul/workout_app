@@ -51,6 +51,14 @@ export const VASA_STYLE_LABELS: Record<VasaStyle, string> = {
   brawn: 'Brawn · advanced strength',
 };
 
+/** SPEC 10.8: short form of `VASA_STYLE_LABELS` (the text before " · "), for `defaultWorkoutName`. */
+export const VASA_STYLE_SHORT_LABELS: Record<VasaStyle, string> = {
+  build: 'Build',
+  pump: 'Pump',
+  power: 'Power',
+  brawn: 'Brawn',
+};
+
 export interface NewVasaMovementInput {
   name: string;
   region: BodyRegion;

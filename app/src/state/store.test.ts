@@ -1,18 +1,19 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import type { AppState, PoolWorkout, WorkoutLog } from '../domain/types';
+import type { AppState, Movement, PoolWorkout, WorkoutLog } from '../domain/types';
 import type { Storage } from '../storage/storage';
 import { buildAdhocLog } from '../domain/program/adhoc';
-import { buildVasaLog } from '../domain/vasa/build';
+import { buildEnteredWorkout } from '../domain/vasa/pool';
 import {
   acceptDeload,
+  addPoolWorkout,
   bumpTodayWorkout,
+  chooseTodayWorkout,
   clearTodayWorkout,
   currentTodayWorkout,
   deleteLog,
   dismissFlags,
   init,
   logAdhoc,
-  logVasa,
   pullToday,
   setStorage,
   setTodayWorkout,
@@ -205,6 +206,134 @@ describe('pullToday (SPEC 9.5/9.9)', () => {
   });
 });
 
+function squatMovement(overrides: Partial<Movement> = {}): Movement {
+  return {
+    id: 'back_squat',
+    name: 'Back Squat',
+    tags: ['squat'],
+    equipment: ['barbell'],
+    cadenceDays: 7,
+    unit: 'reps',
+    loadable: true,
+    ...overrides,
+  };
+}
+
+function emptyStateWithProgram(): AppState {
+  return {
+    ...emptyState(),
+    schemaVersion: 2,
+    program: { cycleStartedAt: '2024-01-01T00:00:00.000Z', dismissedFlags: [] },
+  };
+}
+
+describe('addPoolWorkout (SPEC 10.8)', () => {
+  it('appends the workout to the pool', async () => {
+    const storage = new MemoryStorage();
+    storage.saved = emptyStateWithProgram();
+    setStorage(storage);
+    await init();
+    await addPoolWorkout(squatPool());
+    expect(state.value?.pool.map((w) => w.id)).toEqual(['w1']);
+    expect(storage.saved?.pool.map((w) => w.id)).toEqual(['w1']);
+  });
+
+  it('marks referenced movements into the vasa library for an entered workout', async () => {
+    const storage = new MemoryStorage();
+    storage.saved = { ...emptyStateWithProgram(), movements: [squatMovement()] };
+    setStorage(storage);
+    await init();
+    const entered = buildEnteredWorkout({
+      date: '2024-01-05',
+      region: 'lower',
+      blocks: [{ role: 'main', title: 'Main', movements: [{ movementId: 'back_squat', sets: 5 }] }],
+      id: 'entered-1',
+    });
+    await addPoolWorkout(entered);
+    const movement = state.value?.movements.find((m) => m.id === 'back_squat');
+    expect(movement?.libraries).toEqual(['default', 'vasa']);
+  });
+
+  it('does not touch movement libraries for an ordinary (non-entered) pool workout', async () => {
+    const storage = new MemoryStorage();
+    storage.saved = { ...emptyStateWithProgram(), movements: [squatMovement()] };
+    setStorage(storage);
+    await init();
+    await addPoolWorkout(squatPool());
+    const movement = state.value?.movements.find((m) => m.id === 'back_squat');
+    expect(movement?.libraries).toBeUndefined();
+  });
+});
+
+describe('chooseTodayWorkout (SPEC 10.8)', () => {
+  it('returns null and sets nothing for an unknown id', async () => {
+    const storage = new MemoryStorage();
+    storage.saved = emptyStateWithProgram();
+    setStorage(storage);
+    await init();
+    const now = new Date('2024-01-01T12:00:00.000Z');
+    const result = chooseTodayWorkout('nope', now);
+    expect(result).toBeNull();
+    expect(currentTodayWorkout(now)).toBeNull();
+  });
+
+  it('sets an unwaved snapshot for an entered workout', async () => {
+    const storage = new MemoryStorage();
+    storage.saved = { ...emptyStateWithProgram(), movements: [squatMovement()] };
+    setStorage(storage);
+    await init();
+    const entered = buildEnteredWorkout({
+      date: '2024-01-05',
+      region: 'lower',
+      blocks: [{ role: 'main', title: 'Main', movements: [{ movementId: 'back_squat', sets: 5 }] }],
+      id: 'entered-1',
+    });
+    await addPoolWorkout(entered);
+
+    // Week 3 (peak) would normally drop sets by 1 and bump targetRpe to 9;
+    // an entered workout must skip the wave entirely (the coach's
+    // prescription is not waved).
+    const now = new Date('2024-01-15T00:00:00.000Z'); // cycleStartedAt + 14 days = week 3
+    const snapshot = chooseTodayWorkout('entered-1', now);
+    expect(snapshot?.blocks[0].sets).toBe(5);
+    expect(snapshot?.blocks[0].movements[0].targetRpe).toBeUndefined();
+    expect(currentTodayWorkout(now)?.workoutId).toBe('entered-1');
+    expect(currentTodayWorkout(now)?.snapshot).toEqual(snapshot);
+  });
+
+  it('sets a wave-transformed snapshot for an ordinary pool workout', async () => {
+    const storage = new MemoryStorage();
+    storage.saved = {
+      ...emptyStateWithProgram(),
+      movements: [squatMovement()],
+      pool: [squatPool()],
+    };
+    setStorage(storage);
+    await init();
+
+    const now = new Date('2024-01-15T00:00:00.000Z'); // week 3 (peak): sets -1, targetRpe 9
+    const snapshot = chooseTodayWorkout('w1', now);
+    expect(snapshot?.blocks[0].sets).toBe(4); // 5 - 1
+    expect(snapshot?.blocks[0].movements[0].targetRpe).toBe(9);
+  });
+
+  it('clears a bumped exclusion for the chosen id', async () => {
+    const storage = new MemoryStorage();
+    storage.saved = { ...emptyStateWithProgram(), pool: [squatPool()] };
+    setStorage(storage);
+    await init();
+
+    const now = new Date('2024-01-01T12:00:00.000Z');
+    setTodayWorkout('w1', now);
+    bumpTodayWorkout(now);
+    expect(currentTodayWorkout(now)?.excluded).toEqual(['w1']);
+
+    chooseTodayWorkout('w1', now);
+    expect(currentTodayWorkout(now)?.excluded).toEqual([]);
+    expect(currentTodayWorkout(now)?.workoutId).toBe('w1');
+  });
+});
+
 describe('logAdhoc / acceptDeload / dismissFlags / startNewCycle', () => {
   function emptyStateWithProgram(): AppState {
     return {
@@ -227,78 +356,6 @@ describe('logAdhoc / acceptDeload / dismissFlags / startNewCycle', () => {
     await logAdhoc(log);
     expect(state.value?.logs).toHaveLength(1);
     expect(state.value?.logs[0].kind).toBe('adhoc');
-  });
-
-  it('logVasa appends the log and marks its movements as in the vasa library (SPEC 10.4)', async () => {
-    const storage = new MemoryStorage();
-    storage.saved = {
-      ...emptyStateWithProgram(),
-      movements: [
-        {
-          id: 'back_squat',
-          name: 'Back Squat',
-          tags: ['squat'],
-          equipment: ['barbell'],
-          cadenceDays: 7,
-          unit: 'reps',
-          loadable: true,
-        },
-      ],
-    };
-    setStorage(storage);
-    await init();
-    const log = buildVasaLog({
-      date: '2024-01-05T12:00:00.000Z',
-      region: 'lower',
-      blocks: [
-        {
-          role: 'main',
-          title: 'Main',
-          movements: [{ movementId: 'back_squat', sets: [{ weight: 185, reps: 8 }] }],
-        },
-      ],
-      id: 'vasa-1',
-    });
-    await logVasa(log);
-    expect(state.value?.logs).toHaveLength(1);
-    expect(state.value?.logs[0].kind).toBe('vasa');
-    const movement = state.value?.movements.find((m) => m.id === 'back_squat');
-    expect(movement?.libraries).toEqual(['default', 'vasa']);
-  });
-
-  it('logVasa does not mark a movement as vasa if it is not referenced by any result', async () => {
-    const storage = new MemoryStorage();
-    storage.saved = {
-      ...emptyStateWithProgram(),
-      movements: [
-        {
-          id: 'untouched',
-          name: 'Untouched',
-          tags: [],
-          equipment: [],
-          cadenceDays: 3,
-          unit: 'reps',
-          loadable: true,
-        },
-      ],
-    };
-    setStorage(storage);
-    await init();
-    const log = buildVasaLog({
-      date: '2024-01-05T12:00:00.000Z',
-      region: 'lower',
-      blocks: [
-        {
-          role: 'main',
-          title: 'Main',
-          movements: [{ movementId: 'back_squat', sets: [{ reps: 5 }] }],
-        },
-      ],
-      id: 'vasa-2',
-    });
-    await logVasa(log);
-    const movement = state.value?.movements.find((m) => m.id === 'untouched');
-    expect(movement?.libraries).toBeUndefined();
   });
 
   it('acceptDeload sets program.deloadWeekStartedAt', async () => {

@@ -1,20 +1,20 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   draftHasAnyMovement,
-  draftToLogInput,
-  newVasaDraft,
-  readVasaDraft,
+  draftToWorkoutInput,
+  newEnterDraft,
+  readEnterDraft,
   regionForDraftDate,
-  writeVasaDraft,
-  type VasaDraft,
-} from './vasaDraft';
+  writeEnterDraft,
+  type EnterDraft,
+} from './enterDraft';
 import type { Movement } from '../domain/types';
 
-function fixtureDraft(overrides: Partial<VasaDraft> = {}): VasaDraft {
-  return { ...newVasaDraft(new Date('2024-01-16T12:00:00')), ...overrides }; // Tue -> lower
+function fixtureDraft(overrides: Partial<EnterDraft> = {}): EnterDraft {
+  return { ...newEnterDraft(new Date('2024-01-16T12:00:00')), ...overrides }; // Tue -> lower
 }
 
-describe('vasaDraft (SPEC 10.5)', () => {
+describe('enterDraft (SPEC 10.8)', () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -23,15 +23,15 @@ describe('vasaDraft (SPEC 10.5)', () => {
     vi.useRealTimers();
   });
 
-  describe('newVasaDraft', () => {
+  describe('newEnterDraft', () => {
     it('defaults region by weekday via regionForDate', () => {
-      expect(newVasaDraft(new Date('2024-01-16T12:00:00')).region).toBe('lower'); // Tuesday
-      expect(newVasaDraft(new Date('2024-01-17T12:00:00')).region).toBe('upper'); // Wednesday
-      expect(newVasaDraft(new Date('2024-01-19T12:00:00')).region).toBe('full'); // Friday
+      expect(newEnterDraft(new Date('2024-01-16T12:00:00')).region).toBe('lower'); // Tuesday
+      expect(newEnterDraft(new Date('2024-01-17T12:00:00')).region).toBe('upper'); // Wednesday
+      expect(newEnterDraft(new Date('2024-01-19T12:00:00')).region).toBe('full'); // Friday
     });
 
     it('creates four blocks: Main, Accessory 1, Accessory 2, Finisher (2 min)', () => {
-      const draft = newVasaDraft(new Date('2024-01-16T12:00:00'));
+      const draft = newEnterDraft(new Date('2024-01-16T12:00:00'));
       expect(draft.blocks.map((b) => b.title)).toEqual([
         'Main',
         'Accessory 1',
@@ -44,6 +44,7 @@ describe('vasaDraft (SPEC 10.5)', () => {
         'accessory',
         'finisher',
       ]);
+      expect(draft.name).toBe('');
       expect(draft.regionTouched).toBe(false);
       expect(draft.blocks.every((b) => b.movements.length === 0)).toBe(true);
     });
@@ -59,99 +60,92 @@ describe('vasaDraft (SPEC 10.5)', () => {
 
   describe('localStorage round-trip', () => {
     it('returns null when nothing is stored', () => {
-      expect(readVasaDraft()).toBeNull();
+      expect(readEnterDraft()).toBeNull();
     });
 
     it('writes and reads back an identical draft', () => {
       const draft = fixtureDraft({
+        name: 'Tuesday Lower',
         blocks: [
           {
             role: 'main',
             title: 'Main',
-            movements: [{ movementId: 'squat', sets: [{ weight: '185', reps: '8' }], note: '' }],
+            movements: [{ movementId: 'squat', sets: '5', reps: '5', seconds: '' }],
           },
           { role: 'accessory', title: 'Accessory 1', movements: [] },
           { role: 'accessory', title: 'Accessory 2', movements: [] },
           { role: 'finisher', title: 'Finisher (2 min)', movements: [] },
         ],
       });
-      writeVasaDraft(draft);
-      expect(readVasaDraft()).toEqual(draft);
+      writeEnterDraft(draft);
+      expect(readEnterDraft()).toEqual(draft);
     });
 
     it('clears the stored draft when written null', () => {
-      writeVasaDraft(fixtureDraft());
-      writeVasaDraft(null);
-      expect(readVasaDraft()).toBeNull();
+      writeEnterDraft(fixtureDraft());
+      writeEnterDraft(null);
+      expect(readEnterDraft()).toBeNull();
     });
 
     it('returns null for corrupt JSON rather than throwing', () => {
-      localStorage.setItem('workout_app.vasaDraft', '{not json');
-      expect(readVasaDraft()).toBeNull();
+      localStorage.setItem('workout_app.enterDraft', '{not json');
+      expect(readEnterDraft()).toBeNull();
     });
 
     it('returns null for a plausible-looking but wrong-shaped value', () => {
-      localStorage.setItem('workout_app.vasaDraft', JSON.stringify({ foo: 'bar' }));
-      expect(readVasaDraft()).toBeNull();
+      localStorage.setItem('workout_app.enterDraft', JSON.stringify({ foo: 'bar' }));
+      expect(readEnterDraft()).toBeNull();
     });
   });
 
-  describe('draftToLogInput', () => {
-    it('drops empty weight/reps/notes/rpe strings to undefined', () => {
+  describe('draftToWorkoutInput', () => {
+    it('drops empty sets/reps/seconds/notes/name strings to undefined', () => {
       const draft = fixtureDraft({
+        name: '   ',
         notes: '   ',
-        rpe: '',
         blocks: [
           {
             role: 'main',
             title: 'Main',
-            movements: [{ movementId: 'squat', sets: [{ weight: '', reps: '' }], note: '' }],
+            movements: [{ movementId: 'squat', sets: '', reps: '', seconds: '' }],
           },
           { role: 'accessory', title: 'Accessory 1', movements: [] },
           { role: 'accessory', title: 'Accessory 2', movements: [] },
           { role: 'finisher', title: 'Finisher (2 min)', movements: [] },
         ],
       });
-      const input = draftToLogInput(draft);
+      const input = draftToWorkoutInput(draft);
+      expect(input.name).toBeUndefined();
       expect(input.notes).toBeUndefined();
-      expect(input.rpe).toBeUndefined();
-      expect(input.blocks[0].movements[0].sets).toEqual([{ weight: undefined, reps: undefined }]);
+      expect(input.blocks[0].movements[0]).toEqual({
+        movementId: 'squat',
+        sets: undefined,
+        reps: undefined,
+      });
     });
 
-    it('parses numeric weight/reps/rpe strings', () => {
+    it('parses numeric sets/reps for main/accessory rows', () => {
       const draft = fixtureDraft({
-        rpe: '7.5',
+        name: 'Deadlift day',
         notes: 'Felt strong',
         blocks: [
           {
             role: 'main',
             title: 'Main',
-            movements: [
-              {
-                movementId: 'squat',
-                sets: [
-                  { weight: '185', reps: '8' },
-                  { weight: '185', reps: '8' },
-                ],
-                note: '',
-              },
-            ],
+            movements: [{ movementId: 'squat', sets: '5', reps: '5', seconds: '' }],
           },
           { role: 'accessory', title: 'Accessory 1', movements: [] },
           { role: 'accessory', title: 'Accessory 2', movements: [] },
           { role: 'finisher', title: 'Finisher (2 min)', movements: [] },
         ],
       });
-      const input = draftToLogInput(draft);
-      expect(input.rpe).toBe(7.5);
+      const input = draftToWorkoutInput(draft);
+      expect(input.name).toBe('Deadlift day');
       expect(input.notes).toBe('Felt strong');
-      expect(input.blocks[0].movements[0].sets).toEqual([
-        { weight: 185, reps: 8 },
-        { weight: 185, reps: 8 },
-      ]);
+      expect(input.blocks[0].movements[0]).toEqual({ movementId: 'squat', sets: 5, reps: 5 });
     });
 
-    it('carries a finisher note through as `notes` with no sets', () => {
+    it('carries a finisher row through with only `seconds`', () => {
       const draft = fixtureDraft({
         blocks: [
           { role: 'main', title: 'Main', movements: [] },
@@ -160,16 +154,12 @@ describe('vasaDraft (SPEC 10.5)', () => {
           {
             role: 'finisher',
             title: 'Finisher (2 min)',
-            movements: [{ movementId: 'plank', sets: [], note: '20 each side' }],
+            movements: [{ movementId: 'plank', sets: '', reps: '', seconds: '45' }],
           },
         ],
       });
-      const input = draftToLogInput(draft);
-      expect(input.blocks[3].movements[0]).toEqual({
-        movementId: 'plank',
-        sets: [],
-        notes: '20 each side',
-      });
+      const input = draftToWorkoutInput(draft);
+      expect(input.blocks[3].movements[0]).toEqual({ movementId: 'plank', seconds: 45 });
     });
 
     it('drops draft entries for movements no longer present when a movement list is given', () => {
@@ -190,8 +180,8 @@ describe('vasaDraft (SPEC 10.5)', () => {
             role: 'main',
             title: 'Main',
             movements: [
-              { movementId: 'squat', sets: [{ weight: '185', reps: '5' }], note: '' },
-              { movementId: 'deleted_movement', sets: [{ weight: '10', reps: '10' }], note: '' },
+              { movementId: 'squat', sets: '5', reps: '5', seconds: '' },
+              { movementId: 'deleted_movement', sets: '3', reps: '10', seconds: '' },
             ],
           },
           { role: 'accessory', title: 'Accessory 1', movements: [] },
@@ -199,7 +189,7 @@ describe('vasaDraft (SPEC 10.5)', () => {
           { role: 'finisher', title: 'Finisher (2 min)', movements: [] },
         ],
       });
-      const input = draftToLogInput(draft, movements);
+      const input = draftToWorkoutInput(draft, movements);
       expect(input.blocks[0].movements).toHaveLength(1);
       expect(input.blocks[0].movements[0].movementId).toBe('squat');
     });
@@ -213,7 +203,11 @@ describe('vasaDraft (SPEC 10.5)', () => {
     it('is true once any block has a movement', () => {
       const draft = fixtureDraft({
         blocks: [
-          { role: 'main', title: 'Main', movements: [{ movementId: 'squat', sets: [], note: '' }] },
+          {
+            role: 'main',
+            title: 'Main',
+            movements: [{ movementId: 'squat', sets: '', reps: '', seconds: '' }],
+          },
           { role: 'accessory', title: 'Accessory 1', movements: [] },
           { role: 'accessory', title: 'Accessory 2', movements: [] },
           { role: 'finisher', title: 'Finisher (2 min)', movements: [] },

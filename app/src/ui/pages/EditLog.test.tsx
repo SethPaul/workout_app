@@ -50,38 +50,6 @@ function poolLog(): WorkoutLog {
   };
 }
 
-function vasaLog(): WorkoutLog {
-  return {
-    id: 'v1',
-    workoutSnapshot: {
-      id: 'vasa-v1',
-      name: 'Vasa LFT · Lower',
-      intensity: 'M',
-      cadenceDays: 0,
-      enabled: false,
-      source: 'manual',
-      tags: ['vasa', 'region:lower'],
-      blocks: [
-        { format: 'strength', title: 'Main', movements: [{ movementId: 'squat' }], sets: 1 },
-        {
-          format: 'amrap',
-          title: 'Finisher',
-          movements: [{ movementId: 'squat' }],
-          durationSec: 120,
-        },
-      ],
-    },
-    startedAt: '2024-06-01T12:00:00.000Z',
-    finishedAt: '2024-06-01T12:00:00.000Z',
-    results: [
-      { movementId: 'squat', blockIndex: 0, sets: [{ weight: 200, reps: 5 }] },
-      { movementId: 'squat', blockIndex: 1, notes: '3 rounds' },
-    ],
-    kind: 'vasa',
-    vasa: { region: 'lower', style: 'build' },
-  };
-}
-
 function fixtureState(logs: WorkoutLog[]): AppState {
   return {
     movements: [
@@ -183,25 +151,5 @@ describe('EditLog', () => {
 
     const now = new Date('2024-06-02T00:00:00.000Z');
     expect(currentMax(state.value!.logs, 'squat', now)).toBeCloseTo(e1rm(425, 1)!);
-  });
-
-  it('edits a vasa log: changing a weight saves and preserves kind/vasa meta', async () => {
-    state.value = fixtureState([vasaLog()]);
-    renderEditLog('v1');
-
-    const weightInput = screen.getByDisplayValue('200');
-    fireEvent.input(weightInput, { target: { value: '215' } });
-
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-
-    await waitFor(() => {
-      const log = state.value!.logs.find((l) => l.id === 'v1');
-      expect(log?.results[0].sets?.[0].weight).toBe(215);
-    });
-
-    const log = state.value!.logs.find((l) => l.id === 'v1')!;
-    expect(log.kind).toBe('vasa');
-    expect(log.vasa).toEqual({ region: 'lower', style: 'build' });
-    expect(log.editedAt).toBeDefined();
   });
 });

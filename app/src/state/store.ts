@@ -4,6 +4,7 @@ import { applyWave, cycleWeek, isDeloadWeek } from '../domain/program/cycle';
 import { resolveProgram } from '../domain/program/context';
 import { selectWorkout, type SelectInput, type SelectResult } from '../domain/select';
 import { withLibrary } from '../domain/vasa/library';
+import { isEnteredWorkout } from '../domain/vasa/pool';
 import type { AppState, PoolWorkout, ProgramState, WorkoutLog } from '../domain/types';
 import type { Storage } from '../storage/storage';
 import { IdbStorage } from '../storage/idb';
@@ -47,15 +48,17 @@ export async function logAdhoc(log: WorkoutLog): Promise<void> {
 }
 
 /**
- * Appends a Vasa studio-class WorkoutLog (SPEC 10.4) built by
- * `domain/vasa/build.ts`, and marks every movement it references as being
- * in the `vasa` library, so the Vasa library grows from use.
+ * Appends a pool workout (SPEC 10.8), e.g. one entered via `/enter`. Every
+ * movement it references is marked as being in the `vasa` library when the
+ * workout itself is an entered one (`isEnteredWorkout`), so the Vasa library
+ * grows from use; ordinary pool workouts don't touch movement libraries.
  */
-export async function logVasa(log: WorkoutLog): Promise<void> {
+export async function addPoolWorkout(w: PoolWorkout): Promise<void> {
   await update((s) => {
-    const movementIds = new Set(log.results.map((r) => r.movementId));
+    if (!isEnteredWorkout(w)) return { ...s, pool: [...s.pool, w] };
+    const movementIds = new Set(w.blocks.flatMap((b) => b.movements.map((m) => m.movementId)));
     const movements = s.movements.map((m) => (movementIds.has(m.id) ? withLibrary(m, 'vasa') : m));
-    return { ...s, movements, logs: [...s.logs, log] };
+    return { ...s, movements, pool: [...s.pool, w] };
   });
 }
 
@@ -202,6 +205,43 @@ export function pullToday(input: PullTodayInput): SelectResult {
     setTodayWorkout(result.workout.id, input.now, snapshot);
   }
   return result;
+}
+
+/**
+ * SPEC 10.8: sets today's workout to the pool entry with `id` — used by the
+ * `/enter` "Start" and "Make it today's" actions to run/log a searched or
+ * just-entered pool workout directly, bypassing `selectWorkout`. Returns the
+ * snapshot that was remembered, or null when `id` isn't in the pool.
+ *
+ * The snapshot is the same cycle-wave transform `pullToday` applies (SPEC
+ * 9.5) for an ordinary pool workout, but the untouched workout for an
+ * entered one (`isEnteredWorkout`) — the coach's prescription isn't waved.
+ * Also clears `id` from today's bumped-exclusion list, if present, so a
+ * workout excluded earlier today can still be chosen explicitly.
+ */
+export function chooseTodayWorkout(id: string, now: Date = new Date()): PoolWorkout | null {
+  if (!state.value) throw new Error('store.chooseTodayWorkout called before init()');
+  const workout = state.value.pool.find((w) => w.id === id);
+  if (!workout) return null;
+
+  let snapshot = workout;
+  if (!isEnteredWorkout(workout)) {
+    const programState = resolveProgram(state.value.program, state.value.logs, now);
+    const week = cycleWeek(programState, now);
+    const deload = isDeloadWeek(programState, now);
+    snapshot = applyWave(workout, week, deload, state.value.settings, state.value.movements);
+  }
+
+  const existing = currentTodayWorkout(now);
+  const next: TodayWorkout = {
+    date: todayDateString(now),
+    workoutId: id,
+    excluded: (existing?.excluded ?? []).filter((excludedId) => excludedId !== id),
+    snapshot,
+  };
+  todayWorkout.value = next;
+  writeLocalStorage(next);
+  return snapshot;
 }
 
 /** Bumps the current workout: adds it to the excluded list and clears the pick. */

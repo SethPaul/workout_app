@@ -303,8 +303,8 @@ describe('importState validation', () => {
   });
 });
 
-describe('importState SPEC 10.2 (Vasa) additions', () => {
-  it('accepts a log with kind: "vasa" and a vasa region/style', () => {
+describe('importState SPEC 10.2/10.8 (Vasa library facet) additions', () => {
+  it('rejects a log with kind: "vasa" (SPEC 10.8 removed the vasa log kind)', () => {
     const state = validState();
     state.logs.push({
       id: 'l1',
@@ -312,55 +312,9 @@ describe('importState SPEC 10.2 (Vasa) additions', () => {
       startedAt: '2024-01-01T00:00:00.000Z',
       finishedAt: '2024-01-01T00:00:00.000Z',
       results: [],
-      kind: 'vasa',
-      vasa: { region: 'lower', style: 'build' },
+      kind: 'vasa' as unknown as 'pool',
     });
-    const imported = importState(JSON.stringify(state));
-    expect(imported.logs[0].kind).toBe('vasa');
-    expect(imported.logs[0].vasa).toEqual({ region: 'lower', style: 'build' });
-  });
-
-  it('accepts a vasa log with no style', () => {
-    const state = validState();
-    state.logs.push({
-      id: 'l1',
-      workoutSnapshot: state.pool[0],
-      startedAt: '2024-01-01T00:00:00.000Z',
-      finishedAt: '2024-01-01T00:00:00.000Z',
-      results: [],
-      kind: 'vasa',
-      vasa: { region: 'full' },
-    });
-    const imported = importState(JSON.stringify(state));
-    expect(imported.logs[0].vasa).toEqual({ region: 'full' });
-  });
-
-  it('rejects a vasa log with an invalid region', () => {
-    const state = validState();
-    state.logs.push({
-      id: 'l1',
-      workoutSnapshot: state.pool[0],
-      startedAt: '2024-01-01T00:00:00.000Z',
-      finishedAt: '2024-01-01T00:00:00.000Z',
-      results: [],
-      kind: 'vasa',
-      vasa: { region: 'sideways' as unknown as 'lower' },
-    });
-    expect(() => importState(JSON.stringify(state))).toThrow(/region/);
-  });
-
-  it('rejects a vasa log with an invalid style', () => {
-    const state = validState();
-    state.logs.push({
-      id: 'l1',
-      workoutSnapshot: state.pool[0],
-      startedAt: '2024-01-01T00:00:00.000Z',
-      finishedAt: '2024-01-01T00:00:00.000Z',
-      results: [],
-      kind: 'vasa',
-      vasa: { region: 'lower', style: 'ultra' as unknown as 'build' },
-    });
-    expect(() => importState(JSON.stringify(state))).toThrow(/style/);
+    expect(() => importState(JSON.stringify(state))).toThrow(/kind/);
   });
 
   it('accepts a movement with libraries and an explicit region', () => {

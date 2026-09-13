@@ -8,10 +8,9 @@ function durationLabel(startedAt: string, finishedAt: string): string {
   return `${minutes} min`;
 }
 
-const KIND_LABELS: Record<'adhoc' | 'max-test' | 'vasa', string> = {
+const KIND_LABELS: Record<'adhoc' | 'max-test', string> = {
   adhoc: 'Logged',
   'max-test': 'Max test',
-  vasa: 'Vasa',
 };
 
 export function History() {
@@ -30,9 +29,6 @@ export function History() {
       <div class="btn-row" style="margin-bottom:1rem">
         <a class="btn btn-block" href="/history/adhoc">
           Log something else
-        </a>
-        <a class="btn btn-block" href="/vasa">
-          Log a Vasa class
         </a>
       </div>
 

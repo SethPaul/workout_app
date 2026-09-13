@@ -148,12 +148,6 @@ export interface BlockOutcome {
   status: 'completed' | 'skipped' | 'failed';
 }
 
-/** SPEC 10.2: per-log metadata for a Vasa studio class. */
-export interface VasaMeta {
-  region: BodyRegion;
-  style?: VasaStyle;
-}
-
 export interface WorkoutLog {
   id: string;
   // Was required; SPEC 9.1 makes it optional (adhoc/max-test logs have none).
@@ -171,14 +165,12 @@ export interface WorkoutLog {
   // src/ui/) keep typechecking; treat an absent kind as 'pool' (see
   // `program/context.ts`'s `logKind`). migrate() stamps it explicitly on
   // stored state.
-  kind?: 'pool' | 'adhoc' | 'max-test' | 'vasa';
+  kind?: 'pool' | 'adhoc' | 'max-test';
   durationMin?: number; // derived from startedAt/finishedAt when both exist
   // --- history editing additions ---
   editedAt?: string; // ISO timestamp of the last edit via store.updateLog, if any
   // --- per-block outcome capture (bug fix: AMRAP rounds/for-time clocks were thrown away) ---
   blockOutcomes?: BlockOutcome[];
-  // --- SPEC 10.2: present iff kind === 'vasa' ---
-  vasa?: VasaMeta;
 }
 
 export interface Settings {
