@@ -1,4 +1,6 @@
-import type { Block, BlockMovement, Format } from './types';
+import type { Block, BlockMovement, BlockOutcome, Format } from './types';
+
+export type { BlockOutcome };
 
 export type CueType = 'beep' | 'bell' | 'countdown';
 
@@ -23,6 +25,16 @@ export interface Phase {
   repsDue?: number;
   remainingMs?: number;
   elapsedMs: number;
+  // Structured set/round context (in addition to `label`) so callers can
+  // build their own heading instead of parsing the label with a regex.
+  /** strength work/rest phases: the set number (rest after set s carries setIndex: s). */
+  setIndex?: number;
+  /** strength work/rest phases: total prescribed sets. */
+  setCount?: number;
+  /** emom/interval/tabata work/rest phases: the round number. */
+  round?: number;
+  /** emom/interval/tabata work/rest phases: total rounds. */
+  roundCount?: number;
 }
 
 export type TimerStatus = 'idle' | 'running' | 'paused' | 'between-blocks' | 'finished';
@@ -32,6 +44,10 @@ interface InternalPhase {
   label: string;
   movementIds: string[];
   repsDue?: number;
+  setIndex?: number;
+  setCount?: number;
+  round?: number;
+  roundCount?: number;
   /** undefined = event-paced (advanced via `next`) or an open stopwatch. */
   durationMs?: number;
   beepOnStart?: boolean;
@@ -61,10 +77,14 @@ export interface TimerState {
   roundsDone: number;
   status: TimerStatus;
   pendingCues: Cue[];
+  /** One entry per block that has ended (naturally, skipped, failed, or via early finish), in block order. */
+  blockOutcomes: BlockOutcome[];
   // --- internal bookkeeping (not part of the documented public surface, but
   // plain data so the whole state can be safely structuredClone()d) ---
   _blocks: InternalBlock[];
   _phaseElapsedMs: number;
+  /** Wall-clock ms accumulated within the current block, across all its phases (resets on advanceBlock). */
+  _blockElapsedMs: number;
   _cueFiredMarks: string[];
   _lastTickAt?: number;
   _chipperIndex?: number;
@@ -112,6 +132,8 @@ function buildInternalBlock(block: Block): InternalBlock {
           label: `Set ${s}/${sets}`,
           movementIds,
           repsDue,
+          setIndex: s,
+          setCount: sets,
           bellOnStart: s === sets && sets > 1,
         });
         if (s < sets) {
@@ -119,6 +141,8 @@ function buildInternalBlock(block: Block): InternalBlock {
             kind: 'rest',
             label: 'Rest',
             movementIds: [],
+            setIndex: s, // the set just completed
+            setCount: sets,
             durationMs: restSec * 1000,
             countdownTicks: true,
             tenSecondCue: restSec * 1000 > 10_000,
@@ -146,6 +170,8 @@ function buildInternalBlock(block: Block): InternalBlock {
           label: `Round ${r}/${rounds}`,
           movementIds: roundMovementIds,
           repsDue,
+          round: r,
+          roundCount: rounds,
           durationMs: intervalSec * 1000,
           beepOnStart: true,
           countdownTicks: true,
@@ -168,6 +194,8 @@ function buildInternalBlock(block: Block): InternalBlock {
             label: `${movementLabel(mv)} ${r}/${rounds}`,
             movementIds: [mv.movementId],
             repsDue: mv.reps,
+            round: r,
+            roundCount: rounds,
             durationMs: workSec * 1000,
             beepOnStart: true,
             tenSecondCue: workSec * 1000 > 10_000,
@@ -180,6 +208,8 @@ function buildInternalBlock(block: Block): InternalBlock {
               kind: 'rest',
               label: 'Rest',
               movementIds: [],
+              round: r, // the round just completed
+              roundCount: rounds,
               durationMs: restSec * 1000,
               bellOnStart: true,
               tenSecondCue: restSec * 1000 > 10_000,
@@ -200,6 +230,8 @@ function buildInternalBlock(block: Block): InternalBlock {
           kind: 'work',
           label: `Round ${r}/${rounds} work`,
           movementIds,
+          round: r,
+          roundCount: rounds,
           durationMs: workSec * 1000,
           beepOnStart: true,
           tenSecondCue: workSec * 1000 > 10_000,
@@ -209,6 +241,8 @@ function buildInternalBlock(block: Block): InternalBlock {
             kind: 'rest',
             label: `Round ${r}/${rounds} rest`,
             movementIds: [],
+            round: r,
+            roundCount: rounds,
             durationMs: restSec * 1000,
             bellOnStart: true,
             tenSecondCue: restSec * 1000 > 10_000,
@@ -255,7 +289,9 @@ function buildInternalBlock(block: Block): InternalBlock {
       const phases: InternalPhase[] = [
         {
           kind: 'stopwatch',
-          label: first ? `Movement 1/${block.movements.length}: ${movementLabel(first)}` : 'Chipper',
+          label: first
+            ? `Movement 1/${block.movements.length}: ${movementLabel(first)}`
+            : 'Chipper',
           movementIds: first ? [first.movementId] : [],
           bellAtElapsedMs: timeCapMs,
         },
@@ -286,6 +322,10 @@ function setPhaseFromInternal(state: TimerState, phase: InternalPhase): void {
     repsDue: phase.repsDue,
     remainingMs: phase.durationMs,
     elapsedMs: 0,
+    setIndex: phase.setIndex,
+    setCount: phase.setCount,
+    round: phase.round,
+    roundCount: phase.roundCount,
   };
   state._phaseElapsedMs = 0;
   state._cueFiredMarks = [];
@@ -305,8 +345,10 @@ export function createTimer(blocks: Block[], now: number): TimerState {
     roundsDone: 0,
     status: 'idle',
     pendingCues: [],
+    blockOutcomes: [],
     _blocks: internalBlocks,
     _phaseElapsedMs: 0,
+    _blockElapsedMs: 0,
     _cueFiredMarks: [],
     _lastTickAt: now,
   };
@@ -330,11 +372,40 @@ function fireStartCues(state: TimerState, phase: InternalPhase | undefined): voi
   if (phase.bellOnStart) pushCue(state, 'bell', phase.durationMs ?? 0);
 }
 
+/**
+ * Records the outcome of the block currently ending, so the score isn't lost
+ * once the block (and its roundsDone/elapsed bookkeeping) is reset. A no-op
+ * if there's no current block, or that blockIndex was already recorded.
+ */
+function recordBlockOutcome(state: TimerState, status: BlockOutcome['status']): void {
+  const block = currentBlock(state);
+  if (!block) return;
+  if (state.blockOutcomes.some((o) => o.blockIndex === state.blockIndex)) return;
+  const outcome: BlockOutcome = {
+    blockIndex: state.blockIndex,
+    format: block.format,
+    elapsedMs: state._blockElapsedMs,
+    status,
+  };
+  if (block.format === 'amrap' || block.format === 'rounds') {
+    outcome.roundsDone = state.roundsDone;
+  }
+  if (status === 'failed') {
+    outcome.failedAtMinute = currentInternalPhase(state)?.repsDue;
+  }
+  state.blockOutcomes.push(outcome);
+}
+
 /** Advances to the next block, or finishes the workout if none remain. */
-function advanceBlock(state: TimerState): void {
+function advanceBlock(
+  state: TimerState,
+  outcomeStatus: BlockOutcome['status'] = 'completed',
+): void {
+  recordBlockOutcome(state, outcomeStatus);
   state.blockIndex += 1;
   state.phaseIndex = 0;
   state.roundsDone = 0;
+  state._blockElapsedMs = 0;
   const block = currentBlock(state);
   if (!block) {
     state.status = 'finished';
@@ -413,6 +484,7 @@ function applyTick(state: TimerState, now: number): void {
   // double-count the interval it already covered.
   state._lastTickAt = Math.max(last, now);
   state._phaseElapsedMs += dt;
+  state._blockElapsedMs += dt;
   state.phase.elapsedMs = state._phaseElapsedMs;
 
   if (phase.durationMs !== undefined) {
@@ -452,7 +524,11 @@ function applyNext(state: TimerState, now: number): void {
     } else {
       state._chipperIndex = idx;
       const id = block.chipperMovementIds![idx];
-      state.phase = { ...state.phase, movementIds: [id], label: `Movement ${idx + 1}/${total}: ${id}` };
+      state.phase = {
+        ...state.phase,
+        movementIds: [id],
+        label: `Movement ${idx + 1}/${total}: ${id}`,
+      };
     }
     return;
   }
@@ -473,7 +549,8 @@ function applyRoundDone(state: TimerState): void {
 function applyFail(state: TimerState): void {
   if (state.status !== 'running') return;
   // death_by (and, generically, any format): failing ends the current block.
-  advanceBlock(state);
+  const block = currentBlock(state);
+  advanceBlock(state, block?.isDeathBy ? 'failed' : 'skipped');
 }
 
 /**
@@ -521,6 +598,12 @@ export function timerReducer(state: TimerState, event: TimerEvent): TimerState {
       break;
     }
     case 'finish': {
+      // Finishing early mid-block (running or paused) still records whatever
+      // roundsDone/elapsed that block has; finishing from 'between-blocks'
+      // must not double-record the block that already ended naturally.
+      if (next.status === 'running' || next.status === 'paused') {
+        recordBlockOutcome(next, 'completed');
+      }
       next.status = 'finished';
       break;
     }

@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/pr
 import { LocationProvider } from 'preact-iso';
 import { Today } from './Today';
 import { clearTodayWorkout, setStorage, state } from '../../state/store';
+import { beginRunSession, clearRunSession, runSession } from '../../state/run';
 import type { AppState, PoolWorkout, WorkoutLog } from '../../domain/types';
 import type { Storage } from '../../storage/storage';
 
@@ -19,8 +20,24 @@ class MemoryStorage implements Storage {
 function fixtureState(): AppState {
   return {
     movements: [
-      { id: 'squat', name: 'Back Squat', tags: [], equipment: [], cadenceDays: 7, unit: 'reps', loadable: true },
-      { id: 'row', name: 'Row', tags: [], equipment: [], cadenceDays: 1, unit: 'meters', loadable: false },
+      {
+        id: 'squat',
+        name: 'Back Squat',
+        tags: [],
+        equipment: [],
+        cadenceDays: 7,
+        unit: 'reps',
+        loadable: true,
+      },
+      {
+        id: 'row',
+        name: 'Row',
+        tags: [],
+        equipment: [],
+        cadenceDays: 1,
+        unit: 'meters',
+        loadable: false,
+      },
     ],
     pool: [
       {
@@ -67,7 +84,14 @@ function strengthSnapshot(movementId: string, reps: number): PoolWorkout {
   };
 }
 
-function strengthLog(id: string, finishedAt: string, movementId: string, reps: number, weight: number, actualReps: number): WorkoutLog {
+function strengthLog(
+  id: string,
+  finishedAt: string,
+  movementId: string,
+  reps: number,
+  weight: number,
+  actualReps: number,
+): WorkoutLog {
   return {
     id,
     poolWorkoutId: `w-${movementId}`,
@@ -86,6 +110,17 @@ function renderToday() {
     </LocationProvider>,
   );
 }
+
+// Applies to every test in this file: the in-progress run session is kept in
+// module-level state (persisted to localStorage), so it must not leak
+// between tests regardless of which describe block sets it.
+beforeEach(() => {
+  clearRunSession();
+});
+
+afterEach(() => {
+  clearRunSession();
+});
 
 describe('Today page', () => {
   beforeEach(() => {
@@ -223,5 +258,77 @@ describe('Today page — deload banner (SPEC 9.6/9.9)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Start deload week' }));
     await waitFor(() => expect(screen.getByText('Deload week')).toBeInTheDocument());
     expect(state.value?.program?.deloadWeekStartedAt).toBe(new Date().toISOString());
+  });
+});
+
+describe('Today page — in-progress run card', () => {
+  beforeEach(() => {
+    clearTodayWorkout();
+    state.value = fixtureState();
+  });
+
+  afterEach(() => {
+    cleanup();
+    clearTodayWorkout();
+  });
+
+  function beginSession() {
+    beginRunSession(state.value!, state.value!.pool[0], new Date('2024-01-01T00:00:00.000Z'));
+  }
+
+  it('shows nothing extra when no run is in progress', () => {
+    renderToday();
+    expect(screen.queryByText(/Workout in progress/)).not.toBeInTheDocument();
+  });
+
+  it('shows a card with the workout name and status when a run is in progress', () => {
+    beginSession();
+    renderToday();
+    expect(screen.getByText('Workout in progress: Squat Day')).toBeInTheDocument();
+    expect(screen.getByText('Ready to start')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Resume' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Discard' })).toBeInTheDocument();
+  });
+
+  it('Resume routes to /run', () => {
+    beginSession();
+    renderToday();
+    fireEvent.click(screen.getByRole('button', { name: 'Resume' }));
+    expect(window.location.pathname).toBe('/run');
+  });
+
+  it('Discard confirms, then clears the session and removes the card', () => {
+    beginSession();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    renderToday();
+    fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
+    expect(confirmSpy).toHaveBeenCalled();
+    expect(runSession.value).toBeNull();
+    expect(screen.queryByText(/Workout in progress/)).not.toBeInTheDocument();
+    confirmSpy.mockRestore();
+  });
+
+  it('Discard does nothing when the confirmation is declined', () => {
+    beginSession();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    renderToday();
+    fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
+    expect(runSession.value).not.toBeNull();
+    confirmSpy.mockRestore();
+  });
+
+  it('starting a new workout confirms before replacing an in-progress session', () => {
+    beginSession();
+    state.value = { ...state.value!, pool: [...state.value!.pool] };
+    renderToday();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    // The pulled-workout "Start" button only appears once a workout has been
+    // pulled for today; pull one so the confirm path can be exercised.
+    fireEvent.click(screen.getByRole('button', { name: /Get Today.s Workout/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+    expect(confirmSpy).toHaveBeenCalled();
+    // Declined: the original in-progress session is untouched.
+    expect(runSession.value?.poolWorkoutId).toBe('w1');
+    confirmSpy.mockRestore();
   });
 });

@@ -15,13 +15,13 @@ import {
   state,
   todayWorkout,
 } from '../../state/store';
-import { beginRunSession } from '../../state/run';
+import { beginRunSession, clearRunSession, runSession } from '../../state/run';
 import { BlockSummary } from '../components/BlockSummary';
 import { INTENSITY_LABELS } from '../helpers';
 import type { PoolWorkout } from '../../domain/types';
 
 const REASON_MESSAGES: Record<SelectReason, string> = {
-  'no-enabled': "No workouts are enabled in your pool yet. Enable some in the Pool tab.",
+  'no-enabled': 'No workouts are enabled in your pool yet. Enable some in the Pool tab.',
   equipment: "Every remaining workout needs equipment you don't have available right now.",
   cadence: 'Everything eligible is still on cooldown — every movement or workout needs more rest.',
   pattern:
@@ -34,12 +34,21 @@ const NEEDED_MESSAGES: Record<string, string> = {
   'deadlift-press': 'Deadlift + push press day is due this week.',
 };
 
+const RUN_STATUS_LABELS: Record<string, string> = {
+  idle: 'Ready to start',
+  running: 'In progress',
+  paused: 'Paused',
+  'between-blocks': 'Between blocks',
+  finished: 'Ready to log results',
+};
+
 export function Today() {
   const s = state.value!;
   const location = useLocation();
   // Reading the signal directly keeps this component subscribed to changes
   // made by setTodayWorkout/bumpTodayWorkout elsewhere.
   void todayWorkout.value;
+  const inProgress = runSession.value;
   const today = currentTodayWorkout();
   const [failReason, setFailReason] = useState<SelectReason | null>(null);
   const now = new Date();
@@ -47,7 +56,9 @@ export function Today() {
   // SPEC 9.5/9.9: the card renders today's wave-transformed snapshot, not
   // the raw pool entry — that's what carries the current week's targetRpe,
   // set counts, and (during a deload) scaled-down prescription.
-  const workout: PoolWorkout | null = today?.snapshot ?? (today?.workoutId ? (s.pool.find((w) => w.id === today.workoutId) ?? null) : null);
+  const workout: PoolWorkout | null =
+    today?.snapshot ??
+    (today?.workoutId ? (s.pool.find((w) => w.id === today.workoutId) ?? null) : null);
   const needed = weeklyNeed(s.logs, now);
 
   const program = resolveProgram(s.program, s.logs, now);
@@ -84,8 +95,23 @@ export function Today() {
 
   function start() {
     if (!workout) return;
-    beginRunSession(workout);
+    if (
+      runSession.value &&
+      !confirm('A workout is already in progress. Discard it and start this one instead?')
+    ) {
+      return;
+    }
+    beginRunSession(s, workout);
     location.route('/run');
+  }
+
+  function resumeRun() {
+    location.route('/run');
+  }
+
+  function discardRun() {
+    if (!confirm('Discard the in-progress workout? This cannot be undone.')) return;
+    clearRunSession();
   }
 
   function startDeload() {
@@ -100,9 +126,30 @@ export function Today() {
     <div>
       <h1 class="page-title">Today</h1>
 
-      <div class={`cycle-chip${onDeload ? ' deload' : ''}`} style="margin-bottom:0.75rem">
+      {inProgress && (
+        <div class="card run-in-progress-card" style="margin-bottom:1rem">
+          <div class="list-row-title">Workout in progress: {inProgress.workoutSnapshot.name}</div>
+          <div class="muted">
+            {RUN_STATUS_LABELS[inProgress.timer.status] ?? inProgress.timer.status}
+          </div>
+          <div class="btn-row" style="margin-top:0.6rem">
+            <button class="btn" onClick={discardRun}>
+              Discard
+            </button>
+            <button class="btn btn-primary btn-big" onClick={resumeRun}>
+              Resume
+            </button>
+          </div>
+        </div>
+      )}
+
+      <a
+        href="/program"
+        class={`cycle-chip${onDeload ? ' deload' : ''}`}
+        style="margin-bottom:0.75rem;text-decoration:none"
+      >
         {cycleChipLabel}
-      </div>
+      </a>
 
       {showDeloadBanner && (
         <div class="banner banner-deload" style="margin-bottom:1rem">
@@ -123,7 +170,11 @@ export function Today() {
         </div>
       )}
 
-      {needed && <div class="banner banner-info">{NEEDED_MESSAGES[needed] ?? `${needed} day is due this week.`}</div>}
+      {needed && (
+        <div class="banner banner-info">
+          {NEEDED_MESSAGES[needed] ?? `${needed} day is due this week.`}
+        </div>
+      )}
 
       {workout ? (
         <div class="stack">
@@ -132,9 +183,13 @@ export function Today() {
               <div class="list-row-title" style="font-size:1.2rem">
                 {workout.name}
               </div>
-              <span class={`chip chip-${workout.intensity}`}>{INTENSITY_LABELS[workout.intensity]}</span>
+              <span class={`chip chip-${workout.intensity}`}>
+                {INTENSITY_LABELS[workout.intensity]}
+              </span>
             </div>
-            <div class="muted">Est. {formatDurationMin(estimateWorkoutSeconds(workout.blocks))}</div>
+            <div class="muted">
+              Est. {formatDurationMin(estimateWorkoutSeconds(workout.blocks))}
+            </div>
             {workout.notes && <div class="muted">{workout.notes}</div>}
             <div class="stack">
               {workout.blocks.map((block, i) => (

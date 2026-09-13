@@ -15,7 +15,12 @@ function movement(id: string, overrides: Partial<Movement> = {}): Movement {
   };
 }
 
-const settings: Settings = { availableEquipment: [], soundOn: true, vibrateOn: true, keepScreenOn: true };
+const settings: Settings = {
+  availableEquipment: [],
+  soundOn: true,
+  vibrateOn: true,
+  keepScreenOn: true,
+};
 
 function strengthLog(
   id: string,
@@ -31,7 +36,11 @@ function strengthLog(
     name: `w-${id}`,
     intensity: 'M',
     blocks: [
-      { format: 'strength', sets: options.prescribedSets ?? sets.length, movements: [{ movementId, ...bmOverrides }] },
+      {
+        format: 'strength',
+        sets: options.prescribedSets ?? sets.length,
+        movements: [{ movementId, ...bmOverrides }],
+      },
     ],
     cadenceDays: 14,
     enabled: true,
@@ -59,10 +68,17 @@ describe('progressionStatus: linear (barbell default)', () => {
 
   it('success: every set hit target reps at rpe <= target+0.5 -> progress, next load = last + increment', () => {
     const logs = [
-      strengthLog('l1', '2024-01-01T00:00:00.000Z', 'squat', { reps: 5, targetRpe: 8 }, [
-        { weight: 200, reps: 5 },
-        { weight: 200, reps: 5 },
-      ], 8),
+      strengthLog(
+        'l1',
+        '2024-01-01T00:00:00.000Z',
+        'squat',
+        { reps: 5, targetRpe: 8 },
+        [
+          { weight: 200, reps: 5 },
+          { weight: 200, reps: 5 },
+        ],
+        8,
+      ),
     ];
     const result = progressionStatus(squat, logs, settings);
     expect(result.status).toBe('progress');
@@ -72,7 +88,9 @@ describe('progressionStatus: linear (barbell default)', () => {
 
   it('missing RPE counts as success', () => {
     const logs = [
-      strengthLog('l1', '2024-01-01T00:00:00.000Z', 'squat', { reps: 5, targetRpe: 8 }, [{ weight: 200, reps: 5 }]),
+      strengthLog('l1', '2024-01-01T00:00:00.000Z', 'squat', { reps: 5, targetRpe: 8 }, [
+        { weight: 200, reps: 5 },
+      ]),
     ];
     const result = progressionStatus(squat, logs, settings);
     expect(result.status).toBe('progress');
@@ -80,8 +98,12 @@ describe('progressionStatus: linear (barbell default)', () => {
 
   it('a single missed session is a hold, not a stall', () => {
     const logs = [
-      strengthLog('l1', '2024-01-01T00:00:00.000Z', 'squat', { reps: 5, targetRpe: 8 }, [{ weight: 200, reps: 5 }]),
-      strengthLog('l2', '2024-01-08T00:00:00.000Z', 'squat', { reps: 5, targetRpe: 8 }, [{ weight: 205, reps: 3 }]),
+      strengthLog('l1', '2024-01-01T00:00:00.000Z', 'squat', { reps: 5, targetRpe: 8 }, [
+        { weight: 200, reps: 5 },
+      ]),
+      strengthLog('l2', '2024-01-08T00:00:00.000Z', 'squat', { reps: 5, targetRpe: 8 }, [
+        { weight: 205, reps: 3 },
+      ]),
     ];
     const result = progressionStatus(squat, logs, settings);
     expect(result.status).toBe('hold');
@@ -90,9 +112,15 @@ describe('progressionStatus: linear (barbell default)', () => {
 
   it('two consecutive missed sessions is a stall, suggesting a ~10% cut', () => {
     const logs = [
-      strengthLog('l1', '2024-01-01T00:00:00.000Z', 'squat', { reps: 5, targetRpe: 8 }, [{ weight: 200, reps: 5 }]),
-      strengthLog('l2', '2024-01-08T00:00:00.000Z', 'squat', { reps: 5, targetRpe: 8 }, [{ weight: 205, reps: 3 }]),
-      strengthLog('l3', '2024-01-15T00:00:00.000Z', 'squat', { reps: 5, targetRpe: 8 }, [{ weight: 205, reps: 3 }]),
+      strengthLog('l1', '2024-01-01T00:00:00.000Z', 'squat', { reps: 5, targetRpe: 8 }, [
+        { weight: 200, reps: 5 },
+      ]),
+      strengthLog('l2', '2024-01-08T00:00:00.000Z', 'squat', { reps: 5, targetRpe: 8 }, [
+        { weight: 205, reps: 3 },
+      ]),
+      strengthLog('l3', '2024-01-15T00:00:00.000Z', 'squat', { reps: 5, targetRpe: 8 }, [
+        { weight: 205, reps: 3 },
+      ]),
     ];
     const result = progressionStatus(squat, logs, settings);
     expect(result.status).toBe('stall');
@@ -103,7 +131,9 @@ describe('progressionStatus: linear (barbell default)', () => {
 
   it('a high rpe (>target+0.5) even with reps met counts as a miss', () => {
     const logs = [
-      strengthLog('l1', '2024-01-01T00:00:00.000Z', 'squat', { reps: 5, targetRpe: 8 }, [{ weight: 200, reps: 5 }]),
+      strengthLog('l1', '2024-01-01T00:00:00.000Z', 'squat', { reps: 5, targetRpe: 8 }, [
+        { weight: 200, reps: 5 },
+      ]),
       strengthLog(
         'l2',
         '2024-01-08T00:00:00.000Z',
@@ -119,10 +149,16 @@ describe('progressionStatus: linear (barbell default)', () => {
 
   it('back-off then success resumes progression (status flips back to progress)', () => {
     const logs = [
-      strengthLog('l1', '2024-01-01T00:00:00.000Z', 'squat', { reps: 5, targetRpe: 8 }, [{ weight: 205, reps: 3 }]),
-      strengthLog('l2', '2024-01-08T00:00:00.000Z', 'squat', { reps: 5, targetRpe: 8 }, [{ weight: 205, reps: 3 }]),
+      strengthLog('l1', '2024-01-01T00:00:00.000Z', 'squat', { reps: 5, targetRpe: 8 }, [
+        { weight: 205, reps: 3 },
+      ]),
+      strengthLog('l2', '2024-01-08T00:00:00.000Z', 'squat', { reps: 5, targetRpe: 8 }, [
+        { weight: 205, reps: 3 },
+      ]),
       // Backed off to ~185 (stall cut) and hit it clean:
-      strengthLog('l3', '2024-01-15T00:00:00.000Z', 'squat', { reps: 5, targetRpe: 8 }, [{ weight: 185, reps: 5 }]),
+      strengthLog('l3', '2024-01-15T00:00:00.000Z', 'squat', { reps: 5, targetRpe: 8 }, [
+        { weight: 185, reps: 5 },
+      ]),
     ];
     const result = progressionStatus(squat, logs, settings);
     expect(result.status).toBe('progress');
@@ -132,7 +168,11 @@ describe('progressionStatus: linear (barbell default)', () => {
 });
 
 describe('progressionStatus: double progression (non-barbell default)', () => {
-  const curl = movement('db_curl', { tags: ['accessory'], equipment: ['dumbbell'], progression: 'double' });
+  const curl = movement('db_curl', {
+    tags: ['accessory'],
+    equipment: ['dumbbell'],
+    progression: 'double',
+  });
 
   it('climbs reps session over session while below the top of the range', () => {
     const logs = [
@@ -168,12 +208,58 @@ describe('progressionStatus: double progression (non-barbell default)', () => {
 
   it('two sessions without any rep or load gain is a stall', () => {
     const logs = [
-      strengthLog('l1', '2024-01-01T00:00:00.000Z', 'db_curl', { reps: 6 }, [{ weight: 30, reps: 6 }]),
-      strengthLog('l2', '2024-01-08T00:00:00.000Z', 'db_curl', { reps: 6 }, [{ weight: 30, reps: 6 }]),
-      strengthLog('l3', '2024-01-15T00:00:00.000Z', 'db_curl', { reps: 6 }, [{ weight: 30, reps: 6 }]),
+      strengthLog('l1', '2024-01-01T00:00:00.000Z', 'db_curl', { reps: 6 }, [
+        { weight: 30, reps: 6 },
+      ]),
+      strengthLog('l2', '2024-01-08T00:00:00.000Z', 'db_curl', { reps: 6 }, [
+        { weight: 30, reps: 6 },
+      ]),
+      strengthLog('l3', '2024-01-15T00:00:00.000Z', 'db_curl', { reps: 6 }, [
+        { weight: 30, reps: 6 },
+      ]),
     ];
     const result = progressionStatus(curl, logs, settings);
     expect(result.status).toBe('stall');
+  });
+});
+
+describe('progressionStatus: movement duplicated across blocks in the same log', () => {
+  const clean = movement('clean', { tags: ['olympic'], equipment: ['barbell'] });
+
+  it('matches results by blockIndex, ignoring a same-movementId result from a different block', () => {
+    const workoutSnapshot: PoolWorkout = {
+      id: 'w-clean',
+      name: 'w-clean',
+      intensity: 'M',
+      blocks: [
+        {
+          format: 'strength',
+          sets: 1,
+          movements: [{ movementId: 'clean', reps: 5, targetRpe: 8 }],
+        },
+        { format: 'amrap', durationSec: 300, movements: [{ movementId: 'clean', reps: 10 }] },
+      ],
+      cadenceDays: 14,
+      enabled: true,
+      source: 'manual',
+    };
+    const log: WorkoutLog = {
+      id: 'l1',
+      poolWorkoutId: workoutSnapshot.id,
+      workoutSnapshot,
+      startedAt: '2024-01-01T00:00:00.000Z',
+      finishedAt: '2024-01-01T00:00:00.000Z',
+      kind: 'pool',
+      results: [
+        // Strength-block result: hits target reps at target rpe -> should progress.
+        { movementId: 'clean', blockIndex: 0, sets: [{ weight: 135, reps: 5 }], rpe: 8 },
+        // Conditioning-block result for the same movementId, much lighter — must not be used.
+        { movementId: 'clean', blockIndex: 1, weight: 65, reps: 10, rpe: 9.9 },
+      ],
+    };
+    const result = progressionStatus(clean, [log], settings);
+    expect(result.status).toBe('progress');
+    expect(result.lastLoad).toBe(135);
   });
 });
 

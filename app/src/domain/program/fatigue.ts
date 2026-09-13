@@ -3,7 +3,7 @@ import type { ProgramState, Settings, WorkoutLog } from '../types';
 import { cycleWeek } from './cycle';
 import { earliestLogDate, logKind, resolveSettings } from './context';
 import { e1rmHistory } from './e1rm';
-import { strengthSessionsForMovement } from './progression';
+import { resultFor, strengthSessionsForMovement } from './progression';
 
 export interface FatigueFlag {
   id: string;
@@ -43,7 +43,9 @@ function e1rmDropFlags(logs: WorkoutLog[], now: string | Date): FatigueFlag[] {
   for (const movementId of distinctMovementIds(pool)) {
     const history = e1rmHistory(pool, movementId);
     if (history.length < 2) continue;
-    const peak = Math.max(...history.filter((p) => daysSince(p.date, now) <= E1RM_PEAK_WINDOW_DAYS).map((p) => p.e1rm));
+    const peak = Math.max(
+      ...history.filter((p) => daysSince(p.date, now) <= E1RM_PEAK_WINDOW_DAYS).map((p) => p.e1rm),
+    );
     if (!Number.isFinite(peak) || peak <= 0) continue;
     const lastTwo = history.slice(-2);
     const bothDown = lastTwo.every((p) => p.e1rm <= peak * E1RM_DROP_THRESHOLD);
@@ -65,7 +67,7 @@ function rpeCreepFlags(logs: WorkoutLog[]): FatigueFlag[] {
     if (sessions.length < 3) continue;
     const points = sessions
       .map((s) => {
-        const result = s.log.results.find((r) => r.movementId === movementId);
+        const result = resultFor(s);
         const weight = result?.sets?.[0]?.weight ?? result?.weight;
         return { weight, rpe: result?.rpe };
       })
@@ -90,7 +92,7 @@ function missedRepsFlags(logs: WorkoutLog[]): FatigueFlag[] {
     const sessions = strengthSessionsForMovement(movementId, logs).slice(0, 2);
     if (sessions.length < 2) continue;
     const bothMissed = sessions.every((s) => {
-      const result = s.log.results.find((r) => r.movementId === movementId);
+      const result = resultFor(s);
       const sets = result?.sets ?? [];
       const target = s.bm.reps;
       if (target === undefined || sets.length === 0) return false;
@@ -149,7 +151,12 @@ function loadSpikeFlag(logs: WorkoutLog[], now: string | Date): FatigueFlag[] {
 
 /** All fatigue flags currently raised by the log history (SPEC 9.6, R39). */
 export function fatigueFlags(logs: WorkoutLog[], now: string | Date): FatigueFlag[] {
-  return [...e1rmDropFlags(logs, now), ...rpeCreepFlags(logs), ...missedRepsFlags(logs), ...loadSpikeFlag(logs, now)];
+  return [
+    ...e1rmDropFlags(logs, now),
+    ...rpeCreepFlags(logs),
+    ...missedRepsFlags(logs),
+    ...loadSpikeFlag(logs, now),
+  ];
 }
 
 /** Whether a deload should be suggested right now (SPEC 9.6). */

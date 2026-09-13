@@ -61,7 +61,10 @@ describe('e1rmHistory', () => {
       log('l1', '2024-01-01T00:00:00.000Z', [{ weight: 90, reps: 5 }]),
     ];
     const history = e1rmHistory(logs, 'squat');
-    expect(history.map((p) => p.date)).toEqual(['2024-01-01T00:00:00.000Z', '2024-01-10T00:00:00.000Z']);
+    expect(history.map((p) => p.date)).toEqual([
+      '2024-01-01T00:00:00.000Z',
+      '2024-01-10T00:00:00.000Z',
+    ]);
     expect(history[1].e1rm).toBeCloseTo(e1rm(110, 3)!);
   });
 
@@ -71,8 +74,23 @@ describe('e1rmHistory', () => {
   });
 
   it('marks a max-test log as source "max-test"', () => {
-    const logs = [log('l1', '2024-01-01T00:00:00.000Z', [{ weight: 200, reps: 1 }], { kind: 'max-test' })];
+    const logs = [
+      log('l1', '2024-01-01T00:00:00.000Z', [{ weight: 200, reps: 1 }], { kind: 'max-test' }),
+    ];
     expect(e1rmHistory(logs, 'squat')[0].source).toBe('max-test');
+  });
+
+  it('takes the best e1rm across all results for the movement when it appears in two blocks of one log', () => {
+    const withDuplicateBlock: WorkoutLog = {
+      ...log('l1', '2024-01-01T00:00:00.000Z', [{ weight: 100, reps: 5 }]),
+      results: [
+        { movementId: 'squat', blockIndex: 0, sets: [{ weight: 100, reps: 5 }] },
+        { movementId: 'squat', blockIndex: 1, sets: [{ weight: 130, reps: 3 }] },
+      ],
+    };
+    const history = e1rmHistory([withDuplicateBlock], 'squat');
+    expect(history).toHaveLength(1);
+    expect(history[0].e1rm).toBeCloseTo(e1rm(130, 3)!);
   });
 
   it('excludes sets outside the 1-10 rep window from the session best', () => {
@@ -117,7 +135,9 @@ describe('currentMax', () => {
   it('a max-test older than 56 days no longer wins; falls back to recent estimate', () => {
     const logs = [
       log('recent', '2024-02-20T00:00:00.000Z', [{ weight: 120, reps: 5 }]),
-      log('stale-test', '2023-11-01T00:00:00.000Z', [{ weight: 300, reps: 1 }], { kind: 'max-test' }),
+      log('stale-test', '2023-11-01T00:00:00.000Z', [{ weight: 300, reps: 1 }], {
+        kind: 'max-test',
+      }),
     ];
     expect(currentMax(logs, 'squat', NOW)).toBeCloseTo(e1rm(120, 5)!);
   });

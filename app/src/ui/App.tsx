@@ -13,6 +13,7 @@ import { HistoryDetail } from './pages/HistoryDetail';
 import { EditLog } from './pages/EditLog';
 import { AdhocLog } from './pages/AdhocLog';
 import { Settings } from './pages/Settings';
+import { Program } from './pages/Program';
 
 function NotFound() {
   return (
@@ -42,6 +43,7 @@ function AppShell() {
           <Route path="/history/:id/edit" component={EditLog} />
           <Route path="/history/:id" component={HistoryDetail} />
           <Route path="/settings" component={Settings} />
+          <Route path="/program" component={Program} />
           <Route default component={NotFound} />
         </Router>
       </main>

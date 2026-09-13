@@ -108,6 +108,31 @@ export interface MovementResult {
   reps?: number; // total reps or reps per round
   notes?: string;
   rpe?: number; // SPEC 9.1: per-movement RPE of the hardest set, 1-10
+  // Index into workoutSnapshot.blocks identifying which block this result
+  // came from — a movement appearing in more than one block (e.g. cleans in
+  // both a strength block and a conditioning block) gets one MovementResult
+  // per block instead of being deduped. Optional so older logs (saved before
+  // this field existed) still typecheck and read back correctly.
+  blockIndex?: number;
+}
+
+/**
+ * A per-block outcome captured by the timer as a block ends, so a workout's
+ * score isn't lost when the run finishes (e.g. an AMRAP's rounds-done, or a
+ * for-time block's elapsed clock). See `src/domain/timer.ts` for how these
+ * are produced and `src/ui/resultsDraft.ts` for how they become the score.
+ */
+export interface BlockOutcome {
+  blockIndex: number;
+  format: Format;
+  /** amrap / rounds: rounds completed (via roundDone). */
+  roundsDone?: number;
+  /** every format: wall-clock ms spent in the block (excludes paused time). */
+  elapsedMs: number;
+  /** death_by: the minute the user failed on (repsDue of the phase when 'fail' fired). */
+  failedAtMinute?: number;
+  /** 'completed' = ran to its natural end; 'skipped' = user hit Skip Block; 'failed' = death_by fail. */
+  status: 'completed' | 'skipped' | 'failed';
 }
 
 export interface WorkoutLog {
@@ -131,11 +156,14 @@ export interface WorkoutLog {
   durationMin?: number; // derived from startedAt/finishedAt when both exist
   // --- history editing additions ---
   editedAt?: string; // ISO timestamp of the last edit via store.updateLog, if any
+  // --- per-block outcome capture (bug fix: AMRAP rounds/for-time clocks were thrown away) ---
+  blockOutcomes?: BlockOutcome[];
 }
 
 export interface Settings {
   availableEquipment: Equipment[]; // default: everything
   soundOn: boolean;
+  soundVolume?: number; // 0-1 master volume for timer cues; default 1
   vibrateOn: boolean;
   keepScreenOn: boolean;
   // --- SPEC 9.1 additions (programming layer) ---

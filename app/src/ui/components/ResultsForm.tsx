@@ -1,5 +1,5 @@
 import type { Movement, PoolWorkout, Settings } from '../../domain/types';
-import type { ResultsDraft } from '../resultsDraft';
+import { formatBlockOutcome, type ResultsDraft } from '../resultsDraft';
 
 export interface ResultsFormProps {
   /** The workout the results are for (used to infer a loadable default when the movement record is unavailable). */
@@ -12,7 +12,8 @@ export interface ResultsFormProps {
 
 function isStrengthBlockMovement(snapshot: PoolWorkout, movementId: string): boolean {
   return snapshot.blocks.some(
-    (block) => block.format === 'strength' && block.movements.some((bm) => bm.movementId === movementId),
+    (block) =>
+      block.format === 'strength' && block.movements.some((bm) => bm.movementId === movementId),
   );
 }
 
@@ -30,14 +31,25 @@ export function ResultsForm(props: ResultsFormProps) {
     onChange(next);
   }
 
+  const idCounts = new Map<string, number>();
+  for (const m of draft.movements)
+    idCounts.set(m.movementId, (idCounts.get(m.movementId) ?? 0) + 1);
+
   return (
     <div class="stack" style="padding-bottom:1rem">
       {draft.movements.map((m, mi) => {
         const mv = movements.find((x) => x.id === m.movementId);
         const loadable = mv ? mv.loadable : isStrengthBlockMovement(snapshot, m.movementId);
+        const block = snapshot.blocks[m.blockIndex];
+        const showBlockSubtitle = (idCounts.get(m.movementId) ?? 0) > 1;
         return (
-          <div class="card stack" key={m.movementId}>
+          <div class="card stack" key={`${m.blockIndex}-${m.movementId}`}>
             <div class="list-row-title">{mv?.name ?? m.movementId}</div>
+            {showBlockSubtitle && (
+              <div class="muted" style="font-size:0.8rem;margin-top:-0.4rem">
+                {block?.title || `Block ${m.blockIndex + 1}`}
+              </div>
+            )}
             {m.sets ? (
               <div class="stack">
                 {m.sets.map((set, si) => (
@@ -106,9 +118,9 @@ export function ResultsForm(props: ResultsFormProps) {
             )}
             {loadable && (
               <div class="field">
-                <label for={`rpe-${m.movementId}`}>RPE (1–10, optional)</label>
+                <label for={`rpe-${m.blockIndex}-${m.movementId}`}>RPE (1–10, optional)</label>
                 <input
-                  id={`rpe-${m.movementId}`}
+                  id={`rpe-${m.blockIndex}-${m.movementId}`}
                   type="number"
                   inputMode="decimal"
                   min="1"
@@ -129,6 +141,33 @@ export function ResultsForm(props: ResultsFormProps) {
         );
       })}
 
+      {(() => {
+        const captured = draft.blockOutcomes
+          .map((outcome) => {
+            const block = snapshot.blocks[outcome.blockIndex];
+            if (!block) return null;
+            const text = formatBlockOutcome(outcome, block);
+            if (!text) return null;
+            return {
+              blockIndex: outcome.blockIndex,
+              title: block.title || `Block ${outcome.blockIndex + 1}`,
+              text,
+            };
+          })
+          .filter((c): c is { blockIndex: number; title: string; text: string } => c !== null);
+        if (captured.length === 0) return null;
+        return (
+          <div class="muted" style="font-size:0.85rem">
+            Captured:
+            {captured.map((c) => (
+              <div key={c.blockIndex}>
+                {c.title} — {c.text}
+              </div>
+            ))}
+          </div>
+        );
+      })()}
+
       <div class="field">
         <label for="score">Score</label>
         <input
@@ -140,6 +179,7 @@ export function ResultsForm(props: ResultsFormProps) {
             const v = (e.target as HTMLInputElement).value;
             patch((next) => {
               next.score = v;
+              next.scoreAuto = false;
             });
           }}
         />
