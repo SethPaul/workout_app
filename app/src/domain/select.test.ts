@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { selectWorkout } from './select';
+import { selectWorkout, viableWorkouts } from './select';
 import type { Movement, PoolWorkout, Settings, WorkoutLog } from './types';
 
 /** Deterministic seeded RNG for reproducible tests (mulberry32). */
@@ -27,7 +27,11 @@ function movement(id: string, overrides: Partial<Movement> = {}): Movement {
   };
 }
 
-function workout(id: string, movementIds: string[], overrides: Partial<PoolWorkout> = {}): PoolWorkout {
+function workout(
+  id: string,
+  movementIds: string[],
+  overrides: Partial<PoolWorkout> = {},
+): PoolWorkout {
   return {
     id,
     name: id,
@@ -175,10 +179,7 @@ describe('selectWorkout gates', () => {
 
 describe('selectWorkout scoring', () => {
   it('prefers a never-performed workout over any performed one (never bonus dominates)', () => {
-    const pool = [
-      workout('recent', ['squat']),
-      workout('never', ['squat']),
-    ];
+    const pool = [workout('recent', ['squat']), workout('never', ['squat'])];
     const logs = [log('recent', ['squat'], '2024-01-31T00:00:00.000Z')]; // yesterday, but cadenceDays default 14 -> would gate out
     // Give 'recent' a short cadence so it survives gating despite being recent.
     pool[0].cadenceDays = 1;
@@ -197,7 +198,10 @@ describe('selectWorkout scoring', () => {
   });
 
   it('scores higher daysSince workout higher, capped at 60', () => {
-    const pool = [workout('old', ['squat'], { cadenceDays: 1 }), workout('new', ['squat'], { cadenceDays: 1 })];
+    const pool = [
+      workout('old', ['squat'], { cadenceDays: 1 }),
+      workout('new', ['squat'], { cadenceDays: 1 }),
+    ];
     const logs = [
       log('old', ['squat'], '2023-01-01T00:00:00.000Z'), // very long ago, capped
       log('new', ['squat'], '2024-01-30T00:00:00.000Z'), // 2 days ago
@@ -226,8 +230,22 @@ describe('selectWorkout scoring', () => {
     const settings = settingsWith(['barbell', 'rack']);
     const movements = [movement('squat', { cadenceDays: 1 })];
 
-    const result1 = selectWorkout({ pool, movements, logs: [], settings, now: NOW, rng: seededRng(7) });
-    const result2 = selectWorkout({ pool, movements, logs: [], settings, now: NOW, rng: seededRng(7) });
+    const result1 = selectWorkout({
+      pool,
+      movements,
+      logs: [],
+      settings,
+      now: NOW,
+      rng: seededRng(7),
+    });
+    const result2 = selectWorkout({
+      pool,
+      movements,
+      logs: [],
+      settings,
+      now: NOW,
+      rng: seededRng(7),
+    });
     expect(result1.workout?.id).toBe(result2.workout?.id);
   });
 });
@@ -251,7 +269,9 @@ describe('selectWorkout bump/exclusion', () => {
 
 describe('selectWorkout candidates', () => {
   it('takes top max(3, ceil(25% of survivors)) as the candidate slice', () => {
-    const pool = Array.from({ length: 8 }, (_, i) => workout(`w${i}`, ['squat'], { cadenceDays: 1 }));
+    const pool = Array.from({ length: 8 }, (_, i) =>
+      workout(`w${i}`, ['squat'], { cadenceDays: 1 }),
+    );
     const result = selectWorkout({
       pool,
       movements: [movement('squat', { cadenceDays: 1 })],
@@ -286,7 +306,9 @@ describe('selectWorkout pattern gate (C1)', () => {
       id,
       name: id,
       intensity: 'M',
-      blocks: [{ format: 'amrap', title: 'Conditioning', movements: [{ movementId }], durationSec: 600 }],
+      blocks: [
+        { format: 'amrap', title: 'Conditioning', movements: [{ movementId }], durationSec: 600 },
+      ],
       cadenceDays: 0,
       enabled: true,
       source: 'manual',
@@ -428,9 +450,28 @@ describe('selectWorkout weekly mandatory-day gate (C2)', () => {
     expect(result.workout?.id).toBe('generic');
   });
 
+  it('widens the hopper to the unrestricted pool once the needed-day workout is bumped (SPEC 3.1)', () => {
+    const pool = [dayWorkout('generic'), dayWorkout('the-day', 'day:deadlift-press')];
+    const result = selectWorkout({
+      pool,
+      movements: [movement('row', { cadenceDays: 0 })],
+      logs: [],
+      settings: settingsWith([]),
+      now: NOW,
+      exclude: ['the-day'],
+      rng: () => 0,
+    });
+    expect(result.reason).toBe('ok');
+    expect(result.workout?.id).toBe('generic');
+    expect(result.hopper.viable.map((w) => w.id)).toEqual(['generic', 'the-day']);
+    expect(result.hopper.remaining.map((w) => w.id)).toEqual(['generic']);
+  });
+
   it('clears the need when a matching log happened 3 days ago', () => {
     const pool = [dayWorkout('generic')];
-    const logs = [log('the-day', ['row'], '2024-01-29T00:00:00.000Z', { tags: ['day:deadlift-press'] })]; // 3 days before NOW
+    const logs = [
+      log('the-day', ['row'], '2024-01-29T00:00:00.000Z', { tags: ['day:deadlift-press'] }),
+    ]; // 3 days before NOW
     const result = selectWorkout({
       pool,
       movements: [movement('row', { cadenceDays: 0 })],
@@ -485,7 +526,14 @@ describe('selectWorkout focus multiplier (SPEC 9.7)', () => {
 
   it("focus 'balanced' (or unset) leaves the two tied, so daysSince ordering decides", () => {
     const pool = [conditioningOnly('cond'), strengthLed('str')];
-    const result = selectWorkout({ pool, movements, logs: [], settings: settingsWith([]), now: NOW, rng: () => 0 });
+    const result = selectWorkout({
+      pool,
+      movements,
+      logs: [],
+      settings: settingsWith([]),
+      now: NOW,
+      rng: () => 0,
+    });
     // Neither is ever-performed, so both score identically; the candidate
     // slice should contain both rather than one dominating.
     expect(result.candidates.map((c) => c.id).sort()).toEqual(['cond', 'str']);
@@ -537,7 +585,13 @@ describe('selectWorkout masters cadence extension (SPEC 9.7/R44)', () => {
     const pool = [strengthWorkout('fs', 'front_squat')];
     const logs = [heavyLog('back_squat', '2024-01-30T00:00:00.000Z')]; // 2 days ago
     const settings: Settings = { ...settingsWith(['barbell', 'rack']), masters: true };
-    const result = selectWorkout({ pool, movements: [backSquat, frontSquat], logs, settings, now: NOW });
+    const result = selectWorkout({
+      pool,
+      movements: [backSquat, frontSquat],
+      logs,
+      settings,
+      now: NOW,
+    });
     expect(result.reason).toBe('pattern');
   });
 
@@ -545,7 +599,155 @@ describe('selectWorkout masters cadence extension (SPEC 9.7/R44)', () => {
     const pool = [strengthWorkout('fs', 'front_squat')];
     const logs = [heavyLog('back_squat', '2024-01-29T00:00:00.000Z')]; // 3 days ago
     const settings: Settings = { ...settingsWith(['barbell', 'rack']), masters: true };
-    const result = selectWorkout({ pool, movements: [backSquat, frontSquat], logs, settings, now: NOW });
+    const result = selectWorkout({
+      pool,
+      movements: [backSquat, frontSquat],
+      logs,
+      settings,
+      now: NOW,
+    });
     expect(result.reason).toBe('ok');
+  });
+});
+
+describe('viableWorkouts (SPEC 3.1)', () => {
+  it('reason no-enabled when nothing in the pool is enabled', () => {
+    const pool = [workout('w1', ['squat'], { enabled: false })];
+    const result = viableWorkouts({
+      pool,
+      movements: [movement('squat')],
+      logs: [],
+      settings: settingsWith(['barbell', 'rack']),
+      now: NOW,
+    });
+    expect(result.reason).toBe('no-enabled');
+    expect(result.viable).toEqual([]);
+  });
+
+  it('reason equipment when required equipment is unavailable', () => {
+    const pool = [workout('w1', ['deadlift'])];
+    const result = viableWorkouts({
+      pool,
+      movements: [movement('deadlift', { equipment: ['barbell', 'rack'] })],
+      logs: [],
+      settings: settingsWith([]),
+      now: NOW,
+    });
+    expect(result.reason).toBe('equipment');
+    expect(result.viable).toEqual([]);
+  });
+
+  it('reason cadence when the workout itself is not yet due', () => {
+    const pool = [workout('w1', ['squat'], { cadenceDays: 14 })];
+    const logs = [log('w1', ['squat'], '2024-01-30T00:00:00.000Z')]; // 2 days ago
+    const result = viableWorkouts({
+      pool,
+      movements: [movement('squat')],
+      logs,
+      settings: settingsWith(['barbell', 'rack']),
+      now: NOW,
+    });
+    expect(result.reason).toBe('cadence');
+    expect(result.viable).toEqual([]);
+  });
+
+  it('reason ok with the full survivor list, ignoring exclude entirely', () => {
+    const pool = [workout('w1', ['squat']), workout('w2', ['squat'])];
+    const result = viableWorkouts({
+      pool,
+      movements: [movement('squat')],
+      logs: [],
+      settings: settingsWith(['barbell', 'rack']),
+      now: NOW,
+    });
+    expect(result.reason).toBe('ok');
+    expect(result.viable.map((w) => w.id).sort()).toEqual(['w1', 'w2']);
+  });
+
+  it('ignoreCadence still applies the equipment gate', () => {
+    const pool = [workout('w1', ['deadlift'])];
+    const result = viableWorkouts({
+      pool,
+      movements: [movement('deadlift', { equipment: ['barbell', 'rack'] })],
+      logs: [],
+      settings: settingsWith([]), // nothing available
+      now: NOW,
+      ignoreCadence: true,
+    });
+    expect(result.reason).toBe('equipment');
+    expect(result.viable).toEqual([]);
+  });
+});
+
+describe('selectWorkout hopper (SPEC 3.1 — the bump bug)', () => {
+  it("reports 'excluded' (not 'cadence') once every viable workout has been bumped, even when a non-viable, non-excluded workout remains in the pool", () => {
+    // w1: viable and excluded (bumped). w2: not excluded, but fails cadence
+    // on its own -- before the fix this leaked through as reason 'cadence'.
+    const pool = [workout('w1', ['squat']), workout('w2', ['deadlift'], { cadenceDays: 14 })];
+    const logs = [log('w2', ['deadlift'], '2024-01-30T00:00:00.000Z')]; // 2 days ago, cadence 14 -> not due
+    const result = selectWorkout({
+      pool,
+      movements: [movement('squat'), movement('deadlift')],
+      logs,
+      settings: settingsWith(['barbell', 'rack']),
+      now: NOW,
+      exclude: ['w1'],
+    });
+    expect(result.reason).toBe('excluded');
+    expect(result.workout).toBeNull();
+    expect(result.hopper.viable.map((w) => w.id)).toEqual(['w1']);
+    expect(result.hopper.remaining).toEqual([]);
+  });
+
+  it('hopper.remaining shrinks as exclude grows, while hopper.viable stays fixed', () => {
+    const pool = [workout('w1', ['squat']), workout('w2', ['squat']), workout('w3', ['squat'])];
+    const movements = [movement('squat')];
+    const settings = settingsWith(['barbell', 'rack']);
+
+    const none = selectWorkout({ pool, movements, logs: [], settings, now: NOW, exclude: [] });
+    expect(none.hopper.viable.map((w) => w.id).sort()).toEqual(['w1', 'w2', 'w3']);
+    expect(none.hopper.remaining.map((w) => w.id).sort()).toEqual(['w1', 'w2', 'w3']);
+
+    const one = selectWorkout({ pool, movements, logs: [], settings, now: NOW, exclude: ['w1'] });
+    expect(one.hopper.viable.map((w) => w.id).sort()).toEqual(['w1', 'w2', 'w3']);
+    expect(one.hopper.remaining.map((w) => w.id).sort()).toEqual(['w2', 'w3']);
+
+    const two = selectWorkout({
+      pool,
+      movements,
+      logs: [],
+      settings,
+      now: NOW,
+      exclude: ['w1', 'w2'],
+    });
+    expect(two.hopper.viable.map((w) => w.id).sort()).toEqual(['w1', 'w2', 'w3']);
+    expect(two.hopper.remaining.map((w) => w.id).sort()).toEqual(['w3']);
+
+    const all = selectWorkout({
+      pool,
+      movements,
+      logs: [],
+      settings,
+      now: NOW,
+      exclude: ['w1', 'w2', 'w3'],
+    });
+    expect(all.hopper.remaining).toEqual([]);
+    expect(all.reason).toBe('excluded');
+  });
+
+  it('reports the gate reason (not excluded) when the hopper itself is empty, exclude aside', () => {
+    const pool = [workout('w1', ['squat'], { cadenceDays: 14 })];
+    const logs = [log('w1', ['squat'], '2024-01-30T00:00:00.000Z')]; // 2 days ago, not due
+    const result = selectWorkout({
+      pool,
+      movements: [movement('squat')],
+      logs,
+      settings: settingsWith(['barbell', 'rack']),
+      now: NOW,
+      exclude: [],
+    });
+    expect(result.reason).toBe('cadence');
+    expect(result.hopper.viable).toEqual([]);
+    expect(result.hopper.remaining).toEqual([]);
   });
 });

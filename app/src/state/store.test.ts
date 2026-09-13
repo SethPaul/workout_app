@@ -12,9 +12,12 @@ import {
   currentTodayWorkout,
   deleteLog,
   dismissFlags,
+  hopperMode,
   init,
   logAdhoc,
   pullToday,
+  resetHopper,
+  setHopperMode,
   setStorage,
   setTodayWorkout,
   startNewCycle,
@@ -136,6 +139,76 @@ describe('today workout', () => {
   });
 });
 
+describe('hopper mode (SPEC 3.1)', () => {
+  it('hopperMode defaults to "viable" when nothing has been pulled', () => {
+    const now = new Date('2024-01-01T12:00:00Z');
+    expect(hopperMode(now)).toBe('viable');
+  });
+
+  it('hopperMode defaults to "viable" when a workout is pulled without a mode set', () => {
+    const now = new Date('2024-01-01T12:00:00Z');
+    setTodayWorkout('w1', now);
+    expect(hopperMode(now)).toBe('viable');
+  });
+
+  it('setHopperMode sets mode, keeps excluded, clears workoutId', () => {
+    const now = new Date('2024-01-01T12:00:00Z');
+    setTodayWorkout('w1', now);
+    bumpTodayWorkout(now);
+    expect(currentTodayWorkout(now)?.excluded).toEqual(['w1']);
+
+    setHopperMode('all', now);
+    const today = currentTodayWorkout(now);
+    expect(today?.mode).toBe('all');
+    expect(today?.excluded).toEqual(['w1']);
+    expect(today?.workoutId).toBeNull();
+    expect(hopperMode(now)).toBe('all');
+  });
+
+  it('resetHopper clears excluded and workoutId, keeps mode', () => {
+    const now = new Date('2024-01-01T12:00:00Z');
+    setTodayWorkout('w1', now);
+    bumpTodayWorkout(now);
+    setHopperMode('all', now);
+
+    resetHopper(now);
+    const today = currentTodayWorkout(now);
+    expect(today?.excluded).toEqual([]);
+    expect(today?.workoutId).toBeNull();
+    expect(today?.mode).toBe('all');
+  });
+
+  it('bumpTodayWorkout preserves mode', () => {
+    const now = new Date('2024-01-01T12:00:00Z');
+    setTodayWorkout('w1', now);
+    setHopperMode('all', now);
+    setTodayWorkout('w2', now);
+    bumpTodayWorkout(now);
+    expect(currentTodayWorkout(now)?.mode).toBe('all');
+  });
+
+  it('setTodayWorkout preserves mode', () => {
+    const now = new Date('2024-01-01T12:00:00Z');
+    setTodayWorkout('w1', now);
+    setHopperMode('all', now);
+    setTodayWorkout('w2', now);
+    expect(currentTodayWorkout(now)?.mode).toBe('all');
+  });
+
+  it('chooseTodayWorkout preserves mode', async () => {
+    const storage = new MemoryStorage();
+    storage.saved = { ...emptyState(), schemaVersion: 2, pool: [squatPool()] };
+    setStorage(storage);
+    await init();
+
+    const now = new Date('2024-01-01T12:00:00Z');
+    setTodayWorkout('w1', now);
+    setHopperMode('all', now);
+    chooseTodayWorkout('w1', now);
+    expect(currentTodayWorkout(now)?.mode).toBe('all');
+  });
+});
+
 function squatPool(): PoolWorkout {
   return {
     id: 'w1',
@@ -203,6 +276,85 @@ describe('pullToday (SPEC 9.5/9.9)', () => {
     const today = currentTodayWorkout(now);
     expect(today?.snapshot?.blocks[0].movements[0].targetRpe).toBe(6);
     expect(today?.snapshot?.notes).toBe('Deload week');
+  });
+
+  it("passes ignoreCadence: true when today's hopper mode is 'all' (SPEC 3.1)", () => {
+    const now = new Date('2024-01-01T12:00:00Z');
+    const pool = [squatPool()]; // cadenceDays: 0, so cadence alone wouldn't gate it out here
+    pool[0].cadenceDays = 14;
+    const movements = [
+      {
+        id: 'squat',
+        name: 'Squat',
+        tags: ['squat'],
+        equipment: [],
+        cadenceDays: 14,
+        unit: 'reps' as const,
+        loadable: true,
+      },
+    ];
+    const logs = [
+      {
+        id: 'log-1',
+        poolWorkoutId: 'w1',
+        workoutSnapshot: { ...pool[0] },
+        startedAt: '2024-01-01T00:00:00.000Z',
+        finishedAt: '2024-01-01T00:00:00.000Z',
+        results: [],
+      },
+    ];
+    const settings = { availableEquipment: [], soundOn: true, vibrateOn: true, keepScreenOn: true };
+    const program = { cycleStartedAt: now.toISOString(), dismissedFlags: [] };
+
+    // Not in 'all' mode: still on cadence cooldown (logged moments ago).
+    const gated = pullToday({ pool, movements, logs, settings, now, program });
+    expect(gated.workout).toBeNull();
+    expect(gated.reason).toBe('cadence');
+
+    setHopperMode('all', now);
+    const result = pullToday({ pool, movements, logs, settings, now, program });
+    expect(result.workout?.id).toBe('w1');
+  });
+
+  it('an explicit ignoreCadence input overrides mode', () => {
+    const now = new Date('2024-01-01T12:00:00Z');
+    const pool = [squatPool()];
+    pool[0].cadenceDays = 14;
+    const movements = [
+      {
+        id: 'squat',
+        name: 'Squat',
+        tags: ['squat'],
+        equipment: [],
+        cadenceDays: 14,
+        unit: 'reps' as const,
+        loadable: true,
+      },
+    ];
+    const logs = [
+      {
+        id: 'log-1',
+        poolWorkoutId: 'w1',
+        workoutSnapshot: { ...pool[0] },
+        startedAt: '2024-01-01T00:00:00.000Z',
+        finishedAt: '2024-01-01T00:00:00.000Z',
+        results: [],
+      },
+    ];
+    const settings = { availableEquipment: [], soundOn: true, vibrateOn: true, keepScreenOn: true };
+    const program = { cycleStartedAt: now.toISOString(), dismissedFlags: [] };
+
+    // mode stays 'viable' (default), but the caller explicitly ignores cadence.
+    const result = pullToday({
+      pool,
+      movements,
+      logs,
+      settings,
+      now,
+      program,
+      ignoreCadence: true,
+    });
+    expect(result.workout?.id).toBe('w1');
   });
 });
 
