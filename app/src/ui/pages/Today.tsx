@@ -21,7 +21,7 @@ import { INTENSITY_LABELS } from '../helpers';
 import type { PoolWorkout } from '../../domain/types';
 
 const REASON_MESSAGES: Record<SelectReason, string> = {
-  'no-enabled': "No workouts are enabled in your pool yet. Enable some in the Pool tab.",
+  'no-enabled': 'No workouts are enabled in your pool yet. Enable some in the Pool tab.',
   equipment: "Every remaining workout needs equipment you don't have available right now.",
   cadence: 'Everything eligible is still on cooldown — every movement or workout needs more rest.',
   pattern:
@@ -47,7 +47,9 @@ export function Today() {
   // SPEC 9.5/9.9: the card renders today's wave-transformed snapshot, not
   // the raw pool entry — that's what carries the current week's targetRpe,
   // set counts, and (during a deload) scaled-down prescription.
-  const workout: PoolWorkout | null = today?.snapshot ?? (today?.workoutId ? (s.pool.find((w) => w.id === today.workoutId) ?? null) : null);
+  const workout: PoolWorkout | null =
+    today?.snapshot ??
+    (today?.workoutId ? (s.pool.find((w) => w.id === today.workoutId) ?? null) : null);
   const needed = weeklyNeed(s.logs, now);
 
   const program = resolveProgram(s.program, s.logs, now);
@@ -100,9 +102,13 @@ export function Today() {
     <div>
       <h1 class="page-title">Today</h1>
 
-      <div class={`cycle-chip${onDeload ? ' deload' : ''}`} style="margin-bottom:0.75rem">
+      <a
+        href="/program"
+        class={`cycle-chip${onDeload ? ' deload' : ''}`}
+        style="margin-bottom:0.75rem;text-decoration:none"
+      >
         {cycleChipLabel}
-      </div>
+      </a>
 
       {showDeloadBanner && (
         <div class="banner banner-deload" style="margin-bottom:1rem">
@@ -123,7 +129,11 @@ export function Today() {
         </div>
       )}
 
-      {needed && <div class="banner banner-info">{NEEDED_MESSAGES[needed] ?? `${needed} day is due this week.`}</div>}
+      {needed && (
+        <div class="banner banner-info">
+          {NEEDED_MESSAGES[needed] ?? `${needed} day is due this week.`}
+        </div>
+      )}
 
       {workout ? (
         <div class="stack">
@@ -132,9 +142,13 @@ export function Today() {
               <div class="list-row-title" style="font-size:1.2rem">
                 {workout.name}
               </div>
-              <span class={`chip chip-${workout.intensity}`}>{INTENSITY_LABELS[workout.intensity]}</span>
+              <span class={`chip chip-${workout.intensity}`}>
+                {INTENSITY_LABELS[workout.intensity]}
+              </span>
             </div>
-            <div class="muted">Est. {formatDurationMin(estimateWorkoutSeconds(workout.blocks))}</div>
+            <div class="muted">
+              Est. {formatDurationMin(estimateWorkoutSeconds(workout.blocks))}
+            </div>
             {workout.notes && <div class="muted">{workout.notes}</div>}
             <div class="stack">
               {workout.blocks.map((block, i) => (

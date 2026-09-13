@@ -9,6 +9,7 @@ const ENTRIES: NavEntry[] = [
   { href: '/pool', label: 'Pool', icon: '\u{1F4CB}' },
   { href: '/movements', label: 'Moves', icon: '\u{1F3CB}' },
   { href: '/history', label: 'History', icon: '\u{1F4C8}' },
+  { href: '/program', label: 'Program', icon: '\u{1F4CA}' },
   { href: '/settings', label: 'Settings', icon: '⚙' },
 ];
 

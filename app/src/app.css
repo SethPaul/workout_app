@@ -145,6 +145,20 @@ a {
   color: var(--accent);
 }
 
+/* Six-item nav (Today/Pool/Moves/History/Program/Settings) still needs to
+   fit comfortably at phone width; shrink label/icon slightly rather than
+   letting labels wrap or overflow their column. */
+@media (max-width: 400px) {
+  .nav-item {
+    font-size: 0.62rem;
+    letter-spacing: 0.01em;
+  }
+
+  .nav-item .nav-icon {
+    font-size: 1.1rem;
+  }
+}
+
 /* ---------- Typography / layout helpers ---------- */
 
 .page-title {
@@ -643,6 +657,52 @@ a {
   padding: 0.1rem 0;
 }
 
+.set-entry {
+  width: 100%;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.set-entry-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  width: 100%;
+}
+
+.set-entry-label {
+  font-size: 0.85rem;
+  color: var(--fg-muted);
+  font-weight: 600;
+}
+
+.set-entry-row .row {
+  width: 100%;
+}
+
+.set-entry-row .row > input {
+  min-height: 44px;
+  font-size: 1rem;
+}
+
+.log-block-details {
+  width: 100%;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.log-block-details summary {
+  cursor: pointer;
+  color: var(--fg-muted);
+  font-weight: 600;
+  padding: 0.4rem 0;
+}
+
+.log-block-details .stack {
+  padding-top: 0.5rem;
+  gap: 0.6rem;
+}
+
 hr.sep {
   border: none;
   border-top: 1px solid var(--border);
@@ -677,6 +737,37 @@ hr.sep {
 
 .stat-value {
   font-weight: 700;
+}
+
+/* Program page: progression status badges (stall/hold/progress/unknown). */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.status-stall {
+  background: var(--chip-h-bg);
+  color: var(--chip-h-fg);
+}
+
+.status-hold {
+  background: var(--chip-m-bg);
+  color: var(--chip-m-fg);
+}
+
+.status-progress {
+  background: var(--chip-l-bg);
+  color: var(--chip-l-fg);
+}
+
+.status-unknown {
+  background: var(--bg);
+  color: var(--fg-muted);
+  border: 1px solid var(--border);
 }
 
 .chip-kind {
