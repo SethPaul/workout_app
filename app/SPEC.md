@@ -525,3 +525,57 @@ results editor is acceptable).
   Full body, where Auto clears the override and shows the derived value).
 - `EQUIPMENT_LABELS` gains `band: 'Bands'`; `ALL_EQUIPMENT` (seed.ts) and `seed/validate.py` gain
   `'band'`.
+
+### 10.7 Catalog search and on-the-fly movement creation (logging page)
+
+Goal: while logging a class, be confident in a few taps that a movement is or is not already in
+the catalog, and if not, add it properly (not with blind defaults) without leaving the page.
+
+**Search (`src/domain/vasa/search.ts`, replaces the 10.3 matching rules; scoring boosts unchanged)**
+
+- `normalizeText(s)`: lowercase, replace every non-alphanumeric run with a space, collapse and trim.
+  So "Pull-up" ≡ "pull up" ≡ "pullup"? No: hyphen and space both become a space, so "pull up"
+  matches "Pull-up"; "pullup" matches via substring of the space-stripped form (see below).
+- `singular(token)`: `ies` → `y`, else strip one trailing `s` unless the token ends in `ss` or is
+  3 characters or shorter. Applied to every token of both the query and the candidate.
+- `expandAbbreviation(token)`: `db` → `dumbbell`, `kb` → `kettlebell`, `bb` → `barbell`,
+  `rdl` → `romanian deadlift`, `ohp` → `overhead press`, `bss` → `bulgarian split squat`,
+  `sl` → `single leg`, `sa` → `single arm`. Applied to query tokens only.
+- Match tiers for a query against each candidate string (name and every alias), best wins:
+  - exact: normalized+singularized strings equal → 100
+  - ordered word prefixes: every query token prefix-matches a distinct candidate word, in order
+    ("inc db fly" → "Incline Dumbbell Fly") → 60
+  - unordered word prefixes: every query token prefix-matches a distinct candidate word → 50
+  - substring: the space-stripped query is a substring of the space-stripped candidate
+    ("pullup" → "pull up") → 20
+  - otherwise 0 (excluded when the query is non-empty)
+- `hasExactName` uses the same normalized+singularized equality ("dead bugs" ≡ "Dead Bug").
+- `similarMovements(movements, query, limit = 3)`: the top-scoring matches by the tiers above
+  (ignoring library/region/recency boosts), for the "did you mean" row.
+- Default `limit` stays 8 for an empty query; the UI passes 20 when a query is present so nothing
+  that matches is hidden.
+
+**`newVasaMovement` (`library.ts`)** gains optional `unit?: Unit` (default `'reps'`) and
+`tags?: string[]` (default `[]`).
+
+**UI (`src/ui/pages/Vasa.tsx` + new `src/ui/components/NewMovementSheet.tsx`)**
+
+1. Picker results show a subtitle line: region label · equipment labels (or "No equipment"), so
+   near-duplicates are distinguishable at a glance.
+2. When the query is non-empty and `hasExactName` is false, the picker shows a
+   **Create “<query>”…** row: first in the list when there are no matches, last otherwise.
+3. Tapping it swaps the picker for the **New movement** sheet, still inside the block card:
+   - Name (text input, prefilled with the query, editable).
+   - "Already have: " chips for `similarMovements` when any exist; tapping one adds that existing
+     movement to the block instead of creating.
+   - Region chips Lower / Upper / Full body; default `full` for the Finisher block, otherwise the
+     draft's current region.
+   - Equipment chips from `VASA_EQUIPMENT` minus `'none'` (labels from `EQUIPMENT_LABELS`),
+     multi-select; nothing selected saves as `['none']`.
+   - "Log weight" toggle (`loadable`), default on; "Measure" chips Reps / Seconds (`unit`).
+   - Primary button **Add to <block title>**, secondary **Back** (returns to the picker with the
+     query intact). Add creates the movement (`libraries: ['vasa']`), persists it via `update`,
+     adds it to the block, and closes the sheet. The name must be non-empty; if it now exactly
+     matches an existing movement, that movement is used instead of creating a duplicate.
+4. A created movement's row on the logging page keeps a small link to `/movements/<id>` ("edit")
+   so cadence, tags or aliases can be fixed later without hunting for it.
