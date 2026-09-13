@@ -380,3 +380,282 @@ pool logs. Max-test logs feed `currentMax` directly (9.2).
 - **History**: "Log something else"; adhoc and max-test rows marked.
 - **Settings**: units, deload policy, cycle length, focus, masters; changing units converts nothing,
   it only labels and sets increments (logs store the number as entered).
+
+## 10. Vasa studio mode (quick logging of coached LFT classes)
+
+Context: the user attends Vasa's studio LFT (lifting) classes, typically Tuesday and Thursday. The
+coach supplies the workout one block at a time, so nothing is selected or timed by the app; the app
+only needs to make *logging* fast enough to do during a rest interval. Every input is optional: a
+log with a single deadlift weight is valid.
+
+### 10.1 Class structure (what the log models)
+
+- **Main** block: 1 or 2 complex movements (e.g. back squat, pull-up), sets × reps, loaded.
+- **Accessory 1** and **Accessory 2**: supersets of 2 or 3 movements (e.g. band tricep extension
+  paired with incline fly).
+- **Finisher**: always 2 minutes of something; core movements (dead bugs, planks) show up here.
+- Weekly focus: Mon/Tue **lower** body, Wed/Thu **upper** body, Fri/Sat/Sun **full** body. The day
+  of week sets the *default* region filter for movement selection; the user can override it.
+- Four training styles a class may be labelled with: **Build** (strength), **Pump** (hypertrophy),
+  **Power**, **Brawn** (advanced strength). Optional per log.
+- Studio equipment: squat rack, kettlebells, barbells, bumper plates, dumbbells, bands, landmine,
+  adjustable bench, plyo box. `'band'` is a new `Equipment` value.
+
+### 10.2 Types (additions to `src/domain/types.ts`)
+
+```ts
+export type Equipment = /* existing */ | 'band';
+export type MovementLibrary = 'default' | 'vasa';   // "my default list" vs "Vasa movements"
+export type BodyRegion = 'lower' | 'upper' | 'full';
+export type VasaStyle = 'build' | 'pump' | 'power' | 'brawn';
+
+export interface Movement {              // additions
+  libraries?: MovementLibrary[];         // absent = ['default']; a movement can be in both
+  region?: BodyRegion;                   // explicit override; otherwise derived from tags (10.3)
+}
+export interface VasaMeta { region: BodyRegion; style?: VasaStyle; }
+export interface WorkoutLog {            // additions
+  kind?: 'pool' | 'adhoc' | 'max-test' | 'vasa';
+  vasa?: VasaMeta;                       // present iff kind === 'vasa'
+}
+export interface AppState { schemaVersion: 1 | 2 | 3; }
+```
+
+Migration to schemaVersion 3 (`src/domain/migrate.ts`, idempotent): appends `'band'` to
+`settings.availableEquipment` when absent, and appends every movement from
+`src/domain/vasa/seedMovements.ts` whose id is not already present. `buildSeedState` includes the
+same seed movements on first run. Existing movements are left untouched (absent `libraries` reads
+as `['default']`). `serialize.ts` accepts `kind: 'vasa'`, `vasa`, `libraries`, `region`, `'band'`.
+
+### 10.3 Domain (`src/domain/vasa/*`, pure, unit-tested)
+
+- `region.ts`
+  - `regionForDate(date: Date): BodyRegion` — Mon/Tue lower, Wed/Thu upper, else full (local day).
+  - `movementRegion(m: Movement): BodyRegion` — `m.region` if set; else lower when any tag in
+    `squat, legs, hinge, unilateral`, upper when any tag in `push, pull, gymnastics`; both → full;
+    neither (core, cardio, carry, plyo only) → full.
+  - `matchesRegion(m, region)` — `region === 'full'` accepts all; otherwise accepts movements whose
+    region equals it **or is `full`** (so core/finisher movements always surface).
+  - `REGION_LABELS: Record<BodyRegion, string>` — Lower, Upper, Full body.
+- `library.ts`
+  - `movementLibraries(m): MovementLibrary[]` (absent → `['default']`), `inLibrary(m, lib)`,
+    `withLibrary(m, lib): Movement` (adds without duplicating).
+  - `VASA_EQUIPMENT: Equipment[]` = rack, pullup_bar (the rack carries one), barbell, kettlebell,
+    dumbbell, band, landmine, bench, plyo_box, box, none. `availableAtVasa(m)`: every required equipment is in that list (empty or
+    `['none']` → true).
+  - `VASA_STYLES`, `VASA_STYLE_LABELS` (Build · strength, Pump · hypertrophy, Power, Brawn · advanced
+    strength).
+  - `newVasaMovement(input: { name; region: BodyRegion; existingIds: string[]; loadable?; equipment? })
+    : Movement` — id = `slugify(name)` made unique against `existingIds` with a `_2`, `_3` suffix;
+    `libraries: ['vasa']`, `region`, `tags: []`, `equipment` (default `['none']`), `cadenceDays: 3`,
+    `unit: 'reps'`, `loadable` default true.
+- `search.ts`
+  - `searchMovements(movements, query, opts: { region: BodyRegion; logs: WorkoutLog[]; now: Date;
+    limit?: number }): Movement[]` — case-insensitive match on name and aliases when `query` is
+    non-empty (no match → excluded); ranked by score, ties by name: exact name +100, any word of the
+    name/alias starts with the query +50, substring +20; in the `vasa` library +10; passes
+    `matchesRegion` +8 and exact region +4 (only when `region !== 'full'`); performed in the last 30
+    days +3; not `availableAtVasa` −15 (ranked down, never hidden). Default limit 8.
+  - `hasExactName(movements, query): boolean` — case/whitespace-insensitive equality on name or
+    alias; the UI shows a "Create “…”" row only when false.
+- `build.ts`
+  - ```ts
+    export interface VasaSetInput { weight?: number; reps?: number; }
+    export interface VasaMovementInput { movementId: string; sets: VasaSetInput[]; notes?: string; }
+    export interface VasaBlockInput { role: 'main' | 'accessory' | 'finisher'; title: string; movements: VasaMovementInput[]; }
+    export interface BuildVasaLogInput { date: string | Date; region: BodyRegion; style?: VasaStyle;
+      blocks: VasaBlockInput[]; notes?: string; rpe?: number; id?: string; }
+    export function buildVasaLog(input: BuildVasaLogInput): WorkoutLog;
+    ```
+    Blocks with no movements are dropped. `main`/`accessory` blocks → `format: 'strength'`,
+    `sets` = the largest set count among their movements (min 1), `title` as given.
+    `finisher` → `format: 'amrap'`, `durationSec: 120`. Snapshot: id `vasa-<logId>`, name
+    `Vasa LFT · <Region label>` plus ` · <Style label>` when a style is set, `intensity: 'M'`,
+    `cadenceDays: 0`, `enabled: false`, `source: 'manual'`, `tags: ['vasa', 'region:<r>', 'style:<s>'?]`.
+    Results: one `MovementResult` per movement per block with `blockIndex`, `sets` holding only
+    sets that have a weight or reps (may be empty), `notes`. `startedAt = finishedAt =` the given
+    instant (a date-only string means local noon), `kind: 'vasa'`, `vasa: { region, style }`.
+    Because these are strength blocks, Vasa logs feed last-performed, the pattern cadence gate, e1rm
+    history, progression and fatigue flags exactly like pool logs (a Vasa squat day correctly delays a
+    garage squat day).
+  - `lastVasaSets(logs, movementId): { date: string; sets: SetResult[] } | null` — the most recent
+    log of any kind containing the movement, for a "last time" hint.
+- `src/domain/program/context.ts`: `logKind` unchanged (returns the union including `'vasa'`).
+
+### 10.4 Store (`src/state/store.ts`)
+
+`logVasa(log: WorkoutLog)`: appends the log **and** marks every movement it references as being in
+the `vasa` library (`withLibrary`), so the Vasa library grows from use. New movements created inline
+are added via the existing `update`.
+
+### 10.5 Screen: `/vasa` (Preact, `src/ui/pages/Vasa.tsx`)
+
+Optimised for one-thumb entry between sets. Draft persisted to `localStorage` key
+`workout_app.vasaDraft` on every change (same pattern as `state/run.ts`) and restored on open, so a
+reload mid-class loses nothing; cleared on Save or Discard.
+
+1. Top bar: back, title "Vasa LFT". Row: date input (default today). Region chips Lower / Upper /
+   Full body, default `regionForDate(date)` (re-defaults when the date changes unless the user has
+   tapped a chip). Style chips Build / Pump / Power / Brawn, optional, tap again to clear.
+2. Four block cards, always present, titled Main, Accessory 1, Accessory 2, Finisher (2 min).
+   Each shows its movements and an **+ Add movement** button that opens an inline picker: a search
+   input (autofocused), the top `searchMovements` results for the current region, and, when the
+   query has no exact name match, a final row **Create “<query>”** that calls `newVasaMovement`
+   (region = current chip, saved to state immediately) and adds it. Picking a movement adds it with
+   one blank set (main/accessory) or one blank entry (finisher).
+3. Movement row (main/accessory): name, a muted "last: 185×8, 185×8 · 3 Sep" line from
+   `lastVasaSets` when available, then one line per set with weight and reps inputs (both optional,
+   `inputMode` decimal/numeric), a remove-set button, and **+ Set** which prefills the new set from
+   the previous one (the common case is "same again"). Finisher rows: name plus a single free-text
+   note input (e.g. "3 rounds", "20 each side"). A remove-movement control on every row.
+4. Notes textarea and RPE input (both optional). **Save** is enabled once any block has a movement;
+   it calls `buildVasaLog` → `logVasa` → routes to `/history/<id>`. **Discard** clears the draft after
+   confirmation.
+
+Entry points: a **Log a Vasa class** button on Today (below the workout card / get button) and a
+link on History next to "Log something else". History and HistoryDetail label these logs
+"Vasa"; HistoryDetail shows region and style. EditLog must open Vasa logs without error (the generic
+results editor is acceptable).
+
+### 10.6 Movements library UI
+
+- Movements page: filter chips All / Default / Vasa (via `inLibrary`), a small "Vasa" chip on rows in
+  that library, and a region filter Lower / Upper / Full (via `matchesRegion`).
+- Movement editor: library checkboxes (Default, Vasa) and a region select (Auto / Lower / Upper /
+  Full body, where Auto clears the override and shows the derived value).
+- `EQUIPMENT_LABELS` gains `band: 'Bands'`; `ALL_EQUIPMENT` (seed.ts) and `seed/validate.py` gain
+  `'band'`.
+
+### 10.7 Catalog search and on-the-fly movement creation (logging page)
+
+Goal: while logging a class, be confident in a few taps that a movement is or is not already in
+the catalog, and if not, add it properly (not with blind defaults) without leaving the page.
+
+**Search (`src/domain/vasa/search.ts`, replaces the 10.3 matching rules; scoring boosts unchanged)**
+
+- `normalizeText(s)`: lowercase, replace every non-alphanumeric run with a space, collapse and trim.
+  So "Pull-up" ≡ "pull up" ≡ "pullup"? No: hyphen and space both become a space, so "pull up"
+  matches "Pull-up"; "pullup" matches via substring of the space-stripped form (see below).
+- `singular(token)`: `ies` → `y`, else strip one trailing `s` unless the token ends in `ss` or is
+  3 characters or shorter. Applied to every token of both the query and the candidate.
+- `expandAbbreviation(token)`: `db` → `dumbbell`, `kb` → `kettlebell`, `bb` → `barbell`,
+  `rdl` → `romanian deadlift`, `ohp` → `overhead press`, `bss` → `bulgarian split squat`,
+  `sl` → `single leg`, `sa` → `single arm`. Applied to query tokens only.
+- Match tiers for a query against each candidate string (name and every alias), best wins:
+  - exact: normalized+singularized strings equal → 100
+  - ordered word prefixes: every query token prefix-matches a distinct candidate word, in order
+    ("inc db fly" → "Incline Dumbbell Fly") → 60
+  - unordered word prefixes: every query token prefix-matches a distinct candidate word → 50
+  - substring: the space-stripped query is a substring of the space-stripped candidate
+    ("pullup" → "pull up") → 20
+  - otherwise 0 (excluded when the query is non-empty)
+- `hasExactName` uses the same normalized+singularized equality ("dead bugs" ≡ "Dead Bug").
+- `similarMovements(movements, query, limit = 3)`: the top-scoring matches by the tiers above
+  (ignoring library/region/recency boosts), for the "did you mean" row.
+- Default `limit` stays 8 for an empty query; the UI passes 20 when a query is present so nothing
+  that matches is hidden.
+
+**`newVasaMovement` (`library.ts`)** gains optional `unit?: Unit` (default `'reps'`) and
+`tags?: string[]` (default `[]`).
+
+**UI (`src/ui/pages/Vasa.tsx` + new `src/ui/components/NewMovementSheet.tsx`)**
+
+1. Picker results show a subtitle line: region label · equipment labels (or "No equipment"), so
+   near-duplicates are distinguishable at a glance.
+2. When the query is non-empty and `hasExactName` is false, the picker shows a
+   **Create “<query>”…** row: first in the list when there are no matches, last otherwise.
+3. Tapping it swaps the picker for the **New movement** sheet, still inside the block card:
+   - Name (text input, prefilled with the query, editable).
+   - "Already have: " chips for `similarMovements` when any exist; tapping one adds that existing
+     movement to the block instead of creating.
+   - Region chips Lower / Upper / Full body; default `full` for the Finisher block, otherwise the
+     draft's current region.
+   - Equipment chips from `VASA_EQUIPMENT` minus `'none'` (labels from `EQUIPMENT_LABELS`),
+     multi-select; nothing selected saves as `['none']`.
+   - "Log weight" toggle (`loadable`), default on; "Measure" chips Reps / Seconds (`unit`).
+   - Primary button **Add to <block title>**, secondary **Back** (returns to the picker with the
+     query intact). Add creates the movement (`libraries: ['vasa']`), persists it via `update`,
+     adds it to the block, and closes the sheet. The name must be non-empty; if it now exactly
+     matches an existing movement, that movement is used instead of creating a duplicate.
+4. A created movement's row on the logging page keeps a small link to `/movements/<id>` ("edit")
+   so cadence, tags or aliases can be fixed later without hunting for it.
+
+### 10.8 Entered workouts join the pool; pool workouts are startable (supersedes 10.3 `build.ts`, 10.4, 10.5)
+
+Reframing: a class the coach gives us is just a workout we didn't have yet. So the entry screen
+becomes **Enter a workout** (`/enter`), general in wording, whose product is a **`PoolWorkout`** —
+not a separate log kind. Results are logged by the existing Run screen (which already supports
+logging during the workout), so there is one way to run and one way to log.
+
+Two flows, both ending on `/run`:
+1. **Search the pool → pick a workout → Start.**
+2. **Search the pool → not found → enter a new workout → it is saved to the pool → Start.**
+
+**Removed**: `WorkoutLog.kind: 'vasa'`, `VasaMeta`, `WorkoutLog.vasa`, `buildVasaLog`,
+`lastVasaSets`, `store.logVasa`, and every "Vasa" label in History/HistoryDetail/EditLog. Logs from
+these workouts are ordinary `kind: 'pool'` logs with a `poolWorkoutId`. Kept: `Movement.libraries`
+(the Vasa library facet), `Movement.region`, `BodyRegion`, `VasaStyle`, `'band'`, search, the
+New movement sheet, schemaVersion 3.
+
+**Pool workout shape** (`src/domain/vasa/pool.ts`):
+```ts
+export interface EnteredMovement { movementId: string; sets?: number; reps?: number; seconds?: number; }
+export interface EnteredBlock { role: 'main' | 'accessory' | 'finisher'; title: string; movements: EnteredMovement[]; }
+export interface BuildEnteredWorkoutInput {
+  name?: string;               // default: defaultWorkoutName(...)
+  date: string;                // YYYY-MM-DD (for the default name)
+  region: BodyRegion; style?: VasaStyle;
+  blocks: EnteredBlock[]; notes?: string; id?: string;
+}
+export function defaultWorkoutName(region, style, date): string;   // "Lower · Build · Sep 15" (no style: "Lower · Sep 15")
+export function buildEnteredWorkout(input): PoolWorkout;
+export function workoutRegion(w: PoolWorkout): BodyRegion | null;  // from a `region:<r>` tag
+export function workoutStyle(w: PoolWorkout): VasaStyle | null;    // from a `style:<s>` tag
+export function isEnteredWorkout(w: PoolWorkout): boolean;         // tags include 'vasa'
+export function searchPool(pool: PoolWorkout[], movements: Movement[], query: string,
+  opts: { region: BodyRegion; logs: WorkoutLog[]; now: Date; limit?: number }): PoolWorkout[];
+```
+- `buildEnteredWorkout`: empty blocks dropped. main/accessory → `format: 'strength'`, `sets` =
+  the largest `sets` among its movements, default 3; each movement carries `reps`/`seconds` when
+  given. finisher → `format: 'amrap'`, `durationSec: 120`. `id` = `entered-<generated>` unless
+  given, `intensity: 'M'`, `cadenceDays: 14`, `enabled: true`, `source: 'manual'`,
+  `tags: ['vasa', 'region:<r>', 'style:<s>'?]`, `notes`.
+- `searchPool`: `search.ts` exports `textMatchScore(query, candidates: string[]): number` (the 10.7
+  tiers over arbitrary strings). A workout's candidates are its name, its tags, and the names of
+  its movements. Non-empty query: score 0 excludes. Boosts: `workoutRegion` equals `opts.region`
+  +8 (only when region !== 'full'); entered workout +4; last performed within 30 days +3 (recently
+  entered class workouts float up); disabled −5 (still shown). Ties by name. Default limit 8; the UI
+  passes 20 with a query.
+
+**Store** (`src/state/store.ts`):
+- `addPoolWorkout(w: PoolWorkout)`: appends to `pool` and adds every referenced movement to the
+  `vasa` library (`withLibrary`) when `isEnteredWorkout(w)`.
+- `chooseTodayWorkout(id: string, now = new Date()): PoolWorkout | null`: sets today's workout to
+  the pool entry with that id. The snapshot is `applyWave(...)` (SPEC 9.5) for ordinary pool
+  workouts, but the untouched workout for entered ones (the coach's prescription is not waved).
+  Returns the snapshot. Clears any bumped exclusions for that id.
+
+**Screen `/enter`** (`src/ui/pages/EnterWorkout.tsx`, replaces `Vasa.tsx`; draft module renamed
+`src/ui/enterDraft.ts` with the same persistence key semantics under `workout_app.enterDraft`):
+1. Top bar "Enter a workout". A search input "Search the pool…" (autofocus). Results from
+   `searchPool` with the day's region (`regionForDate(today)`, no chips needed here): name, a
+   one-line block summary (`blockMetaLine`/movement names, first 3 movements + "…"), last done or
+   "never". Tapping a row expands it in place: the full `BlockSummary` list and two buttons,
+   **Start** (primary: `chooseTodayWorkout` then `beginRunSession(state, snapshot)` then
+   `route('/run')`, with the same "already in progress" confirm as Today) and **Make it today's**
+   (`chooseTodayWorkout` then `route('/')`).
+2. Under the results, always: **Enter a new workout** button (wording "Not here? Enter a new
+   workout" when a query has no results). It opens the composer below the search (search collapses
+   to a single line "← Back to search").
+3. Composer: name input (placeholder shows `defaultWorkoutName`), date, region chips (default by
+   weekday, re-defaults on date change unless touched), style chips (optional), the four block
+   cards (Main, Accessory 1, Accessory 2, Finisher (2 min)) with the 10.7 picker and New movement
+   sheet unchanged. A main/accessory movement row is one line: name · `sets` input · "×" · `reps`
+   input (both optional, numeric) · remove. A finisher row: name · `seconds` input (optional,
+   placeholder "seconds") · remove. Notes textarea. Draft persisted on every change.
+4. Buttons: **Save & start** (primary; enabled once any block has a movement): `buildEnteredWorkout`
+   → `addPoolWorkout` → `chooseTodayWorkout(id)` → `beginRunSession` → `/run`, clearing the draft.
+   **Save to pool** (secondary): same without starting; routes to `/pool/<id>`. **Discard** (ghost).
+5. Entry points: Today's button becomes **Enter a workout** (href `/enter`); History's second
+   button is removed (History keeps "Log something else"). Pool page rows keep linking to the
+   editor; the editor gains a **Make it today's** button (`chooseTodayWorkout` → `/`).

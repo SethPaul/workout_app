@@ -110,7 +110,11 @@ export function EditLog() {
     );
   }
 
-  if (logKind(log) !== 'pool') {
+  // Only adhoc/max-test (built by buildAdhocLog, no snapshot blocks) need
+  // the dedicated AdhocLog form; every other kind (pool, and pool-derived
+  // entered-workout logs, SPEC 10.8) uses the generic results editor.
+  const kind = logKind(log);
+  if (kind === 'adhoc' || kind === 'max-test') {
     return <EditAdhocLog log={log} />;
   }
 

@@ -10,6 +10,7 @@ import type {
 import { resolveSettings } from '../domain/program/context';
 import { loadForBlockMovement } from '../domain/program/rpe';
 import { progressionStatus } from '../domain/program/progression';
+export { slugify } from '../domain/slug';
 
 /** Formats a millisecond duration as clock time — "M:SS" or "H:MM:SS". */
 export function formatClock(ms: number): string {
@@ -52,6 +53,7 @@ export const EQUIPMENT_LABELS: Record<Equipment, string> = {
   cable: 'Cable Machine',
   landmine: 'Landmine',
   plyo_box: 'Plyo Box',
+  band: 'Bands',
   none: 'No equipment',
 };
 
@@ -65,14 +67,6 @@ export function formatDueIn(days: number | null): string {
   if (days === null) return 'never done';
   if (days <= 0) return 'due now';
   return `due in ${days} day${days === 1 ? '' : 's'}`;
-}
-
-export function slugify(name: string): string {
-  return name
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '');
 }
 
 export const FORMAT_LABELS: Record<Format, string> = {

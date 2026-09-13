@@ -23,7 +23,14 @@ function poolWorkout(): PoolWorkout {
     id: 'w1',
     name: 'Deadlift Day',
     intensity: 'H',
-    blocks: [{ format: 'strength', title: 'Main', movements: [{ movementId: 'deadlift', reps: 5 }], sets: 1 }],
+    blocks: [
+      {
+        format: 'strength',
+        title: 'Main',
+        movements: [{ movementId: 'deadlift', reps: 5 }],
+        sets: 1,
+      },
+    ],
     cadenceDays: 14,
     enabled: true,
     source: 'manual',
@@ -46,8 +53,24 @@ function poolLog(): WorkoutLog {
 function fixtureState(logs: WorkoutLog[]): AppState {
   return {
     movements: [
-      { id: 'deadlift', name: 'Deadlift', tags: ['hinge', 'compound'], equipment: ['barbell'], cadenceDays: 7, unit: 'reps', loadable: true },
-      { id: 'squat', name: 'Back Squat', tags: ['squat', 'compound'], equipment: ['barbell'], cadenceDays: 7, unit: 'reps', loadable: true },
+      {
+        id: 'deadlift',
+        name: 'Deadlift',
+        tags: ['hinge', 'compound'],
+        equipment: ['barbell'],
+        cadenceDays: 7,
+        unit: 'reps',
+        loadable: true,
+      },
+      {
+        id: 'squat',
+        name: 'Back Squat',
+        tags: ['squat', 'compound'],
+        equipment: ['barbell'],
+        cadenceDays: 7,
+        unit: 'reps',
+        loadable: true,
+      },
     ],
     pool: [poolWorkout()],
     logs,

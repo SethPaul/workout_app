@@ -228,6 +228,10 @@ export function Today() {
           </button>
         </div>
       )}
+
+      <a class="btn btn-block" href="/enter" style="margin-top:1rem">
+        Enter a workout
+      </a>
     </div>
   );
 }

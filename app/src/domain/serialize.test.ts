@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { exportState, importState } from './serialize';
+import { VASA_SEED_MOVEMENTS } from './vasa/seedMovements';
 import type { AppState } from './types';
 
 function validState(): AppState {
@@ -44,22 +45,25 @@ function validState(): AppState {
 }
 
 describe('exportState / importState round-trip', () => {
-  it('round-trips a v1 export, migrated to v2 (SPEC 9.1)', () => {
+  it('round-trips a v1 export, migrated to v3 (SPEC 9.1/10.2)', () => {
     const state = validState();
     const json = exportState(state);
     const imported = importState(json);
-    expect(imported.schemaVersion).toBe(2);
-    expect(imported.movements).toEqual(state.movements);
+    expect(imported.schemaVersion).toBe(3);
+    expect(imported.movements).toEqual([...state.movements, ...VASA_SEED_MOVEMENTS]);
     expect(imported.pool).toEqual(state.pool);
     expect(imported.logs).toEqual([]);
-    expect(imported.settings).toMatchObject(state.settings);
+    expect(imported.settings.availableEquipment).toEqual([
+      ...state.settings.availableEquipment,
+      'band',
+    ]);
     expect(imported.settings.units).toBe('lb');
     expect(imported.settings.deloadPolicy).toBe('fatigue');
     expect(imported.program).toBeDefined();
     expect(imported.program?.dismissedFlags).toEqual([]);
   });
 
-  it('round-trips an already-v2 export unchanged', () => {
+  it('a v2 export is migrated to v3 on import (band + Vasa seed movements added)', () => {
     const state: AppState = {
       ...validState(),
       schemaVersion: 2,
@@ -71,6 +75,36 @@ describe('exportState / importState round-trip', () => {
         focus: 'strength',
         masters: true,
       },
+      program: { cycleStartedAt: '2024-01-01T00:00:00.000Z', dismissedFlags: ['x'] },
+    };
+    const imported = importState(exportState(state));
+    expect(imported.schemaVersion).toBe(3);
+    expect(imported.settings).toMatchObject({
+      units: 'kg',
+      deloadPolicy: 'calendar',
+      cycleWeeks: 6,
+      focus: 'strength',
+      masters: true,
+    });
+    expect(imported.settings.availableEquipment).toContain('band');
+    expect(imported.movements).toEqual([...state.movements, ...VASA_SEED_MOVEMENTS]);
+    expect(imported.program).toEqual(state.program);
+  });
+
+  it('round-trips an already-v3 export unchanged', () => {
+    const state: AppState = {
+      ...validState(),
+      schemaVersion: 3,
+      settings: {
+        ...validState().settings,
+        availableEquipment: [...validState().settings.availableEquipment, 'band'],
+        units: 'kg',
+        deloadPolicy: 'calendar',
+        cycleWeeks: 6,
+        focus: 'strength',
+        masters: true,
+      },
+      movements: [...validState().movements, ...VASA_SEED_MOVEMENTS],
       program: { cycleStartedAt: '2024-01-01T00:00:00.000Z', dismissedFlags: ['x'] },
     };
     const imported = importState(exportState(state));
@@ -106,8 +140,13 @@ describe('importState validation', () => {
     expect(() => importState(JSON.stringify(state))).not.toThrow();
   });
 
+  it('accepts schemaVersion 3', () => {
+    const state = { ...validState(), schemaVersion: 3 };
+    expect(() => importState(JSON.stringify(state))).not.toThrow();
+  });
+
   it('rejects an unsupported schemaVersion', () => {
-    const state = { ...validState(), schemaVersion: 3 as unknown as 1 };
+    const state = { ...validState(), schemaVersion: 4 as unknown as 1 };
     expect(() => importState(JSON.stringify(state))).toThrow(/schemaVersion/);
   });
 
@@ -142,7 +181,8 @@ describe('importState validation', () => {
     };
     const imported = importState(JSON.stringify(raw));
     expect(imported.settings).toEqual({
-      availableEquipment: ['barbell'],
+      // migrate() (SPEC 10.2) appends 'band' when absent.
+      availableEquipment: ['barbell', 'band'],
       soundOn: true,
       vibrateOn: true,
       keepScreenOn: true,
@@ -260,5 +300,50 @@ describe('importState validation', () => {
       settings: { ...validState().settings, deloadPolicy: 'never' },
     };
     expect(() => importState(JSON.stringify(state))).toThrow(/deloadPolicy/);
+  });
+});
+
+describe('importState SPEC 10.2/10.8 (Vasa library facet) additions', () => {
+  it('rejects a log with kind: "vasa" (SPEC 10.8 removed the vasa log kind)', () => {
+    const state = validState();
+    state.logs.push({
+      id: 'l1',
+      workoutSnapshot: state.pool[0],
+      startedAt: '2024-01-01T00:00:00.000Z',
+      finishedAt: '2024-01-01T00:00:00.000Z',
+      results: [],
+      kind: 'vasa' as unknown as 'pool',
+    });
+    expect(() => importState(JSON.stringify(state))).toThrow(/kind/);
+  });
+
+  it('accepts a movement with libraries and an explicit region', () => {
+    const state = validState();
+    state.movements[0].libraries = ['default', 'vasa'];
+    state.movements[0].region = 'upper';
+    const imported = importState(JSON.stringify(state));
+    expect(imported.movements[0].libraries).toEqual(['default', 'vasa']);
+    expect(imported.movements[0].region).toBe('upper');
+  });
+
+  it('rejects a movement with an invalid library', () => {
+    const state: Record<string, unknown> = { ...validState() };
+    (state.movements as Record<string, unknown>[])[0].libraries = ['default', 'nonsense'];
+    expect(() => importState(JSON.stringify(state))).toThrow(/libraries/);
+  });
+
+  it('rejects a movement with an invalid region', () => {
+    const state: Record<string, unknown> = { ...validState() };
+    (state.movements as Record<string, unknown>[])[0].region = 'sideways';
+    expect(() => importState(JSON.stringify(state))).toThrow(/region/);
+  });
+
+  it('accepts "band" as movement/settings equipment', () => {
+    const state = validState();
+    state.movements[0].equipment.push('band');
+    state.settings.availableEquipment.push('band');
+    const imported = importState(JSON.stringify(state));
+    expect(imported.movements[0].equipment).toContain('band');
+    expect(imported.settings.availableEquipment).toContain('band');
   });
 });

@@ -15,7 +15,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 EQUIPMENT = {
     'barbell', 'kettlebell', 'dumbbell', 'rack', 'bench', 'pullup_bar', 'rings',
     'rower', 'bike', 'box', 'jump_rope', 'medball', 'wall', 'sandbag', 'sled',
-    'ghd', 'ab_wheel', 'trx', 'cable', 'landmine', 'plyo_box', 'none',
+    'ghd', 'ab_wheel', 'trx', 'cable', 'landmine', 'plyo_box', 'band', 'none',
 }
 UNITS = {'reps', 'meters', 'calories', 'seconds'}
 FORMATS = {
