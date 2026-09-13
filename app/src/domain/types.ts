@@ -20,12 +20,22 @@ export type Equipment =
   | 'cable'
   | 'landmine'
   | 'plyo_box'
+  | 'band'
   | 'none';
 
 export type Unit = 'reps' | 'meters' | 'calories' | 'seconds';
 
 /** SPEC 9.1: display/increment units. Logs always store the number as entered. */
 export type Units = 'lb' | 'kg';
+
+/** SPEC 10.2: which list(s) a movement belongs to — the user's default garage list, Vasa studio classes, or both. */
+export type MovementLibrary = 'default' | 'vasa';
+
+/** SPEC 10.2: body region a movement primarily trains; drives the day-of-week default filter in Vasa mode. */
+export type BodyRegion = 'lower' | 'upper' | 'full';
+
+/** SPEC 10.1: Vasa's four training styles. */
+export type VasaStyle = 'build' | 'pump' | 'power' | 'brawn';
 
 export interface Movement {
   id: string; // slug, e.g. "deadlift"
@@ -43,6 +53,9 @@ export interface Movement {
   progression?: 'linear' | 'double'; // default: linear for barbell lifts, double for everything else
   repRange?: [number, number]; // double progression range, default [6, 8] accessory, [3, 5] main
   increment?: number; // load step in settings.units; default by equipment/pattern, see program/rpe.ts
+  // --- SPEC 10.2 additions (Vasa studio mode) ---
+  libraries?: MovementLibrary[]; // absent = ['default']; a movement can be in both
+  region?: BodyRegion; // explicit override; otherwise derived from tags (domain/vasa/region.ts)
 }
 
 export type Format =
@@ -135,6 +148,12 @@ export interface BlockOutcome {
   status: 'completed' | 'skipped' | 'failed';
 }
 
+/** SPEC 10.2: per-log metadata for a Vasa studio class. */
+export interface VasaMeta {
+  region: BodyRegion;
+  style?: VasaStyle;
+}
+
 export interface WorkoutLog {
   id: string;
   // Was required; SPEC 9.1 makes it optional (adhoc/max-test logs have none).
@@ -152,12 +171,14 @@ export interface WorkoutLog {
   // src/ui/) keep typechecking; treat an absent kind as 'pool' (see
   // `program/context.ts`'s `logKind`). migrate() stamps it explicitly on
   // stored state.
-  kind?: 'pool' | 'adhoc' | 'max-test';
+  kind?: 'pool' | 'adhoc' | 'max-test' | 'vasa';
   durationMin?: number; // derived from startedAt/finishedAt when both exist
   // --- history editing additions ---
   editedAt?: string; // ISO timestamp of the last edit via store.updateLog, if any
   // --- per-block outcome capture (bug fix: AMRAP rounds/for-time clocks were thrown away) ---
   blockOutcomes?: BlockOutcome[];
+  // --- SPEC 10.2: present iff kind === 'vasa' ---
+  vasa?: VasaMeta;
 }
 
 export interface Settings {
@@ -190,7 +211,7 @@ export interface AppState {
   pool: PoolWorkout[];
   logs: WorkoutLog[];
   settings: Settings;
-  schemaVersion: 1 | 2;
+  schemaVersion: 1 | 2 | 3;
   // Optional so pre-programming-layer AppState literals (src/ui/ tests this
   // workstream does not own) keep typechecking; migrate() always populates
   // it for stored state, and program/context.ts's `resolveProgram` gives
