@@ -12,6 +12,7 @@ import { History } from './pages/History';
 import { HistoryDetail } from './pages/HistoryDetail';
 import { EditLog } from './pages/EditLog';
 import { AdhocLog } from './pages/AdhocLog';
+import { Vasa } from './pages/Vasa';
 import { Settings } from './pages/Settings';
 import { Program } from './pages/Program';
 
@@ -40,6 +41,7 @@ function AppShell() {
           <Route path="/movements/:id" component={MovementEditor} />
           <Route path="/history" component={History} />
           <Route path="/history/adhoc" component={AdhocLog} />
+          <Route path="/vasa" component={Vasa} />
           <Route path="/history/:id/edit" component={EditLog} />
           <Route path="/history/:id" component={HistoryDetail} />
           <Route path="/settings" component={Settings} />

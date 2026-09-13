@@ -228,6 +228,10 @@ export function Today() {
           </button>
         </div>
       )}
+
+      <a class="btn btn-block" href="/vasa" style="margin-top:1rem">
+        Log a Vasa class
+      </a>
     </div>
   );
 }
