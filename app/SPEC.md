@@ -173,6 +173,39 @@ Inputs: `pool`, `movements`, `logs`, `settings`, `now`, `exclude: string[]` (bum
 **Today** is remembered: once a workout is pulled it stays "today's workout" (stored in
 `localStorage` as `{date, workoutId}`) until completed, bumped, or the date changes.
 
+### 3.1 The hopper (bump behaviour)
+
+Mental model: each day the gates in step 1–2 produce a **viable list** (the hopper). **Bump** surfaces
+another workout from the hopper without repeating one already bumped today. Exclusions are applied
+*after* the gates, never before, so running out of hopper is reported as such rather than as a
+cadence failure.
+
+- `viableWorkouts(input): { viable: PoolWorkout[]; reason: SelectReason }` (`select.ts`, exported):
+  enabled → equipment → cadence → pattern → weekly-need restriction, ignoring `exclude`.
+  `reason` names the gate that emptied the list, or `'ok'`. `ignoreCadence` skips the cadence and
+  pattern gates (equipment still applies).
+- `selectWorkout` = `viableWorkouts` minus `exclude`, then score/slice/pick as in step 3–4. When the
+  viable list is non-empty but every entry is excluded, the result is `{ workout: null, reason:
+  'excluded' }`. `SelectResult` gains `hopper: { viable: PoolWorkout[]; remaining: PoolWorkout[] }`
+  (`remaining` = viable minus excluded; the current pick is part of it).
+- `TodayWorkout` (store, localStorage) gains `mode: 'viable' | 'all'` (absent = `'viable'`).
+  `pullToday` passes `ignoreCadence: input.ignoreCadence ?? mode === 'all'`. `bumpTodayWorkout`
+  keeps `mode` and `excluded`. New: `resetHopper(now)` clears `excluded` and `workoutId`, keeps
+  `mode`; `setHopperMode(mode, now)` sets `mode`, keeps `excluded`, clears `workoutId`. Both are
+  followed by a pull in the UI. Mode is day-scoped like the exclusions.
+- Today screen:
+  - With a workout showing: a muted status line under the card, "Hopper: N of M left" (N =
+    `remaining.length`, M = `viable.length`), suffixed " · all workouts" in `'all'` mode.
+  - `reason === 'excluded'`: banner "You've bumped through all M workouts in today's hopper."
+    Buttons: **Start over** (`resetHopper` + pull), **Use all workouts** (`setHopperMode('all')` +
+    pull; hidden when already in `'all'` mode), **Pick a workout** (link to `/enter`).
+  - `reason === 'cadence' | 'pattern'` (nothing viable from the start): the existing message, then
+    **Use all workouts** (sets the persistent `'all'` mode, so later bumps keep working) and
+    **Pick a workout**. The one-shot "Ignore cadence and pick anyway" is replaced by this.
+  - `reason === 'equipment' | 'no-enabled'`: existing message plus **Pick a workout**.
+  - Bumping in `'all'` mode cycles through every enabled, equipment-OK workout; exhausting that is
+    again `'excluded'` with **Start over** and **Pick a workout**.
+
 ## 4. Timer engine (`app/src/domain/timer.ts`, pure state machine, unit-tested)
 
 The engine is a reducer: `(state, event) => state`, driven by a 100ms tick, with `now` passed in.
