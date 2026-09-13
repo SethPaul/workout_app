@@ -3,6 +3,7 @@ import { migrate } from '../domain/migrate';
 import { applyWave, cycleWeek, isDeloadWeek } from '../domain/program/cycle';
 import { resolveProgram } from '../domain/program/context';
 import { selectWorkout, type SelectInput, type SelectResult } from '../domain/select';
+import { withLibrary } from '../domain/vasa/library';
 import type { AppState, PoolWorkout, ProgramState, WorkoutLog } from '../domain/types';
 import type { Storage } from '../storage/storage';
 import { IdbStorage } from '../storage/idb';
@@ -46,14 +47,33 @@ export async function logAdhoc(log: WorkoutLog): Promise<void> {
 }
 
 /**
+ * Appends a Vasa studio-class WorkoutLog (SPEC 10.4) built by
+ * `domain/vasa/build.ts`, and marks every movement it references as being
+ * in the `vasa` library, so the Vasa library grows from use.
+ */
+export async function logVasa(log: WorkoutLog): Promise<void> {
+  await update((s) => {
+    const movementIds = new Set(log.results.map((r) => r.movementId));
+    const movements = s.movements.map((m) => (movementIds.has(m.id) ? withLibrary(m, 'vasa') : m));
+    return { ...s, movements, logs: [...s.logs, log] };
+  });
+}
+
+/**
  * Merges `patch` into the WorkoutLog with `id` and persists it, stamping
  * `editedAt` so History can show an "edited" hint. Used by the EditLog page
  * to save changes to a saved log's results, score, RPE, notes, or timing.
  */
-export async function updateLog(id: string, patch: Partial<WorkoutLog>, now: Date = new Date()): Promise<void> {
+export async function updateLog(
+  id: string,
+  patch: Partial<WorkoutLog>,
+  now: Date = new Date(),
+): Promise<void> {
   await update((s) => ({
     ...s,
-    logs: s.logs.map((log) => (log.id === id ? { ...log, ...patch, editedAt: now.toISOString() } : log)),
+    logs: s.logs.map((log) =>
+      log.id === id ? { ...log, ...patch, editedAt: now.toISOString() } : log,
+    ),
   }));
 }
 
@@ -143,7 +163,11 @@ export function currentTodayWorkout(now: Date = new Date()): TodayWorkout | null
 }
 
 /** Records that `workoutId` was pulled as today's workout, optionally with its wave-transformed snapshot. */
-export function setTodayWorkout(workoutId: string, now: Date = new Date(), snapshot?: PoolWorkout): void {
+export function setTodayWorkout(
+  workoutId: string,
+  now: Date = new Date(),
+  snapshot?: PoolWorkout,
+): void {
   const existing = currentTodayWorkout(now);
   const next: TodayWorkout = {
     date: todayDateString(now),

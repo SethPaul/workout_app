@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildSeedState, ALL_EQUIPMENT, defaultSettings } from './seed';
+import { VASA_SEED_MOVEMENTS } from '../domain/vasa/seedMovements';
 
 describe('buildSeedState', () => {
   it('never throws, even when seed/*.json is missing or empty', async () => {
@@ -7,12 +8,23 @@ describe('buildSeedState', () => {
     expect(Array.isArray(state.movements)).toBe(true);
     expect(Array.isArray(state.pool)).toBe(true);
     expect(state.logs).toEqual([]);
-    expect(state.schemaVersion).toBe(2);
+    expect(state.schemaVersion).toBe(3);
+  });
+
+  it('includes VASA_SEED_MOVEMENTS (SPEC 10.2), deduped by id against movements.json', async () => {
+    const state = await buildSeedState();
+    const ids = state.movements.map((m) => m.id);
+    for (const seedMovement of VASA_SEED_MOVEMENTS) {
+      expect(ids).toContain(seedMovement.id);
+    }
+    // No id appears twice, whether or not movements.json happens to define it.
+    expect(new Set(ids).size).toBe(ids.length);
   });
 
   it('defaults settings.availableEquipment to every Equipment value', async () => {
     const state = await buildSeedState();
     expect(state.settings.availableEquipment).toEqual(ALL_EQUIPMENT);
+    expect(state.settings.availableEquipment).toContain('band');
   });
 
   it('includes a fresh ProgramState (SPEC 9.1)', async () => {

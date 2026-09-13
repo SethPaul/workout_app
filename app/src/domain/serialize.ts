@@ -1,5 +1,16 @@
 import { migrate } from './migrate';
-import type { AppState, Block, Format, Movement, PoolWorkout, Settings, WorkoutLog } from './types';
+import type {
+  AppState,
+  Block,
+  BodyRegion,
+  Format,
+  Movement,
+  MovementLibrary,
+  PoolWorkout,
+  Settings,
+  VasaMeta,
+  WorkoutLog,
+} from './types';
 
 /** Serializes AppState to a JSON string for backup/export. */
 export function exportState(state: AppState): string {
@@ -56,6 +67,23 @@ function assertCadenceDays(value: unknown, path: string): asserts value is numbe
   }
 }
 
+const BODY_REGIONS = new Set<string>(['lower', 'upper', 'full']);
+const VASA_STYLES = new Set<string>(['build', 'pump', 'power', 'brawn']);
+
+function assertBodyRegion(value: unknown, path: string): asserts value is BodyRegion {
+  assertString(value, path);
+  if (!BODY_REGIONS.has(value)) fail(`expected "${path}" to be one of lower, upper, full`);
+}
+
+function assertMovementLibraries(value: unknown, path: string): asserts value is MovementLibrary[] {
+  assertArray(value, path);
+  value.forEach((lib, i) => {
+    if (lib !== 'default' && lib !== 'vasa') {
+      fail(`expected "${path}[${i}]" to be "default" or "vasa"`);
+    }
+  });
+}
+
 function assertNoDuplicateIds(ids: string[], kind: string): void {
   const seen = new Set<string>();
   for (const id of ids) {
@@ -87,6 +115,9 @@ function validateMovement(value: unknown, index: number): Movement {
     value.repRange.forEach((r, i) => assertNumber(r, `${path}.repRange[${i}]`));
   }
   if (value.increment !== undefined) assertNumber(value.increment, `${path}.increment`);
+  // SPEC 10.2 additions: all optional, validated only when present.
+  if (value.libraries !== undefined) assertMovementLibraries(value.libraries, `${path}.libraries`);
+  if (value.region !== undefined) assertBodyRegion(value.region, `${path}.region`);
   return value as unknown as Movement;
 }
 
@@ -101,7 +132,8 @@ function validateBlock(value: unknown, poolIndex: number, blockIndex: number): B
     assertString(m.movementId, `${mPath}.movementId`);
     if (m.loadPct !== undefined) {
       assertNumber(m.loadPct, `${mPath}.loadPct`);
-      if (m.loadPct < 0 || m.loadPct > 100) fail(`expected "${mPath}.loadPct" to be between 0 and 100`);
+      if (m.loadPct < 0 || m.loadPct > 100)
+        fail(`expected "${mPath}.loadPct" to be between 0 and 100`);
     }
     if (m.rir !== undefined) {
       assertNumber(m.rir, `${mPath}.rir`);
@@ -126,13 +158,25 @@ function validatePoolWorkout(value: unknown, index: number): PoolWorkout {
   return value as unknown as PoolWorkout;
 }
 
-const LOG_KINDS = new Set(['pool', 'adhoc', 'max-test']);
+const LOG_KINDS = new Set(['pool', 'adhoc', 'max-test', 'vasa']);
+
+/** SPEC 10.2: `{ region: BodyRegion; style?: VasaStyle }`, present iff `kind === 'vasa'`. */
+function assertVasaMeta(value: unknown, path: string): asserts value is VasaMeta {
+  if (!isPlainObject(value)) fail(`${path} must be an object`);
+  assertBodyRegion(value.region, `${path}.region`);
+  if (value.style !== undefined) {
+    assertString(value.style, `${path}.style`);
+    if (!VASA_STYLES.has(value.style)) {
+      fail(`expected "${path}.style" to be one of build, pump, power, brawn`);
+    }
+  }
+}
 
 function validateWorkoutLog(value: unknown, index: number): WorkoutLog {
   const path = `logs[${index}]`;
   if (!isPlainObject(value)) fail(`${path} must be an object`);
   assertString(value.id, `${path}.id`);
-  // SPEC 9.1: poolWorkoutId is optional (absent for adhoc/max-test logs).
+  // SPEC 9.1: poolWorkoutId is optional (absent for adhoc/max-test/vasa logs).
   if (value.poolWorkoutId !== undefined) assertString(value.poolWorkoutId, `${path}.poolWorkoutId`);
   if (!isPlainObject(value.workoutSnapshot)) fail(`${path}.workoutSnapshot must be an object`);
   validatePoolWorkout(value.workoutSnapshot, index);
@@ -141,10 +185,14 @@ function validateWorkoutLog(value: unknown, index: number): WorkoutLog {
   assertArray(value.results, `${path}.results`);
   if (value.kind !== undefined) {
     assertString(value.kind, `${path}.kind`);
-    if (!LOG_KINDS.has(value.kind)) fail(`expected "${path}.kind" to be one of pool, adhoc, max-test`);
+    if (!LOG_KINDS.has(value.kind)) {
+      fail(`expected "${path}.kind" to be one of pool, adhoc, max-test, vasa`);
+    }
   }
   if (value.durationMin !== undefined) assertNumber(value.durationMin, `${path}.durationMin`);
   if (value.editedAt !== undefined) assertString(value.editedAt, `${path}.editedAt`);
+  // SPEC 10.2: present iff kind === 'vasa'.
+  if (value.vasa !== undefined) assertVasaMeta(value.vasa, `${path}.vasa`);
   return value as unknown as WorkoutLog;
 }
 
@@ -170,7 +218,8 @@ function validateSettings(value: unknown): Settings {
   // absent (a v1 export never has these), but a present value must be valid.
   if (value.units !== undefined) {
     assertString(value.units, 'settings.units');
-    if (value.units !== 'lb' && value.units !== 'kg') fail('expected "settings.units" to be "lb" or "kg"');
+    if (value.units !== 'lb' && value.units !== 'kg')
+      fail('expected "settings.units" to be "lb" or "kg"');
   }
   if (value.deloadPolicy !== undefined) {
     assertString(value.deloadPolicy, 'settings.deloadPolicy');
@@ -221,8 +270,8 @@ export function importState(json: string): AppState {
   }
 
   if (!isPlainObject(parsed)) fail('root value must be an object');
-  if (parsed.schemaVersion !== 1 && parsed.schemaVersion !== 2) {
-    fail(`unsupported schemaVersion "${String(parsed.schemaVersion)}" (expected 1 or 2)`);
+  if (parsed.schemaVersion !== 1 && parsed.schemaVersion !== 2 && parsed.schemaVersion !== 3) {
+    fail(`unsupported schemaVersion "${String(parsed.schemaVersion)}" (expected 1, 2 or 3)`);
   }
 
   assertArray(parsed.movements, 'movements');

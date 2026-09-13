@@ -1,3 +1,4 @@
+import { VASA_SEED_MOVEMENTS } from '../domain/vasa/seedMovements';
 import type { AppState, Equipment, Movement, PoolWorkout, Settings } from '../domain/types';
 
 export const ALL_EQUIPMENT: Equipment[] = [
@@ -22,6 +23,7 @@ export const ALL_EQUIPMENT: Equipment[] = [
   'cable',
   'landmine',
   'plyo_box',
+  'band',
   'none',
 ];
 
@@ -70,18 +72,24 @@ async function loadSeedArray<T>(filename: string): Promise<T[]> {
  * malformed seed files simply yield empty arrays rather than throwing -
  * the app should still boot (with an empty pool/movement list) if seed
  * data isn't available yet.
+ *
+ * SPEC 10.2: also seeds `VASA_SEED_MOVEMENTS`, deduped by id against
+ * whatever `movements.json` already provides, so a first run starts with
+ * the Vasa library populated exactly as a migrated v1/v2 state would.
  */
 export async function buildSeedState(): Promise<AppState> {
   const [movements, pool] = await Promise.all([
     loadSeedArray<Movement>('movements.json'),
     loadSeedArray<PoolWorkout>('pool.json'),
   ]);
+  const existingIds = new Set(movements.map((m) => m.id));
+  const vasaMovements = VASA_SEED_MOVEMENTS.filter((m) => !existingIds.has(m.id));
   return {
-    movements,
+    movements: [...movements, ...vasaMovements],
     pool,
     logs: [],
     settings: defaultSettings(),
-    schemaVersion: 2,
+    schemaVersion: 3,
     program: { cycleStartedAt: new Date().toISOString(), dismissedFlags: [] },
   };
 }

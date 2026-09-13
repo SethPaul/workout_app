@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import type { AppState, PoolWorkout, WorkoutLog } from '../domain/types';
 import type { Storage } from '../storage/storage';
 import { buildAdhocLog } from '../domain/program/adhoc';
+import { buildVasaLog } from '../domain/vasa/build';
 import {
   acceptDeload,
   bumpTodayWorkout,
@@ -11,6 +12,7 @@ import {
   dismissFlags,
   init,
   logAdhoc,
+  logVasa,
   pullToday,
   setStorage,
   setTodayWorkout,
@@ -56,7 +58,7 @@ describe('init / update', () => {
     expect(Array.isArray(state.value?.movements)).toBe(true);
     expect(Array.isArray(state.value?.pool)).toBe(true);
     expect(state.value?.logs).toEqual([]);
-    expect(state.value?.schemaVersion).toBe(2);
+    expect(state.value?.schemaVersion).toBe(3);
   });
 
   it('loads existing state from storage instead of seeding', async () => {
@@ -73,7 +75,9 @@ describe('init / update', () => {
     });
     setStorage(storage);
     await init();
-    expect(state.value?.movements).toHaveLength(1);
+    // init() migrates the loaded (schemaVersion 1) state, which appends the
+    // SPEC 10.2 Vasa seed movements alongside the pre-existing "squat" one.
+    expect(state.value?.movements.filter((m) => m.id === 'squat')).toHaveLength(1);
   });
 
   it('update() writes through to storage', async () => {
@@ -148,7 +152,17 @@ describe('pullToday (SPEC 9.5/9.9)', () => {
     const now = new Date('2024-01-01T12:00:00Z');
     const result = pullToday({
       pool: [squatPool()],
-      movements: [{ id: 'squat', name: 'Squat', tags: ['squat'], equipment: [], cadenceDays: 0, unit: 'reps', loadable: true }],
+      movements: [
+        {
+          id: 'squat',
+          name: 'Squat',
+          tags: ['squat'],
+          equipment: [],
+          cadenceDays: 0,
+          unit: 'reps',
+          loadable: true,
+        },
+      ],
       logs: [],
       settings: { availableEquipment: [], soundOn: true, vibrateOn: true, keepScreenOn: true },
       now,
@@ -162,10 +176,24 @@ describe('pullToday (SPEC 9.5/9.9)', () => {
 
   it('applies the deload wave when a deload is active', () => {
     const now = new Date('2024-01-10T12:00:00Z');
-    const program = { cycleStartedAt: '2024-01-01T00:00:00.000Z', deloadWeekStartedAt: '2024-01-09T00:00:00.000Z', dismissedFlags: [] };
+    const program = {
+      cycleStartedAt: '2024-01-01T00:00:00.000Z',
+      deloadWeekStartedAt: '2024-01-09T00:00:00.000Z',
+      dismissedFlags: [],
+    };
     pullToday({
       pool: [squatPool()],
-      movements: [{ id: 'squat', name: 'Squat', tags: ['squat'], equipment: [], cadenceDays: 0, unit: 'reps', loadable: true }],
+      movements: [
+        {
+          id: 'squat',
+          name: 'Squat',
+          tags: ['squat'],
+          equipment: [],
+          cadenceDays: 0,
+          unit: 'reps',
+          loadable: true,
+        },
+      ],
       logs: [],
       settings: { availableEquipment: [], soundOn: true, vibrateOn: true, keepScreenOn: true },
       now,
@@ -199,6 +227,78 @@ describe('logAdhoc / acceptDeload / dismissFlags / startNewCycle', () => {
     await logAdhoc(log);
     expect(state.value?.logs).toHaveLength(1);
     expect(state.value?.logs[0].kind).toBe('adhoc');
+  });
+
+  it('logVasa appends the log and marks its movements as in the vasa library (SPEC 10.4)', async () => {
+    const storage = new MemoryStorage();
+    storage.saved = {
+      ...emptyStateWithProgram(),
+      movements: [
+        {
+          id: 'back_squat',
+          name: 'Back Squat',
+          tags: ['squat'],
+          equipment: ['barbell'],
+          cadenceDays: 7,
+          unit: 'reps',
+          loadable: true,
+        },
+      ],
+    };
+    setStorage(storage);
+    await init();
+    const log = buildVasaLog({
+      date: '2024-01-05T12:00:00.000Z',
+      region: 'lower',
+      blocks: [
+        {
+          role: 'main',
+          title: 'Main',
+          movements: [{ movementId: 'back_squat', sets: [{ weight: 185, reps: 8 }] }],
+        },
+      ],
+      id: 'vasa-1',
+    });
+    await logVasa(log);
+    expect(state.value?.logs).toHaveLength(1);
+    expect(state.value?.logs[0].kind).toBe('vasa');
+    const movement = state.value?.movements.find((m) => m.id === 'back_squat');
+    expect(movement?.libraries).toEqual(['default', 'vasa']);
+  });
+
+  it('logVasa does not mark a movement as vasa if it is not referenced by any result', async () => {
+    const storage = new MemoryStorage();
+    storage.saved = {
+      ...emptyStateWithProgram(),
+      movements: [
+        {
+          id: 'untouched',
+          name: 'Untouched',
+          tags: [],
+          equipment: [],
+          cadenceDays: 3,
+          unit: 'reps',
+          loadable: true,
+        },
+      ],
+    };
+    setStorage(storage);
+    await init();
+    const log = buildVasaLog({
+      date: '2024-01-05T12:00:00.000Z',
+      region: 'lower',
+      blocks: [
+        {
+          role: 'main',
+          title: 'Main',
+          movements: [{ movementId: 'back_squat', sets: [{ reps: 5 }] }],
+        },
+      ],
+      id: 'vasa-2',
+    });
+    await logVasa(log);
+    const movement = state.value?.movements.find((m) => m.id === 'untouched');
+    expect(movement?.libraries).toBeUndefined();
   });
 
   it('acceptDeload sets program.deloadWeekStartedAt', async () => {

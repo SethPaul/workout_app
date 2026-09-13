@@ -1,13 +1,16 @@
 import { useLocation, useRoute } from 'preact-iso';
 import { deleteLog, state } from '../../state/store';
 import { logKind } from '../../domain/program/context';
+import { REGION_LABELS } from '../../domain/vasa/region';
+import { VASA_STYLE_LABELS } from '../../domain/vasa/library';
 import { BlockSummary } from '../components/BlockSummary';
 import { movementName } from '../helpers';
 import { formatBlockOutcome } from '../resultsDraft';
 
-const KIND_LABELS: Record<'adhoc' | 'max-test', string> = {
+const KIND_LABELS: Record<'adhoc' | 'max-test' | 'vasa', string> = {
   adhoc: 'Logged',
   'max-test': 'Max test',
+  vasa: 'Vasa',
 };
 
 export function HistoryDetail() {
@@ -66,6 +69,12 @@ export function HistoryDetail() {
             </span>
           </div>
         </div>
+        {log.vasa && (
+          <div class="row" style="gap:0.4rem">
+            <span class="chip-kind">{REGION_LABELS[log.vasa.region]}</span>
+            {log.vasa.style && <span class="chip-kind">{VASA_STYLE_LABELS[log.vasa.style]}</span>}
+          </div>
+        )}
         <div class="row" style="gap:1rem">
           <span>{durationMin} min</span>
           {log.score && <span>Score: {log.score}</span>}

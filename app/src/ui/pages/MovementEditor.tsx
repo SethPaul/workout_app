@@ -1,17 +1,29 @@
 import { useState } from 'preact/hooks';
 import { useLocation, useRoute } from 'preact-iso';
-import type { Equipment, Movement, Unit } from '../../domain/types';
+import type { BodyRegion, Equipment, Movement, MovementLibrary, Unit } from '../../domain/types';
 import { daysSince } from '../../domain/cadence';
-import { currentMax, e1rmHistory, E1RM_WINDOW_DAYS, type E1rmPoint } from '../../domain/program/e1rm';
+import {
+  currentMax,
+  e1rmHistory,
+  E1RM_WINDOW_DAYS,
+  type E1rmPoint,
+} from '../../domain/program/e1rm';
 import { defaultIncrement, resolveIncrement } from '../../domain/program/rpe';
 import { progressionStatus, type ProgressionMode } from '../../domain/program/progression';
 import { resolveSettings } from '../../domain/program/context';
+import { movementLibraries } from '../../domain/vasa/library';
+import { movementRegion, REGION_LABELS } from '../../domain/vasa/region';
 import { state, update } from '../../state/store';
 import { Sparkline } from '../components/Sparkline';
 import { EQUIPMENT_LABELS, fmtWeight } from '../helpers';
 
 const ALL_EQUIPMENT = Object.keys(EQUIPMENT_LABELS) as Equipment[];
 const ALL_UNITS: Unit[] = ['reps', 'meters', 'calories', 'seconds'];
+const LIBRARY_OPTIONS: { value: MovementLibrary; label: string }[] = [
+  { value: 'default', label: 'Default' },
+  { value: 'vasa', label: 'Vasa' },
+];
+const REGION_OPTIONS: BodyRegion[] = ['lower', 'upper', 'full'];
 
 /** Same shape rule as `progression.ts`'s (unexported) defaultMode — display-only hint text. */
 function defaultModeHint(m: Movement): ProgressionMode {
@@ -101,7 +113,10 @@ export function MovementEditor() {
       .map((t) => t.trim())
       .filter(Boolean);
     const toSave: Movement = { ...draft, tags };
-    await update((cur) => ({ ...cur, movements: cur.movements.map((m) => (m.id === toSave.id ? toSave : m)) }));
+    await update((cur) => ({
+      ...cur,
+      movements: cur.movements.map((m) => (m.id === toSave.id ? toSave : m)),
+    }));
     location.route('/movements', true);
   }
 
@@ -123,7 +138,8 @@ export function MovementEditor() {
             <div class="row-between">
               <span class="stat-value">{fmtWeight(maxDetail.value, units)}</span>
               <span class="muted">
-                {maxDetail.source === 'max-test' ? 'tested' : 'estimated'} · {fmtDate(maxDetail.date)}
+                {maxDetail.source === 'max-test' ? 'tested' : 'estimated'} ·{' '}
+                {fmtDate(maxDetail.date)}
               </span>
             </div>
           ) : (
@@ -149,7 +165,9 @@ export function MovementEditor() {
           </div>
           <div class="stat-row">
             <span class="stat-label">Best single</span>
-            <span class="stat-value">{bestSingle === null ? '—' : fmtWeight(bestSingle, units)}</span>
+            <span class="stat-value">
+              {bestSingle === null ? '—' : fmtWeight(bestSingle, units)}
+            </span>
           </div>
         </div>
       )}
@@ -169,13 +187,18 @@ export function MovementEditor() {
           <input
             type="number"
             value={draft.cadenceDays}
-            onInput={(e) => patch((m) => (m.cadenceDays = Number((e.target as HTMLInputElement).value) || 0))}
+            onInput={(e) =>
+              patch((m) => (m.cadenceDays = Number((e.target as HTMLInputElement).value) || 0))
+            }
           />
         </div>
 
         <div class="field">
           <label>Unit</label>
-          <select value={draft.unit} onChange={(e) => patch((m) => (m.unit = (e.target as HTMLSelectElement).value as Unit))}>
+          <select
+            value={draft.unit}
+            onChange={(e) => patch((m) => (m.unit = (e.target as HTMLSelectElement).value as Unit))}
+          >
             {ALL_UNITS.map((u) => (
               <option value={u} key={u}>
                 {u}
@@ -205,7 +228,9 @@ export function MovementEditor() {
                   onChange={(e) => {
                     const checked = (e.target as HTMLInputElement).checked;
                     patch((m) => {
-                      m.equipment = checked ? [...m.equipment, eq] : m.equipment.filter((x) => x !== eq);
+                      m.equipment = checked
+                        ? [...m.equipment, eq]
+                        : m.equipment.filter((x) => x !== eq);
                     });
                   }}
                 />
@@ -217,7 +242,57 @@ export function MovementEditor() {
 
         <div class="field">
           <label>Tags (comma separated)</label>
-          <input type="text" value={tagsInput} onInput={(e) => setTagsInput((e.target as HTMLInputElement).value)} />
+          <input
+            type="text"
+            value={tagsInput}
+            onInput={(e) => setTagsInput((e.target as HTMLInputElement).value)}
+          />
+        </div>
+
+        <div class="field">
+          <label>Libraries</label>
+          <div class="tag-list">
+            {LIBRARY_OPTIONS.map((opt) => (
+              <label class="tag-pill" key={opt.value}>
+                <input
+                  type="checkbox"
+                  checked={movementLibraries(draft).includes(opt.value)}
+                  onChange={(e) => {
+                    const checked = (e.target as HTMLInputElement).checked;
+                    patch((m) => {
+                      const current = movementLibraries(m);
+                      const next = checked
+                        ? [...current, opt.value]
+                        : current.filter((l) => l !== opt.value);
+                      // Never leave a movement in no library at all.
+                      m.libraries = next.length > 0 ? next : ['default'];
+                    });
+                  }}
+                />
+                {opt.label}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Region</label>
+          <select
+            value={draft.region ?? ''}
+            onChange={(e) => {
+              const v = (e.target as HTMLSelectElement).value;
+              patch((m) => (m.region = v === '' ? undefined : (v as BodyRegion)));
+            }}
+          >
+            <option value="">
+              Auto ({REGION_LABELS[movementRegion({ ...draft, region: undefined })].toLowerCase()})
+            </option>
+            {REGION_OPTIONS.map((r) => (
+              <option value={r} key={r}>
+                {REGION_LABELS[r]}
+              </option>
+            ))}
+          </select>
         </div>
 
         {draft.aliases && draft.aliases.length > 0 && (
@@ -236,7 +311,9 @@ export function MovementEditor() {
                 value={draft.progression ?? ''}
                 onChange={(e) => {
                   const v = (e.target as HTMLSelectElement).value;
-                  patch((m) => (m.progression = v === '' ? undefined : (v as Movement['progression'])));
+                  patch(
+                    (m) => (m.progression = v === '' ? undefined : (v as Movement['progression'])),
+                  );
                 }}
               >
                 <option value="">Default ({defaultModeHint(draft)})</option>
@@ -292,7 +369,9 @@ export function MovementEditor() {
                   patch((m) => (m.increment = raw.trim() ? Number(raw) : undefined));
                 }}
               />
-              <div class="muted">Currently steps by {resolveIncrement(draft, units)} {units} per progression.</div>
+              <div class="muted">
+                Currently steps by {resolveIncrement(draft, units)} {units} per progression.
+              </div>
             </div>
           </>
         )}

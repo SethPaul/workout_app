@@ -8,9 +8,10 @@ function durationLabel(startedAt: string, finishedAt: string): string {
   return `${minutes} min`;
 }
 
-const KIND_LABELS: Record<'adhoc' | 'max-test', string> = {
+const KIND_LABELS: Record<'adhoc' | 'max-test' | 'vasa', string> = {
   adhoc: 'Logged',
   'max-test': 'Max test',
+  vasa: 'Vasa',
 };
 
 export function History() {
@@ -26,9 +27,14 @@ export function History() {
         <h1 class="page-title">History</h1>
       </div>
 
-      <a class="btn btn-block" href="/history/adhoc" style="margin-bottom:1rem">
-        Log something else
-      </a>
+      <div class="btn-row" style="margin-bottom:1rem">
+        <a class="btn btn-block" href="/history/adhoc">
+          Log something else
+        </a>
+        <a class="btn btn-block" href="/vasa">
+          Log a Vasa class
+        </a>
+      </div>
 
       {rows.length === 0 && <div class="empty-state">No workouts logged yet.</div>}
       <div class="list">
@@ -52,7 +58,9 @@ export function History() {
                   {log.score ? ` · ${log.score}` : ''}
                 </div>
               </div>
-              <span class={`chip chip-${log.workoutSnapshot.intensity}`}>{log.workoutSnapshot.intensity}</span>
+              <span class={`chip chip-${log.workoutSnapshot.intensity}`}>
+                {log.workoutSnapshot.intensity}
+              </span>
             </a>
           );
         })}
