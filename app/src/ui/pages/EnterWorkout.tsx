@@ -237,6 +237,12 @@ export function EnterWorkout() {
   }
 
   async function saveAndStart() {
+    if (
+      runSession.value &&
+      !confirm('A workout is already in progress. Discard it and start this one instead?')
+    ) {
+      return;
+    }
     const workout = await saveWorkout();
     if (!workout) return;
     const snapshot = chooseTodayWorkout(workout.id);
