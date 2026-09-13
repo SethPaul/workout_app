@@ -3,6 +3,7 @@ import { deleteLog, state } from '../../state/store';
 import { logKind } from '../../domain/program/context';
 import { BlockSummary } from '../components/BlockSummary';
 import { movementName } from '../helpers';
+import { formatBlockOutcome } from '../resultsDraft';
 
 const KIND_LABELS: Record<'adhoc' | 'max-test', string> = {
   adhoc: 'Logged',
@@ -60,7 +61,9 @@ export function HistoryDetail() {
           <span class="muted">{new Date(log.finishedAt).toLocaleString()}</span>
           <div class="row" style="gap:0.4rem">
             {kind !== 'pool' && <span class="chip-kind">{KIND_LABELS[kind]}</span>}
-            <span class={`chip chip-${log.workoutSnapshot.intensity}`}>{log.workoutSnapshot.intensity}</span>
+            <span class={`chip chip-${log.workoutSnapshot.intensity}`}>
+              {log.workoutSnapshot.intensity}
+            </span>
           </div>
         </div>
         <div class="row" style="gap:1rem">
@@ -69,7 +72,11 @@ export function HistoryDetail() {
           {log.rpe !== undefined && <span>RPE {log.rpe}</span>}
         </div>
         {log.notes && <div class="muted">{log.notes}</div>}
-        {log.editedAt && <div class="muted" style="font-style:italic">Edited {new Date(log.editedAt).toLocaleString()}</div>}
+        {log.editedAt && (
+          <div class="muted" style="font-style:italic">
+            Edited {new Date(log.editedAt).toLocaleString()}
+          </div>
+        )}
       </div>
 
       <div class="section-title">Results</div>
@@ -80,7 +87,10 @@ export function HistoryDetail() {
             {r.sets ? (
               <div class="muted">
                 {r.sets
-                  .map((set, si) => `Set ${si + 1}: ${set.weight ?? '–'}${set.weight !== undefined ? ' × ' : ' '}${set.reps ?? '–'} reps`)
+                  .map(
+                    (set, si) =>
+                      `Set ${si + 1}: ${set.weight ?? '–'}${set.weight !== undefined ? ' × ' : ' '}${set.reps ?? '–'} reps`,
+                  )
                   .join(' · ')}
               </div>
             ) : (
@@ -97,9 +107,20 @@ export function HistoryDetail() {
 
       <div class="section-title">Workout</div>
       <div class="stack">
-        {log.workoutSnapshot.blocks.map((block, i) => (
-          <BlockSummary key={i} state={s} block={block} index={i} />
-        ))}
+        {log.workoutSnapshot.blocks.map((block, i) => {
+          const outcome = log.blockOutcomes?.find((o) => o.blockIndex === i);
+          const outcomeText = outcome ? formatBlockOutcome(outcome, block) : '';
+          return (
+            <div key={i} class="stack" style="gap:0.25rem">
+              <BlockSummary state={s} block={block} index={i} />
+              {outcomeText && (
+                <div class="muted" style="font-size:0.85rem">
+                  Result: {outcomeText}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -142,6 +142,8 @@ export function Run() {
       results,
       notes: session.draft.notes.trim() || undefined,
       rpe: session.draft.rpe.trim() ? Number(session.draft.rpe) : undefined,
+      blockOutcomes:
+        session.draft.blockOutcomes.length > 0 ? session.draft.blockOutcomes : undefined,
     };
     void update((s) => ({ ...s, logs: [...s.logs, log] })).then(() => {
       clearTodayWorkout();
@@ -302,6 +304,9 @@ export function Run() {
           />
         )}
         {!running && <p class="status-pill">Paused</p>}
+        {!running && session.restoredAt && (
+          <p class="muted status-pill">Restored after reload — timer paused</p>
+        )}
       </div>
       <div class="run-controls">
         <button class="btn btn-big" onClick={() => fire(running ? 'pause' : 'resume')}>

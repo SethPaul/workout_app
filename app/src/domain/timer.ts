@@ -1,4 +1,6 @@
-import type { Block, BlockMovement, Format } from './types';
+import type { Block, BlockMovement, BlockOutcome, Format } from './types';
+
+export type { BlockOutcome };
 
 export type CueType = 'beep' | 'bell' | 'countdown';
 
@@ -75,10 +77,14 @@ export interface TimerState {
   roundsDone: number;
   status: TimerStatus;
   pendingCues: Cue[];
+  /** One entry per block that has ended (naturally, skipped, failed, or via early finish), in block order. */
+  blockOutcomes: BlockOutcome[];
   // --- internal bookkeeping (not part of the documented public surface, but
   // plain data so the whole state can be safely structuredClone()d) ---
   _blocks: InternalBlock[];
   _phaseElapsedMs: number;
+  /** Wall-clock ms accumulated within the current block, across all its phases (resets on advanceBlock). */
+  _blockElapsedMs: number;
   _cueFiredMarks: string[];
   _lastTickAt?: number;
   _chipperIndex?: number;
@@ -339,8 +345,10 @@ export function createTimer(blocks: Block[], now: number): TimerState {
     roundsDone: 0,
     status: 'idle',
     pendingCues: [],
+    blockOutcomes: [],
     _blocks: internalBlocks,
     _phaseElapsedMs: 0,
+    _blockElapsedMs: 0,
     _cueFiredMarks: [],
     _lastTickAt: now,
   };
@@ -364,11 +372,40 @@ function fireStartCues(state: TimerState, phase: InternalPhase | undefined): voi
   if (phase.bellOnStart) pushCue(state, 'bell', phase.durationMs ?? 0);
 }
 
+/**
+ * Records the outcome of the block currently ending, so the score isn't lost
+ * once the block (and its roundsDone/elapsed bookkeeping) is reset. A no-op
+ * if there's no current block, or that blockIndex was already recorded.
+ */
+function recordBlockOutcome(state: TimerState, status: BlockOutcome['status']): void {
+  const block = currentBlock(state);
+  if (!block) return;
+  if (state.blockOutcomes.some((o) => o.blockIndex === state.blockIndex)) return;
+  const outcome: BlockOutcome = {
+    blockIndex: state.blockIndex,
+    format: block.format,
+    elapsedMs: state._blockElapsedMs,
+    status,
+  };
+  if (block.format === 'amrap' || block.format === 'rounds') {
+    outcome.roundsDone = state.roundsDone;
+  }
+  if (status === 'failed') {
+    outcome.failedAtMinute = currentInternalPhase(state)?.repsDue;
+  }
+  state.blockOutcomes.push(outcome);
+}
+
 /** Advances to the next block, or finishes the workout if none remain. */
-function advanceBlock(state: TimerState): void {
+function advanceBlock(
+  state: TimerState,
+  outcomeStatus: BlockOutcome['status'] = 'completed',
+): void {
+  recordBlockOutcome(state, outcomeStatus);
   state.blockIndex += 1;
   state.phaseIndex = 0;
   state.roundsDone = 0;
+  state._blockElapsedMs = 0;
   const block = currentBlock(state);
   if (!block) {
     state.status = 'finished';
@@ -447,6 +484,7 @@ function applyTick(state: TimerState, now: number): void {
   // double-count the interval it already covered.
   state._lastTickAt = Math.max(last, now);
   state._phaseElapsedMs += dt;
+  state._blockElapsedMs += dt;
   state.phase.elapsedMs = state._phaseElapsedMs;
 
   if (phase.durationMs !== undefined) {
@@ -511,7 +549,8 @@ function applyRoundDone(state: TimerState): void {
 function applyFail(state: TimerState): void {
   if (state.status !== 'running') return;
   // death_by (and, generically, any format): failing ends the current block.
-  advanceBlock(state);
+  const block = currentBlock(state);
+  advanceBlock(state, block?.isDeathBy ? 'failed' : 'skipped');
 }
 
 /**
@@ -559,6 +598,12 @@ export function timerReducer(state: TimerState, event: TimerEvent): TimerState {
       break;
     }
     case 'finish': {
+      // Finishing early mid-block (running or paused) still records whatever
+      // roundsDone/elapsed that block has; finishing from 'between-blocks'
+      // must not double-record the block that already ended naturally.
+      if (next.status === 'running' || next.status === 'paused') {
+        recordBlockOutcome(next, 'completed');
+      }
       next.status = 'finished';
       break;
     }

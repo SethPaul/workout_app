@@ -383,6 +383,162 @@ describe('timer: finished state ignores further events', () => {
   });
 });
 
+describe('timer: blockOutcomes', () => {
+  it('amrap records roundsDone on the block outcome when the clock runs out', () => {
+    const block: Block = {
+      format: 'amrap',
+      movements: [{ movementId: 'kb-swing', reps: 15 }],
+      durationSec: 2,
+    };
+    let state = createTimer([block], 0);
+    state = timerReducer(state, { type: 'start', now: 0 });
+    state = timerReducer(state, { type: 'roundDone', now: 100 });
+    state = timerReducer(state, { type: 'roundDone', now: 200 });
+    state = timerReducer(state, { type: 'roundDone', now: 300 });
+    expect(state.roundsDone).toBe(3);
+
+    const { state: finished } = runTicks(state, 300, 20); // > 2000ms total
+    expect(finished.status).toBe('finished');
+    expect(finished.blockOutcomes).toHaveLength(1);
+    expect(finished.blockOutcomes[0]).toMatchObject({
+      blockIndex: 0,
+      format: 'amrap',
+      roundsDone: 3,
+      status: 'completed',
+    });
+    expect(finished.blockOutcomes[0].elapsedMs).toBeGreaterThanOrEqual(2000);
+  });
+
+  it('rounds records roundsDone when auto-advancing at the target', () => {
+    const block: Block = {
+      format: 'rounds',
+      movements: [{ movementId: 'pullup', reps: 10 }],
+      rounds: 3,
+    };
+    let state = createTimer([block], 0);
+    state = timerReducer(state, { type: 'start', now: 0 });
+    state = timerReducer(state, { type: 'roundDone', now: 100 });
+    state = timerReducer(state, { type: 'roundDone', now: 200 });
+    state = timerReducer(state, { type: 'roundDone', now: 300 });
+    expect(state.status).toBe('finished');
+    expect(state.blockOutcomes).toHaveLength(1);
+    expect(state.blockOutcomes[0]).toMatchObject({
+      blockIndex: 0,
+      format: 'rounds',
+      roundsDone: 3,
+      status: 'completed',
+    });
+  });
+
+  it('chipper (for-time) records elapsed ms with no roundsDone', () => {
+    const block: Block = {
+      format: 'chipper',
+      movements: [
+        { movementId: 'row', distanceM: 500 },
+        { movementId: 'situp', reps: 50 },
+      ],
+    };
+    let state = createTimer([block], 0);
+    state = timerReducer(state, { type: 'start', now: 0 });
+    state = timerReducer(state, { type: 'tick', now: 1000 });
+    state = timerReducer(state, { type: 'next', now: 1000 });
+    state = timerReducer(state, { type: 'tick', now: 2500 });
+    state = timerReducer(state, { type: 'next', now: 2500 });
+    expect(state.status).toBe('finished');
+    expect(state.blockOutcomes).toHaveLength(1);
+    expect(state.blockOutcomes[0].format).toBe('chipper');
+    expect(state.blockOutcomes[0].roundsDone).toBeUndefined();
+    expect(state.blockOutcomes[0].elapsedMs).toBe(2500);
+    expect(state.blockOutcomes[0].status).toBe('completed');
+  });
+
+  it('death_by fail records the failing minute and status "failed"', () => {
+    const block: Block = {
+      format: 'death_by',
+      movements: [{ movementId: 'burpee' }],
+    };
+    let state = createTimer([block], 0);
+    state = timerReducer(state, { type: 'start', now: 0 });
+    const { state: afterMinute1 } = runTicks(state, 0, 601, 100); // into minute 2
+    expect(afterMinute1.phase.repsDue).toBe(2);
+
+    const failed = timerReducer(afterMinute1, { type: 'fail', now: 61_000 });
+    expect(failed.status).toBe('finished');
+    expect(failed.blockOutcomes).toHaveLength(1);
+    expect(failed.blockOutcomes[0]).toMatchObject({
+      blockIndex: 0,
+      format: 'death_by',
+      failedAtMinute: 2,
+      status: 'failed',
+    });
+  });
+
+  it('skip block (fail on a non-death_by format) records status "skipped"', () => {
+    const block: Block = {
+      format: 'amrap',
+      movements: [{ movementId: 'kb-swing', reps: 15 }],
+      durationSec: 600,
+    };
+    let state = createTimer([block], 0);
+    state = timerReducer(state, { type: 'start', now: 0 });
+    state = timerReducer(state, { type: 'roundDone', now: 100 });
+    const skipped = timerReducer(state, { type: 'fail', now: 200 });
+    expect(skipped.status).toBe('finished'); // single block
+    expect(skipped.blockOutcomes).toHaveLength(1);
+    expect(skipped.blockOutcomes[0]).toMatchObject({
+      blockIndex: 0,
+      format: 'amrap',
+      roundsDone: 1,
+      status: 'skipped',
+    });
+  });
+
+  it('finishing early mid-block records the partial block exactly once', () => {
+    const block: Block = {
+      format: 'amrap',
+      movements: [{ movementId: 'kb-swing', reps: 15 }],
+      durationSec: 600,
+    };
+    let state = createTimer([block], 0);
+    state = timerReducer(state, { type: 'start', now: 0 });
+    state = timerReducer(state, { type: 'roundDone', now: 100 });
+    state = timerReducer(state, { type: 'tick', now: 5_000 });
+    const finished = timerReducer(state, { type: 'finish', now: 5_000 });
+    expect(finished.status).toBe('finished');
+    expect(finished.blockOutcomes).toHaveLength(1);
+    expect(finished.blockOutcomes[0]).toMatchObject({
+      blockIndex: 0,
+      format: 'amrap',
+      roundsDone: 1,
+      status: 'completed',
+    });
+    expect(finished.blockOutcomes[0].elapsedMs).toBe(5_000);
+  });
+
+  it('finishing from between-blocks does not duplicate the already-recorded block', () => {
+    const blocks: Block[] = [
+      {
+        format: 'chipper',
+        movements: [{ movementId: 'row', distanceM: 500 }],
+      },
+      {
+        format: 'chipper',
+        movements: [{ movementId: 'situp', reps: 50 }],
+      },
+    ];
+    let state = createTimer(blocks, 0);
+    state = timerReducer(state, { type: 'start', now: 0 });
+    state = timerReducer(state, { type: 'tick', now: 1000 });
+    state = timerReducer(state, { type: 'next', now: 1000 }); // finishes block 0 (single movement)
+    expect(state.status).toBe('between-blocks');
+    expect(state.blockOutcomes).toHaveLength(1);
+
+    const finished = timerReducer(state, { type: 'finish', now: 1500 });
+    expect(finished.status).toBe('finished');
+    expect(finished.blockOutcomes).toHaveLength(1); // no duplicate, and block 1 never started
+  });
+});
+
 describe('timer: pause/resume', () => {
   it('preserves remaining time across a pause', () => {
     const block: Block = {

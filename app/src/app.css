@@ -622,6 +622,10 @@ a {
   padding: 2rem 0;
 }
 
+.run-in-progress-card {
+  border-color: var(--accent);
+}
+
 .status-pill {
   display: inline-block;
   padding: 0.2rem 0.6rem;

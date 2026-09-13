@@ -1,7 +1,14 @@
-import type { AppState, MovementResult, PoolWorkout, WorkoutLog } from '../domain/types';
+import type {
+  AppState,
+  Block,
+  BlockOutcome,
+  MovementResult,
+  PoolWorkout,
+  WorkoutLog,
+} from '../domain/types';
 import { resolveSettings } from '../domain/program/context';
 import { loadForBlockMovement } from '../domain/program/rpe';
-import { movementById } from './helpers';
+import { formatClock, movementById } from './helpers';
 
 /** One editable strength set (Run's results form and EditLog share this shape). */
 export interface SetDraft {
@@ -24,6 +31,10 @@ export interface ResultsDraft {
   score: string;
   rpe: string;
   notes: string;
+  /** Per-block outcomes captured by the timer (rounds done, elapsed clock, fail minute); see `domain/timer.ts`. */
+  blockOutcomes: BlockOutcome[];
+  /** True until the user types into the Score field; while true, `applyBlockOutcomes` is free to keep `score` in sync. */
+  scoreAuto: boolean;
 }
 
 function numToStr(n: number | undefined): string {
@@ -81,7 +92,69 @@ export function buildResultsDraft(appState: AppState, workout: PoolWorkout): Res
     }
   });
 
-  return { movements, score: '', rpe: '', notes: '' };
+  return { movements, score: '', rpe: '', notes: '', blockOutcomes: [], scoreAuto: true };
+}
+
+/**
+ * Formats one block's captured outcome as a short score fragment, e.g. "7
+ * rounds" (amrap), "12:34" (rounds/chipper, for-time), "failed at minute 9"
+ * (death_by). Returns '' for a skipped-status entry's format-specific text is
+ * not applicable — 'skipped' — and for formats with nothing to score
+ * (strength/emom/tabata/interval).
+ */
+export function formatBlockOutcome(outcome: BlockOutcome, block: Block): string {
+  if (outcome.status === 'skipped') return 'skipped';
+  if (outcome.status === 'failed') {
+    return outcome.failedAtMinute !== undefined
+      ? `failed at minute ${outcome.failedAtMinute}`
+      : 'failed';
+  }
+  switch (block.format) {
+    case 'amrap':
+      return outcome.roundsDone !== undefined ? `${outcome.roundsDone} rounds` : '';
+    case 'rounds':
+    case 'chipper':
+      return formatClock(outcome.elapsedMs);
+    default:
+      return '';
+  }
+}
+
+/**
+ * Joins every block's non-empty `formatBlockOutcome` text into one score
+ * string, prefixed with the block's title when the workout has more than one
+ * block (e.g. "Main: 7 rounds · Finisher: 4:12"), or bare when there's just one.
+ */
+export function scoreFromOutcomes(outcomes: BlockOutcome[], snapshot: PoolWorkout): string {
+  const multiBlock = snapshot.blocks.length > 1;
+  const parts = [...outcomes]
+    .sort((a, b) => a.blockIndex - b.blockIndex)
+    .map((outcome) => {
+      const block = snapshot.blocks[outcome.blockIndex];
+      if (!block) return '';
+      const text = formatBlockOutcome(outcome, block);
+      if (!text) return '';
+      const title = block.title || `Block ${outcome.blockIndex + 1}`;
+      return multiBlock ? `${title}: ${text}` : text;
+    })
+    .filter((s) => s.length > 0);
+  return parts.join(' · ');
+}
+
+/**
+ * Records the timer's captured block outcomes onto the draft, and — as long
+ * as the user hasn't typed a custom score (`draft.scoreAuto`) — keeps
+ * `draft.score` in sync with them. Called from `dispatchRun` whenever the
+ * timer records a new block outcome.
+ */
+export function applyBlockOutcomes(
+  draft: ResultsDraft,
+  outcomes: BlockOutcome[],
+  snapshot: PoolWorkout,
+): ResultsDraft {
+  const next: ResultsDraft = { ...draft, blockOutcomes: outcomes };
+  if (draft.scoreAuto) next.score = scoreFromOutcomes(outcomes, snapshot);
+  return next;
 }
 
 /**
@@ -122,6 +195,11 @@ export function draftFromLog(log: WorkoutLog): ResultsDraft {
     score: log.score ?? '',
     rpe: numToStr(log.rpe),
     notes: log.notes ?? '',
+    blockOutcomes: log.blockOutcomes ?? [],
+    // A saved log's score was either typed by hand or already finalized on
+    // save; editing it should never be silently overwritten by re-deriving
+    // it from the block outcomes.
+    scoreAuto: false,
   };
 }
 

@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import type { PoolWorkout, WorkoutLog } from '../domain/types';
-import { buildResultsDraft, draftFromLog, logFromDraft } from './resultsDraft';
+import type { BlockOutcome, PoolWorkout, WorkoutLog } from '../domain/types';
+import {
+  applyBlockOutcomes,
+  buildResultsDraft,
+  draftFromLog,
+  formatBlockOutcome,
+  logFromDraft,
+  scoreFromOutcomes,
+} from './resultsDraft';
 import type { AppState } from '../domain/types';
 
 function poolWorkout(): PoolWorkout {
@@ -240,5 +247,163 @@ describe('resultsFromDraft / draftFromLog with a duplicate movement across block
     log.results = log.results.map(({ blockIndex: _blockIndex, ...rest }) => rest);
     const draft = draftFromLog(log);
     expect(draft.movements.map((m) => m.blockIndex)).toEqual([0, 0]);
+  });
+});
+
+describe('formatBlockOutcome', () => {
+  const amrapBlock = poolWorkout().blocks[1]; // format: 'amrap'
+  const strengthBlock = poolWorkout().blocks[0]; // format: 'strength'
+
+  it('formats amrap as "N rounds"', () => {
+    const outcome: BlockOutcome = {
+      blockIndex: 1,
+      format: 'amrap',
+      roundsDone: 7,
+      elapsedMs: 600_000,
+      status: 'completed',
+    };
+    expect(formatBlockOutcome(outcome, amrapBlock)).toBe('7 rounds');
+  });
+
+  it('formats rounds/chipper (for-time) as a clock', () => {
+    const roundsBlock = { ...amrapBlock, format: 'rounds' as const };
+    const outcome: BlockOutcome = {
+      blockIndex: 0,
+      format: 'rounds',
+      elapsedMs: 754_000, // 12:34
+      status: 'completed',
+    };
+    expect(formatBlockOutcome(outcome, roundsBlock)).toBe('12:34');
+
+    const chipperBlock = { ...amrapBlock, format: 'chipper' as const };
+    expect(formatBlockOutcome({ ...outcome, format: 'chipper' }, chipperBlock)).toBe('12:34');
+  });
+
+  it('formats a death_by fail as "failed at minute N"', () => {
+    const deathByBlock = { ...amrapBlock, format: 'death_by' as const };
+    const outcome: BlockOutcome = {
+      blockIndex: 0,
+      format: 'death_by',
+      failedAtMinute: 9,
+      elapsedMs: 540_000,
+      status: 'failed',
+    };
+    expect(formatBlockOutcome(outcome, deathByBlock)).toBe('failed at minute 9');
+  });
+
+  it('formats a skipped block as "skipped" regardless of format', () => {
+    const outcome: BlockOutcome = {
+      blockIndex: 1,
+      format: 'amrap',
+      roundsDone: 2,
+      elapsedMs: 120_000,
+      status: 'skipped',
+    };
+    expect(formatBlockOutcome(outcome, amrapBlock)).toBe('skipped');
+  });
+
+  it('formats strength/emom/tabata/interval (no score) as an empty string', () => {
+    const outcome: BlockOutcome = {
+      blockIndex: 0,
+      format: 'strength',
+      elapsedMs: 300_000,
+      status: 'completed',
+    };
+    expect(formatBlockOutcome(outcome, strengthBlock)).toBe('');
+  });
+});
+
+describe('scoreFromOutcomes', () => {
+  it('joins per-block text bare (no block title) for a single-block workout', () => {
+    const single: PoolWorkout = { ...poolWorkout(), blocks: [poolWorkout().blocks[1]] };
+    const outcomes: BlockOutcome[] = [
+      { blockIndex: 0, format: 'amrap', roundsDone: 7, elapsedMs: 600_000, status: 'completed' },
+    ];
+    expect(scoreFromOutcomes(outcomes, single)).toBe('7 rounds');
+  });
+
+  it('prefixes each fragment with its block title, joined by " · ", for a multi-block workout', () => {
+    const workout = poolWorkout(); // Strength (strength) + Conditioning (amrap)
+    const outcomes: BlockOutcome[] = [
+      { blockIndex: 0, format: 'strength', elapsedMs: 400_000, status: 'completed' },
+      { blockIndex: 1, format: 'amrap', roundsDone: 4, elapsedMs: 600_000, status: 'completed' },
+    ];
+    // The strength block contributes no text, so only the amrap fragment appears.
+    expect(scoreFromOutcomes(outcomes, workout)).toBe('Conditioning: 4 rounds');
+  });
+
+  it('returns an empty string when no outcome has any score text', () => {
+    const workout = poolWorkout();
+    const outcomes: BlockOutcome[] = [
+      { blockIndex: 0, format: 'strength', elapsedMs: 400_000, status: 'completed' },
+    ];
+    expect(scoreFromOutcomes(outcomes, workout)).toBe('');
+  });
+});
+
+describe('applyBlockOutcomes', () => {
+  it('sets blockOutcomes and derives the score while scoreAuto is true', () => {
+    const workout = poolWorkout();
+    const draft = buildResultsDraft(
+      {
+        movements: [],
+        pool: [],
+        logs: [],
+        settings: { availableEquipment: [], soundOn: true, vibrateOn: true, keepScreenOn: true },
+        schemaVersion: 2,
+      },
+      workout,
+    );
+    const outcomes: BlockOutcome[] = [
+      { blockIndex: 1, format: 'amrap', roundsDone: 5, elapsedMs: 600_000, status: 'completed' },
+    ];
+    const next = applyBlockOutcomes(draft, outcomes, workout);
+    expect(next.blockOutcomes).toBe(outcomes);
+    expect(next.score).toBe('Conditioning: 5 rounds');
+  });
+
+  it('sets blockOutcomes but leaves a user-typed score alone once scoreAuto is false', () => {
+    const workout = poolWorkout();
+    const draft = {
+      ...buildResultsDraft(
+        {
+          movements: [],
+          pool: [],
+          logs: [],
+          settings: { availableEquipment: [], soundOn: true, vibrateOn: true, keepScreenOn: true },
+          schemaVersion: 2,
+        },
+        workout,
+      ),
+      score: 'my custom score',
+      scoreAuto: false,
+    };
+    const outcomes: BlockOutcome[] = [
+      { blockIndex: 1, format: 'amrap', roundsDone: 5, elapsedMs: 600_000, status: 'completed' },
+    ];
+    const next = applyBlockOutcomes(draft, outcomes, workout);
+    expect(next.blockOutcomes).toBe(outcomes);
+    expect(next.score).toBe('my custom score');
+  });
+});
+
+describe('draftFromLog / logFromDraft preserve blockOutcomes', () => {
+  it('reads log.blockOutcomes into the draft with scoreAuto false, and logFromDraft preserves them', () => {
+    const outcomes: BlockOutcome[] = [
+      { blockIndex: 1, format: 'amrap', roundsDone: 7, elapsedMs: 600_000, status: 'completed' },
+    ];
+    const log = baseLog({ blockOutcomes: outcomes });
+    const draft = draftFromLog(log);
+    expect(draft.blockOutcomes).toEqual(outcomes);
+    expect(draft.scoreAuto).toBe(false);
+
+    const restored = logFromDraft(log, draft);
+    expect(restored.blockOutcomes).toEqual(outcomes);
+  });
+
+  it('defaults to an empty array when the log predates blockOutcomes', () => {
+    const log = baseLog();
+    const draft = draftFromLog(log);
+    expect(draft.blockOutcomes).toEqual([]);
   });
 });

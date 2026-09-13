@@ -116,6 +116,25 @@ export interface MovementResult {
   blockIndex?: number;
 }
 
+/**
+ * A per-block outcome captured by the timer as a block ends, so a workout's
+ * score isn't lost when the run finishes (e.g. an AMRAP's rounds-done, or a
+ * for-time block's elapsed clock). See `src/domain/timer.ts` for how these
+ * are produced and `src/ui/resultsDraft.ts` for how they become the score.
+ */
+export interface BlockOutcome {
+  blockIndex: number;
+  format: Format;
+  /** amrap / rounds: rounds completed (via roundDone). */
+  roundsDone?: number;
+  /** every format: wall-clock ms spent in the block (excludes paused time). */
+  elapsedMs: number;
+  /** death_by: the minute the user failed on (repsDue of the phase when 'fail' fired). */
+  failedAtMinute?: number;
+  /** 'completed' = ran to its natural end; 'skipped' = user hit Skip Block; 'failed' = death_by fail. */
+  status: 'completed' | 'skipped' | 'failed';
+}
+
 export interface WorkoutLog {
   id: string;
   // Was required; SPEC 9.1 makes it optional (adhoc/max-test logs have none).
@@ -137,6 +156,8 @@ export interface WorkoutLog {
   durationMin?: number; // derived from startedAt/finishedAt when both exist
   // --- history editing additions ---
   editedAt?: string; // ISO timestamp of the last edit via store.updateLog, if any
+  // --- per-block outcome capture (bug fix: AMRAP rounds/for-time clocks were thrown away) ---
+  blockOutcomes?: BlockOutcome[];
 }
 
 export interface Settings {

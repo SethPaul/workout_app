@@ -1,5 +1,5 @@
 import type { Movement, PoolWorkout, Settings } from '../../domain/types';
-import type { ResultsDraft } from '../resultsDraft';
+import { formatBlockOutcome, type ResultsDraft } from '../resultsDraft';
 
 export interface ResultsFormProps {
   /** The workout the results are for (used to infer a loadable default when the movement record is unavailable). */
@@ -141,6 +141,33 @@ export function ResultsForm(props: ResultsFormProps) {
         );
       })}
 
+      {(() => {
+        const captured = draft.blockOutcomes
+          .map((outcome) => {
+            const block = snapshot.blocks[outcome.blockIndex];
+            if (!block) return null;
+            const text = formatBlockOutcome(outcome, block);
+            if (!text) return null;
+            return {
+              blockIndex: outcome.blockIndex,
+              title: block.title || `Block ${outcome.blockIndex + 1}`,
+              text,
+            };
+          })
+          .filter((c): c is { blockIndex: number; title: string; text: string } => c !== null);
+        if (captured.length === 0) return null;
+        return (
+          <div class="muted" style="font-size:0.85rem">
+            Captured:
+            {captured.map((c) => (
+              <div key={c.blockIndex}>
+                {c.title} — {c.text}
+              </div>
+            ))}
+          </div>
+        );
+      })()}
+
       <div class="field">
         <label for="score">Score</label>
         <input
@@ -152,6 +179,7 @@ export function ResultsForm(props: ResultsFormProps) {
             const v = (e.target as HTMLInputElement).value;
             patch((next) => {
               next.score = v;
+              next.scoreAuto = false;
             });
           }}
         />
