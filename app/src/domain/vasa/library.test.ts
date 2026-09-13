@@ -68,6 +68,7 @@ describe('VASA_EQUIPMENT / availableAtVasa', () => {
   it('lists exactly the studio equipment (SPEC 10.3)', () => {
     expect(VASA_EQUIPMENT).toEqual([
       'rack',
+      'pullup_bar',
       'barbell',
       'kettlebell',
       'dumbbell',
@@ -78,6 +79,10 @@ describe('VASA_EQUIPMENT / availableAtVasa', () => {
       'box',
       'none',
     ]);
+  });
+
+  it('a pull-up (rack-mounted bar) is available', () => {
+    expect(availableAtVasa(movement({ equipment: ['pullup_bar'] }))).toBe(true);
   });
 
   it('a movement using only Vasa equipment is available', () => {

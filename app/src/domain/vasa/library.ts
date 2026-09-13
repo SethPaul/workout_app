@@ -18,9 +18,10 @@ export function withLibrary(m: Movement, lib: MovementLibrary): Movement {
   return { ...m, libraries: [...current, lib] };
 }
 
-/** SPEC 10.3: equipment available at a Vasa studio class. */
+/** SPEC 10.3: equipment available at a Vasa studio class (the rack carries a pull-up bar). */
 export const VASA_EQUIPMENT: Equipment[] = [
   'rack',
+  'pullup_bar',
   'barbell',
   'kettlebell',
   'dumbbell',

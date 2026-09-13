@@ -440,8 +440,8 @@ as `['default']`). `serialize.ts` accepts `kind: 'vasa'`, `vasa`, `libraries`, `
 - `library.ts`
   - `movementLibraries(m): MovementLibrary[]` (absent → `['default']`), `inLibrary(m, lib)`,
     `withLibrary(m, lib): Movement` (adds without duplicating).
-  - `VASA_EQUIPMENT: Equipment[]` = rack, barbell, kettlebell, dumbbell, band, landmine, bench,
-    plyo_box, box, none. `availableAtVasa(m)`: every required equipment is in that list (empty or
+  - `VASA_EQUIPMENT: Equipment[]` = rack, pullup_bar (the rack carries one), barbell, kettlebell,
+    dumbbell, band, landmine, bench, plyo_box, box, none. `availableAtVasa(m)`: every required equipment is in that list (empty or
     `['none']` → true).
   - `VASA_STYLES`, `VASA_STYLE_LABELS` (Build · strength, Pump · hypertrophy, Power, Brawn · advanced
     strength).
