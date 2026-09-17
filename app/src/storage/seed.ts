@@ -1,3 +1,4 @@
+import { SEED_REVISION, mergeSeedRevision, type SeedData } from '../domain/seedRevision';
 import { VASA_SEED_MOVEMENTS } from '../domain/vasa/seedMovements';
 import type { AppState, Equipment, Movement, PoolWorkout, Settings } from '../domain/types';
 
@@ -78,10 +79,7 @@ async function loadSeedArray<T>(filename: string): Promise<T[]> {
  * the Vasa library populated exactly as a migrated v1/v2 state would.
  */
 export async function buildSeedState(): Promise<AppState> {
-  const [movements, pool] = await Promise.all([
-    loadSeedArray<Movement>('movements.json'),
-    loadSeedArray<PoolWorkout>('pool.json'),
-  ]);
+  const { movements, pool } = await loadSeedData();
   const existingIds = new Set(movements.map((m) => m.id));
   const vasaMovements = VASA_SEED_MOVEMENTS.filter((m) => !existingIds.has(m.id));
   return {
@@ -91,5 +89,26 @@ export async function buildSeedState(): Promise<AppState> {
     settings: defaultSettings(),
     schemaVersion: 3,
     program: { cycleStartedAt: new Date().toISOString(), dismissedFlags: [] },
+    seedRevision: SEED_REVISION,
   };
+}
+
+/** The raw contents of app/seed/movements.json and pool.json (empty arrays when absent). */
+export async function loadSeedData(): Promise<SeedData> {
+  const [movements, pool] = await Promise.all([
+    loadSeedArray<Movement>('movements.json'),
+    loadSeedArray<PoolWorkout>('pool.json'),
+  ]);
+  return { movements, pool };
+}
+
+/**
+ * SPEC section 8 (seed revisions): brings a stored state up to the shipped
+ * `SEED_REVISION` by appending the seed workouts (and the movements they
+ * need) added since the revision the state last saw. Returns `state` by
+ * identity when nothing is owed, without touching the seed files.
+ */
+export async function catchUpSeed(state: AppState): Promise<AppState> {
+  if ((state.seedRevision ?? 1) >= SEED_REVISION) return state;
+  return mergeSeedRevision(state, await loadSeedData());
 }

@@ -294,6 +294,28 @@ app/
 - Unparseable rows are listed in `seed/README.md` rather than guessed. Aim for correctness over
   coverage; 30 to 60 good pool entries is plenty.
 - Every `movementId` referenced in `pool.json` must exist in `movements.json` (a test enforces it).
+- **Seed revisions** (`app/src/domain/seedRevision.ts`, `app/seed/expand.py`). The seed is only
+  copied into storage on first run, so a later pool expansion would never reach an existing
+  install without a destructive "Reset to seed data". Instead the seed carries a revision:
+  - `SEED_REVISION` is the revision shipped in `app/seed/*.json`. Every workout added in revision
+    N ≥ 2 carries the tag `seed:vN`; the original seed is untagged and counts as revision 1.
+  - `AppState.seedRevision` (optional; absent = 1) is the revision an install has been brought up
+    to. `buildSeedState` stamps it; `importState` preserves it when present.
+  - `store.init` runs `catchUpSeed` after `migrate`: when the stored revision is behind, it
+    appends every seed workout whose revision is newer than the stored one and whose id is not
+    already present, plus any movement those workouts reference that the state lacks, stamps
+    `seedRevision`, and saves. Existing entries are never modified. Workouts from a revision the
+    install has already seen are never re-added, so a seed workout the user deleted stays deleted.
+  - Adding content: append the workouts (tagged `seed:v<N+1>`) and any new movements, bump
+    `SEED_REVISION`, run `validate.py`. `expand.py` is revision 2: 45 workouts and 8 movements
+    designed against `project_docs/training_evidence.md` (strength, power, stamina, recovery), which
+    is why the pool now exceeds the "30 to 60" guideline above; quality over coverage still applies.
+- `day:*` tags name a workout's role in the week: `day:deadlift-press` (mandatory, gated weekly),
+  `day:squat-strength`, `day:hinge-strength`, `day:press-strength`, `day:pull-strength`,
+  `day:oly-power`, `day:conditioning` (the 4-day split's conditioning-priority day), `day:zone2`,
+  `day:hiit`, `day:recovery` (active recovery, deload and stability sessions). Only the first
+  `day:*` tag is read by `dayType`; `day:zone2`/`day:hiit` also feed the conditioning focus
+  multiplier (9.7).
 
 ## 9. Programming layer (progression, autoregulation, deloads)
 

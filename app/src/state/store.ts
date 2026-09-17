@@ -8,7 +8,7 @@ import { isEnteredWorkout } from '../domain/vasa/pool';
 import type { AppState, PoolWorkout, ProgramState, WorkoutLog } from '../domain/types';
 import type { Storage } from '../storage/storage';
 import { IdbStorage } from '../storage/idb';
-import { buildSeedState } from '../storage/seed';
+import { buildSeedState, catchUpSeed } from '../storage/seed';
 
 /** The whole application state, or null before init() resolves. */
 export const state = signal<AppState | null>(null);
@@ -20,11 +20,19 @@ export function setStorage(next: Storage): void {
   storage = next;
 }
 
-/** Loads AppState from storage, seeding it on first run. */
+/**
+ * Loads AppState from storage, seeding it on first run. An existing state is
+ * migrated, then brought up to the shipped seed revision (SPEC section 8):
+ * new `seed:vN` workouts are appended once and the result persisted, so a
+ * pool expansion reaches installs that predate it without a reset.
+ */
 export async function init(): Promise<void> {
   const loaded = await storage.load();
   if (loaded) {
-    state.value = migrate(loaded);
+    const migrated = migrate(loaded);
+    const caughtUp = await catchUpSeed(migrated);
+    state.value = caughtUp;
+    if (caughtUp !== migrated) await storage.save(caughtUp);
     return;
   }
   const seeded = await buildSeedState();

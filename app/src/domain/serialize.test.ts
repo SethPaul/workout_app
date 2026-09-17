@@ -151,6 +151,22 @@ describe('exportState / importState round-trip', () => {
   });
 });
 
+describe('importState seedRevision (SPEC section 8)', () => {
+  it('preserves a present seedRevision', () => {
+    const state = { ...validState(), schemaVersion: 3 as const, seedRevision: 2 };
+    expect(importState(exportState(state)).seedRevision).toBe(2);
+  });
+
+  it('leaves seedRevision absent when the export has none (caught up on next load)', () => {
+    expect(importState(exportState(validState())).seedRevision).toBeUndefined();
+  });
+
+  it('rejects a non-numeric seedRevision', () => {
+    const state = { ...validState(), seedRevision: '2' as unknown as number };
+    expect(() => importState(JSON.stringify(state))).toThrow(/seedRevision/);
+  });
+});
+
 describe('importState validation', () => {
   it('rejects invalid JSON', () => {
     expect(() => importState('{not json')).toThrow(/could not parse JSON/);

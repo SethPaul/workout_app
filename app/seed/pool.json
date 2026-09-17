@@ -3381,7 +3381,7 @@
     "cadenceDays": 14,
     "enabled": true,
     "tags": [
-      "day:strength"
+      "day:press-strength"
     ],
     "source": "manual",
     "notes": "Warm-up: 8-10 min general + bar-only bench ramp-up sets."
@@ -3431,7 +3431,7 @@
     "cadenceDays": 14,
     "enabled": true,
     "tags": [
-      "day:strength"
+      "day:pull-strength"
     ],
     "source": "manual",
     "notes": "Warm-up: 8-10 min general + dead-hang/scap-pull activation."
@@ -3577,5 +3577,3206 @@
     ],
     "source": "manual",
     "notes": "Warm-up: 5-8 min easy bike. Single movement only, supramaximal intensity -- this is the actual validated Tabata protocol (R12), unlike the pool's other mixed-movement 20/10 circuits."
+  },
+  {
+    "id": "v2-back-squat-5x5-press-row",
+    "name": "Back Squat 5x5 + press/row accessory",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 120
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "cossack_squat",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 5,
+        "restSec": 180,
+        "movements": [
+          {
+            "movementId": "back_squat",
+            "reps": 5,
+            "targetRpe": 8
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Accessory",
+        "sets": 3,
+        "restSec": 90,
+        "movements": [
+          {
+            "movementId": "strict_press",
+            "reps": 8,
+            "loadNote": "moderate, 1-2 reps in reserve"
+          },
+          {
+            "movementId": "dumbbell_row",
+            "reps": 10,
+            "loadNote": "moderate, 1-2 reps in reserve"
+          }
+        ]
+      },
+      {
+        "format": "interval",
+        "title": "Finisher",
+        "rounds": 8,
+        "workSec": 30,
+        "restSec": 30,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 30,
+            "loadNote": "hard but repeatable"
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "day:squat-strength",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Classic linear-progression squat day (R1-R3): 5x5 at RPE 8 with 3 min rest, then an upper-body accessory superset (R10/R11: 8-12 reps, 90 s rest) so the conditioning stays short and moderate (R20). Then 2-3 empty-bar / ramp-up sets of the main lift before the working sets (R24, R44)."
+  },
+  {
+    "id": "v2-front-squat-4x6-rdl-ringrow",
+    "name": "Front Squat 4x6 + RDL/ring row accessory",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "row",
+            "distanceM": 250
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "cossack_squat",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 4,
+        "restSec": 180,
+        "movements": [
+          {
+            "movementId": "front_squat",
+            "reps": 6,
+            "targetRpe": 8
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Accessory",
+        "sets": 3,
+        "restSec": 90,
+        "movements": [
+          {
+            "movementId": "romanian_deadlift",
+            "reps": 8,
+            "loadNote": "moderate, 1-2 reps in reserve"
+          },
+          {
+            "movementId": "ring_row",
+            "reps": 10
+          }
+        ]
+      },
+      {
+        "format": "amrap",
+        "title": "Finisher",
+        "durationSec": 480,
+        "movements": [
+          {
+            "movementId": "row",
+            "distanceM": 200
+          },
+          {
+            "movementId": "kb_swing",
+            "reps": 10
+          },
+          {
+            "movementId": "push_up",
+            "reps": 8
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "day:squat-strength",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Front squat at the top of the strength rep range (R1: 4-6 reps), a hinge accessory kept sub-maximal (R11), and an 8 min moderate AMRAP finisher (R16, R20). Then 2-3 empty-bar / ramp-up sets of the main lift before the working sets (R24, R44)."
+  },
+  {
+    "id": "v2-back-squat-heavy-triples",
+    "name": "Back Squat heavy 5x3 (DUP heavy day)",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 120
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "cossack_squat",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 5,
+        "restSec": 240,
+        "movements": [
+          {
+            "movementId": "back_squat",
+            "reps": 3,
+            "targetRpe": 9,
+            "loadNote": "heavy, ~85-90% 1RM"
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Accessory",
+        "sets": 3,
+        "restSec": 90,
+        "movements": [
+          {
+            "movementId": "good_morning",
+            "reps": 8,
+            "loadNote": "light, hamstring stretch"
+          },
+          {
+            "movementId": "plank",
+            "seconds": 45
+          }
+        ]
+      },
+      {
+        "format": "rounds",
+        "title": "Finisher",
+        "rounds": 4,
+        "movements": [
+          {
+            "movementId": "sled_push",
+            "reps": 1,
+            "loadNote": "20 m, heavy"
+          },
+          {
+            "movementId": "bike",
+            "calories": 12
+          }
+        ],
+        "timeCapSec": 600
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "day:squat-strength",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "The heavy day of a daily-undulating wave (R34/R35): triples at ~85-90% with 4 min rest (R3). Sled and bike keep the finisher joint-friendly after heavy squats. Then 2-3 empty-bar / ramp-up sets of the main lift before the working sets (R24, R44)."
+  },
+  {
+    "id": "v2-back-squat-volume-4x8",
+    "name": "Back Squat 4x8 volume day",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "row",
+            "distanceM": 250
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "cossack_squat",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 4,
+        "restSec": 150,
+        "movements": [
+          {
+            "movementId": "back_squat",
+            "reps": 8,
+            "targetRpe": 8,
+            "loadNote": "~70-75% 1RM"
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Accessory",
+        "sets": 3,
+        "restSec": 90,
+        "movements": [
+          {
+            "movementId": "lunge",
+            "reps": 10,
+            "loadNote": "goblet or bodyweight, each leg"
+          },
+          {
+            "movementId": "dip",
+            "reps": 10
+          }
+        ]
+      },
+      {
+        "format": "tabata",
+        "title": "Finisher",
+        "rounds": 8,
+        "workSec": 20,
+        "restSec": 10,
+        "movements": [
+          {
+            "movementId": "battle_ropes",
+            "seconds": 20
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "day:squat-strength",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "The volume day of the wave: 8s for the strength-hypertrophy overlap (R1, R2), shorter rest because the load is lighter (R3). Battle-rope 20/10 finisher is a conditioning circuit, not the validated Tabata protocol (R12). Then 2-3 empty-bar / ramp-up sets of the main lift before the working sets (R24, R44)."
+  },
+  {
+    "id": "v2-deadlift-heavy-triples",
+    "name": "Deadlift heavy 5x3 + pull-up/KB press",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "row",
+            "distanceM": 250
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "cossack_squat",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 5,
+        "restSec": 240,
+        "movements": [
+          {
+            "movementId": "deadlift",
+            "reps": 3,
+            "targetRpe": 9,
+            "loadNote": "heavy, ~85-90% 1RM"
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Accessory",
+        "sets": 3,
+        "restSec": 90,
+        "movements": [
+          {
+            "movementId": "pull_up",
+            "reps": 8
+          },
+          {
+            "movementId": "kb_press",
+            "reps": 10,
+            "loadNote": "each arm"
+          }
+        ]
+      },
+      {
+        "format": "rounds",
+        "title": "Finisher",
+        "rounds": 3,
+        "movements": [
+          {
+            "movementId": "farmers_carry",
+            "reps": 1,
+            "loadNote": "40 m, heavy"
+          },
+          {
+            "movementId": "dead_bug",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 360
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "deadlift-day",
+      "day:hinge-strength",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Heavy hinge day (R1, R3, R5-style triples). Keep >=48 h from the mandatory deadlift + push press day (R21, R26); the pattern gate enforces this. Then 2-3 empty-bar / ramp-up sets of the main lift before the working sets (R24, R44)."
+  },
+  {
+    "id": "v2-deadlift-4x6-bench",
+    "name": "Deadlift 4x6 + bench/ring row accessory",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 120
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "cossack_squat",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 4,
+        "restSec": 180,
+        "movements": [
+          {
+            "movementId": "deadlift",
+            "reps": 6,
+            "targetRpe": 8
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Accessory",
+        "sets": 3,
+        "restSec": 90,
+        "movements": [
+          {
+            "movementId": "bench_press",
+            "reps": 8,
+            "loadNote": "moderate, 1-2 reps in reserve"
+          },
+          {
+            "movementId": "ring_row",
+            "reps": 10
+          }
+        ]
+      },
+      {
+        "format": "amrap",
+        "title": "Finisher",
+        "durationSec": 600,
+        "movements": [
+          {
+            "movementId": "bike",
+            "calories": 10
+          },
+          {
+            "movementId": "push_up",
+            "reps": 10
+          },
+          {
+            "movementId": "sit_up",
+            "reps": 15
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "deadlift-day",
+      "day:hinge-strength",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Deadlift at 6s (top of R1's strength range) paired with a push/pull accessory superset so no second hinge movement stacks on the main lift (R21). Then 2-3 empty-bar / ramp-up sets of the main lift before the working sets (R24, R44)."
+  },
+  {
+    "id": "v2-sumo-deadlift-press-row",
+    "name": "Sumo Deadlift 5x5 + press/row accessory",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "row",
+            "distanceM": 250
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "cossack_squat",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 5,
+        "restSec": 180,
+        "movements": [
+          {
+            "movementId": "sumo_deadlift",
+            "reps": 5,
+            "targetRpe": 8
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Accessory",
+        "sets": 3,
+        "restSec": 90,
+        "movements": [
+          {
+            "movementId": "strict_press",
+            "reps": 8,
+            "loadNote": "moderate, 1-2 reps in reserve"
+          },
+          {
+            "movementId": "bent_over_row",
+            "reps": 8,
+            "loadNote": "moderate, 1-2 reps in reserve"
+          }
+        ]
+      },
+      {
+        "format": "tabata",
+        "title": "Finisher",
+        "rounds": 8,
+        "workSec": 20,
+        "restSec": 10,
+        "movements": [
+          {
+            "movementId": "row",
+            "seconds": 20,
+            "loadNote": "hard"
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "deadlift-day",
+      "day:hinge-strength",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Sumo variant for hinge-pattern variety at the same 5x5 / 3 min prescription (R1-R3). Then 2-3 empty-bar / ramp-up sets of the main lift before the working sets (R24, R44)."
+  },
+  {
+    "id": "v2-bench-press-heavy-triples",
+    "name": "Bench Press heavy 5x3 + row/fly accessory",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "row",
+            "distanceM": 250
+          },
+          {
+            "movementId": "jumping_jack",
+            "reps": 20
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "pvc_passthrough",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 5,
+        "restSec": 240,
+        "movements": [
+          {
+            "movementId": "bench_press",
+            "reps": 3,
+            "targetRpe": 9,
+            "loadNote": "heavy, ~85-90% 1RM"
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Accessory",
+        "sets": 4,
+        "restSec": 90,
+        "movements": [
+          {
+            "movementId": "dumbbell_row",
+            "reps": 10,
+            "loadNote": "moderate, 1-2 reps in reserve"
+          },
+          {
+            "movementId": "chest_fly",
+            "reps": 12
+          }
+        ]
+      },
+      {
+        "format": "interval",
+        "title": "Finisher",
+        "rounds": 8,
+        "workSec": 30,
+        "restSec": 30,
+        "movements": [
+          {
+            "movementId": "row",
+            "seconds": 30,
+            "loadNote": "hard but repeatable"
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "day:press-strength",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Heavy horizontal press day (R1, R3). Bench press was a main movement in the spreadsheet's Sheet3 reference table but never made it into the rebooted pool. Then 2-3 empty-bar / ramp-up sets of the main lift before the working sets (R24, R44)."
+  },
+  {
+    "id": "v2-strict-press-5x5-pullups",
+    "name": "Strict Press 5x5 + pull-up/skull crusher",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 120
+          },
+          {
+            "movementId": "jumping_jack",
+            "reps": 20
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "pvc_passthrough",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 5,
+        "restSec": 180,
+        "movements": [
+          {
+            "movementId": "strict_press",
+            "reps": 5,
+            "targetRpe": 8
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Accessory",
+        "sets": 4,
+        "restSec": 90,
+        "movements": [
+          {
+            "movementId": "pull_up",
+            "reps": 8
+          },
+          {
+            "movementId": "skull_crusher",
+            "reps": 10,
+            "loadNote": "moderate, 1-2 reps in reserve"
+          }
+        ]
+      },
+      {
+        "format": "rounds",
+        "title": "Finisher",
+        "rounds": 4,
+        "movements": [
+          {
+            "movementId": "farmers_carry",
+            "reps": 1,
+            "loadNote": "40 m"
+          },
+          {
+            "movementId": "plank",
+            "seconds": 45
+          }
+        ],
+        "timeCapSec": 480
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "day:press-strength",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Vertical press main lift (Sheet3: strict press -> skull crushers). Small upper-body increments apply (R32: ~2-2.5% per progression step). Then 2-3 empty-bar / ramp-up sets of the main lift before the working sets (R24, R44)."
+  },
+  {
+    "id": "v2-push-press-5x3-rings",
+    "name": "Push Press 5x3 + ring row/dip accessory",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "row",
+            "distanceM": 250
+          },
+          {
+            "movementId": "jumping_jack",
+            "reps": 20
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "pvc_passthrough",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 5,
+        "restSec": 180,
+        "movements": [
+          {
+            "movementId": "push_press",
+            "reps": 3,
+            "loadPct": 80,
+            "targetRpe": 8
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Accessory",
+        "sets": 3,
+        "restSec": 90,
+        "movements": [
+          {
+            "movementId": "ring_row",
+            "reps": 10
+          },
+          {
+            "movementId": "dip",
+            "reps": 10
+          }
+        ]
+      },
+      {
+        "format": "amrap",
+        "title": "Finisher",
+        "durationSec": 600,
+        "movements": [
+          {
+            "movementId": "wall_ball",
+            "reps": 10
+          },
+          {
+            "movementId": "kb_swing",
+            "reps": 10
+          },
+          {
+            "movementId": "row",
+            "distanceM": 150
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "day:press-strength",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Push press as a standalone main lift (Sheet3), triples at ~80% so leg drive and bar speed stay crisp (R5: 3-5 reps for derivatives). Then 2-3 empty-bar / ramp-up sets of the main lift before the working sets (R24, R44)."
+  },
+  {
+    "id": "v2-weighted-pullup-heavy-triples",
+    "name": "Weighted Pull-up heavy 5x3 + bench/curl",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 120
+          },
+          {
+            "movementId": "jumping_jack",
+            "reps": 20
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "pvc_passthrough",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 5,
+        "restSec": 240,
+        "movements": [
+          {
+            "movementId": "weighted_pullup",
+            "reps": 3,
+            "targetRpe": 9,
+            "loadNote": "heavy, ~85-90% 1RM"
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Accessory",
+        "sets": 3,
+        "restSec": 90,
+        "movements": [
+          {
+            "movementId": "bench_press",
+            "reps": 8,
+            "loadNote": "moderate, 1-2 reps in reserve"
+          },
+          {
+            "movementId": "hammer_curl",
+            "reps": 12
+          }
+        ]
+      },
+      {
+        "format": "interval",
+        "title": "Finisher",
+        "rounds": 6,
+        "workSec": 30,
+        "restSec": 30,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 30,
+            "loadNote": "hard but repeatable"
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "day:pull-strength",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Heavy vertical pull day (R1, R3): the pull counterpart to the heavy bench day. Then 2-3 empty-bar / ramp-up sets of the main lift before the working sets (R24, R44)."
+  },
+  {
+    "id": "v2-bent-over-row-5x5",
+    "name": "Bent Over Row 5x5 + press/goblet squat",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "row",
+            "distanceM": 250
+          },
+          {
+            "movementId": "jumping_jack",
+            "reps": 20
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "pvc_passthrough",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 5,
+        "restSec": 150,
+        "movements": [
+          {
+            "movementId": "bent_over_row",
+            "reps": 5,
+            "targetRpe": 8,
+            "loadNote": "strict, no torso swing"
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Accessory",
+        "sets": 3,
+        "restSec": 90,
+        "movements": [
+          {
+            "movementId": "strict_press",
+            "reps": 8,
+            "loadNote": "moderate, 1-2 reps in reserve"
+          },
+          {
+            "movementId": "goblet_squat",
+            "reps": 10
+          }
+        ]
+      },
+      {
+        "format": "amrap",
+        "title": "Finisher",
+        "durationSec": 480,
+        "movements": [
+          {
+            "movementId": "burpee",
+            "reps": 5
+          },
+          {
+            "movementId": "ring_row",
+            "reps": 5
+          },
+          {
+            "movementId": "lunge",
+            "reps": 10
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "day:pull-strength",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Horizontal pull as the main lift, 5x5 with 2.5 min rest (R3: 2-3 min at >=80%). Then 2-3 empty-bar / ramp-up sets of the main lift before the working sets (R24, R44)."
+  },
+  {
+    "id": "v2-deadlift-pushpress-volume",
+    "name": "Deadlift 4x6 + Push Press 5x5 (mandatory day, volume)",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "row",
+            "distanceM": 250
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "cossack_squat",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 4,
+        "restSec": 180,
+        "movements": [
+          {
+            "movementId": "deadlift",
+            "reps": 6,
+            "targetRpe": 8
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 5,
+        "restSec": 180,
+        "movements": [
+          {
+            "movementId": "push_press",
+            "reps": 5,
+            "targetRpe": 8
+          }
+        ]
+      },
+      {
+        "format": "rounds",
+        "title": "Core",
+        "rounds": 3,
+        "movements": [
+          {
+            "movementId": "ghd_situp",
+            "reps": 10
+          },
+          {
+            "movementId": "russian_twist",
+            "reps": 20
+          }
+        ],
+        "timeCapSec": 360
+      }
+    ],
+    "cadenceDays": 6,
+    "enabled": true,
+    "tags": [
+      "day:deadlift-press",
+      "mandatory",
+      "deadlift-day",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Volume variant of the mandatory deadlift + push press day (R26). Keep >=48 h from any other heavy hinge or overhead press; make the next day conditioning-only or rest. cadenceDays 6 so a mandatory-day variant is always eligible each week. Then 2-3 empty-bar / ramp-up sets of the main lift before the working sets (R24, R44)."
+  },
+  {
+    "id": "v2-deadlift-pushpress-heavy",
+    "name": "Deadlift 5x3 + Push Press 4x3 (mandatory day, heavy)",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 120
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "cossack_squat",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 5,
+        "restSec": 240,
+        "movements": [
+          {
+            "movementId": "deadlift",
+            "reps": 3,
+            "targetRpe": 9,
+            "loadNote": "heavy, ~85-90% 1RM"
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 4,
+        "restSec": 180,
+        "movements": [
+          {
+            "movementId": "push_press",
+            "reps": 3,
+            "loadPct": 85
+          }
+        ]
+      },
+      {
+        "format": "rounds",
+        "title": "Finisher",
+        "rounds": 3,
+        "movements": [
+          {
+            "movementId": "farmers_carry",
+            "reps": 1,
+            "loadNote": "40 m, heavy"
+          },
+          {
+            "movementId": "plank",
+            "seconds": 45
+          }
+        ],
+        "timeCapSec": 360
+      }
+    ],
+    "cadenceDays": 6,
+    "enabled": true,
+    "tags": [
+      "day:deadlift-press",
+      "mandatory",
+      "deadlift-day",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Heavy variant of the mandatory day (R26): triples on both lifts, 4 min rest on the pull (R3). Next day lower intensity. cadenceDays 6. Then 2-3 empty-bar / ramp-up sets of the main lift before the working sets (R24, R44)."
+  },
+  {
+    "id": "v2-power-snatch-back-squat",
+    "name": "Power Snatch EMOM + Back Squat 5x5",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "row",
+            "distanceM": 250
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "pvc_passthrough",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "emom",
+        "title": "Power",
+        "rounds": 10,
+        "intervalSec": 60,
+        "movements": [
+          {
+            "movementId": "power_snatch",
+            "reps": 2,
+            "loadPct": 70,
+            "loadNote": "crisp, full extension; rest inside the minute"
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 5,
+        "restSec": 180,
+        "movements": [
+          {
+            "movementId": "back_squat",
+            "reps": 5,
+            "targetRpe": 8
+          }
+        ]
+      },
+      {
+        "format": "amrap",
+        "title": "Finisher",
+        "durationSec": 360,
+        "movements": [
+          {
+            "movementId": "kb_swing",
+            "reps": 10
+          },
+          {
+            "movementId": "push_up",
+            "reps": 10
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "day:oly-power",
+      "day:squat-strength",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "R26 D1 template: oly pull first while fresh (R7, R24), 1-3 reps at 50-75% inside an EMOM (R9), then the heavy squat, then a short finisher. Then 2-3 empty-bar / ramp-up sets of the main lift before the working sets (R24, R44)."
+  },
+  {
+    "id": "v2-hang-clean-strict-press",
+    "name": "Hang Clean 6x2 + Strict Press 5x5",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 120
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "pvc_passthrough",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "strength",
+        "title": "Power",
+        "sets": 6,
+        "restSec": 150,
+        "movements": [
+          {
+            "movementId": "hang_clean",
+            "reps": 2,
+            "loadPct": 75
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 5,
+        "restSec": 180,
+        "movements": [
+          {
+            "movementId": "strict_press",
+            "reps": 5,
+            "targetRpe": 8
+          }
+        ]
+      },
+      {
+        "format": "rounds",
+        "title": "Finisher",
+        "rounds": 3,
+        "movements": [
+          {
+            "movementId": "ring_row",
+            "reps": 10
+          },
+          {
+            "movementId": "step_up",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "day:oly-power",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "R26 D4 template: oly technique/power then press strength. Doubles at ~75% with 2.5 min rest (R5, R6), never to failure. Then 2-3 empty-bar / ramp-up sets of the main lift before the working sets (R24, R44)."
+  },
+  {
+    "id": "v2-clean-and-jerk-complex",
+    "name": "Clean + Jerk complex 8x(1+1)",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "row",
+            "distanceM": 250
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "pvc_passthrough",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "strength",
+        "title": "Power",
+        "sets": 8,
+        "restSec": 180,
+        "movements": [
+          {
+            "movementId": "clean",
+            "reps": 1,
+            "loadNote": "1 clean + 1 jerk per set, build to ~80%"
+          },
+          {
+            "movementId": "jerk",
+            "reps": 1
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Accessory",
+        "sets": 3,
+        "restSec": 90,
+        "movements": [
+          {
+            "movementId": "dip",
+            "reps": 8
+          },
+          {
+            "movementId": "turkish_getup",
+            "reps": 2,
+            "loadNote": "each side"
+          }
+        ]
+      },
+      {
+        "format": "interval",
+        "title": "Finisher",
+        "rounds": 6,
+        "workSec": 30,
+        "restSec": 30,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 30,
+            "loadNote": "hard but repeatable"
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "day:oly-power",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Classic-lift singles inside Prilepin's 70-90% band (R5: 8 total lifts at 80-90%), 3 min rest (R6). Sheet3 pairs jerk with dips and Turkish get-ups. Then 2-3 empty-bar / ramp-up sets of the main lift before the working sets (R24, R44)."
+  },
+  {
+    "id": "v2-snatch-technique-overhead-squat",
+    "name": "Snatch technique 8x2 + Overhead Squat 3x5",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 120
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "pvc_passthrough",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "strength",
+        "title": "Power",
+        "sets": 8,
+        "restSec": 180,
+        "movements": [
+          {
+            "movementId": "snatch",
+            "reps": 2,
+            "loadPct": 65,
+            "loadNote": "technique: speed under the bar, not load"
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 3,
+        "restSec": 240,
+        "movements": [
+          {
+            "movementId": "overhead_squat",
+            "reps": 5,
+            "targetRpe": 7
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Accessory",
+        "sets": 3,
+        "restSec": 90,
+        "movements": [
+          {
+            "movementId": "pull_up",
+            "reps": 8
+          }
+        ]
+      },
+      {
+        "format": "interval",
+        "title": "Finisher",
+        "rounds": 4,
+        "workSec": 30,
+        "restSec": 30,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 30,
+            "loadNote": "moderate"
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "day:oly-power",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Sub-maximal snatch practice (R5/R8: 65% keeps technique intact) followed by overhead squat for receiving-position strength. Low intensity: this is a skill day. Then 2-3 empty-bar / ramp-up sets of the main lift before the working sets (R24, R44)."
+  },
+  {
+    "id": "v2-plyo-front-squat",
+    "name": "Jumps (30 contacts) + Front Squat 5x3",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "row",
+            "distanceM": 250
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "cossack_squat",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "rounds",
+        "title": "Power",
+        "rounds": 5,
+        "movements": [
+          {
+            "movementId": "broad_jump",
+            "reps": 3,
+            "loadNote": "max intent, full recovery between"
+          },
+          {
+            "movementId": "box_jump",
+            "reps": 3,
+            "loadNote": "step down, never rebound"
+          }
+        ],
+        "timeCapSec": 600
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 5,
+        "restSec": 240,
+        "movements": [
+          {
+            "movementId": "front_squat",
+            "reps": 3,
+            "targetRpe": 9,
+            "loadNote": "heavy, ~85-90% 1RM"
+          }
+        ]
+      },
+      {
+        "format": "rounds",
+        "title": "Finisher",
+        "rounds": 4,
+        "movements": [
+          {
+            "movementId": "sled_push",
+            "reps": 1,
+            "loadNote": "20 m"
+          },
+          {
+            "movementId": "row",
+            "distanceM": 200
+          }
+        ],
+        "timeCapSec": 600
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "day:squat-strength",
+      "power",
+      "plyo",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Plyometrics done fresh, first in the session (R23), 30 contacts inside R22's 20-80 recreational floor. Jumps are the only place box_jump appears in the pool; it never goes in a fatigued block (AUDIT.md finding 3). Then 2-3 empty-bar / ramp-up sets of the main lift before the working sets (R24, R44)."
+  },
+  {
+    "id": "v2-power-clean-push-press",
+    "name": "Power Clean EMOM + Push Press 5x3",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "row",
+            "distanceM": 250
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "pvc_passthrough",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "emom",
+        "title": "Power",
+        "rounds": 8,
+        "intervalSec": 60,
+        "movements": [
+          {
+            "movementId": "power_clean",
+            "reps": 2,
+            "loadPct": 70,
+            "loadNote": "rest inside the minute"
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 5,
+        "restSec": 180,
+        "movements": [
+          {
+            "movementId": "push_press",
+            "reps": 3,
+            "loadPct": 80
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Accessory",
+        "sets": 3,
+        "restSec": 90,
+        "movements": [
+          {
+            "movementId": "ring_row",
+            "reps": 10
+          }
+        ]
+      },
+      {
+        "format": "rounds",
+        "title": "Finisher",
+        "rounds": 3,
+        "movements": [
+          {
+            "movementId": "farmers_carry",
+            "reps": 1,
+            "loadNote": "40 m"
+          }
+        ],
+        "timeCapSec": 300
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "day:oly-power",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Pull-then-press power day (R7, R9). Counts as heavy push for the pattern gate, so it sits >=48 h from the mandatory deadlift + push press day automatically (R21). Then 2-3 empty-bar / ramp-up sets of the main lift before the working sets (R24, R44)."
+  },
+  {
+    "id": "v2-kettlebell-power-day",
+    "name": "Kettlebell power: heavy swings + snatch EMOM",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 120
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "cossack_squat",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "emom",
+        "title": "Power",
+        "rounds": 10,
+        "intervalSec": 60,
+        "movements": [
+          {
+            "movementId": "kb_swing",
+            "reps": 8,
+            "loadNote": "heavy bell, hip snap"
+          },
+          {
+            "movementId": "kb_snatch",
+            "reps": 3,
+            "loadNote": "each arm"
+          }
+        ],
+        "alternate": true
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 4,
+        "restSec": 90,
+        "movements": [
+          {
+            "movementId": "goblet_squat",
+            "reps": 8,
+            "targetRpe": 8
+          }
+        ]
+      },
+      {
+        "format": "rounds",
+        "title": "Accessory",
+        "rounds": 3,
+        "movements": [
+          {
+            "movementId": "turkish_getup",
+            "reps": 2,
+            "loadNote": "each side"
+          },
+          {
+            "movementId": "kb_press",
+            "reps": 8,
+            "loadNote": "each arm"
+          }
+        ],
+        "timeCapSec": 480
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity",
+      "power",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Ballistic hip power without a barbell: alternating EMOM keeps reps low and rest built in (R9 logic applied to kettlebell work). A diversity day per requirements.md."
+  },
+  {
+    "id": "v2-jerk-front-squat",
+    "name": "Jerk 6x2 + Front Squat 4x5",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "row",
+            "distanceM": 250
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "pvc_passthrough",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "strength",
+        "title": "Power",
+        "sets": 6,
+        "restSec": 180,
+        "movements": [
+          {
+            "movementId": "jerk",
+            "reps": 2,
+            "loadPct": 80,
+            "loadNote": "from the rack"
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 4,
+        "restSec": 180,
+        "movements": [
+          {
+            "movementId": "front_squat",
+            "reps": 5,
+            "targetRpe": 8
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Accessory",
+        "sets": 3,
+        "restSec": 90,
+        "movements": [
+          {
+            "movementId": "dip",
+            "reps": 8
+          },
+          {
+            "movementId": "turkish_getup",
+            "reps": 2,
+            "loadNote": "each side"
+          }
+        ]
+      },
+      {
+        "format": "interval",
+        "title": "Finisher",
+        "rounds": 6,
+        "workSec": 45,
+        "restSec": 30,
+        "movements": [
+          {
+            "movementId": "row",
+            "seconds": 45,
+            "loadNote": "moderate"
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "day:oly-power",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Jerk as its own main movement (Sheet3), doubles at ~80% with 3 min rest (R5, R6), then front squats for the rack position. Then 2-3 empty-bar / ramp-up sets of the main lift before the working sets (R24, R44)."
+  },
+  {
+    "id": "v2-speed-deadlift-jumps-bench",
+    "name": "Speed Deadlift + jumps EMOM, Bench 4x5",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 120
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "cossack_squat",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "emom",
+        "title": "Power",
+        "rounds": 8,
+        "intervalSec": 60,
+        "movements": [
+          {
+            "movementId": "deadlift",
+            "reps": 2,
+            "loadPct": 60,
+            "loadNote": "speed pull, fast off the floor"
+          },
+          {
+            "movementId": "broad_jump",
+            "reps": 3,
+            "loadNote": "max intent"
+          }
+        ],
+        "alternate": true
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 4,
+        "restSec": 180,
+        "movements": [
+          {
+            "movementId": "bench_press",
+            "reps": 5,
+            "targetRpe": 8
+          }
+        ]
+      },
+      {
+        "format": "amrap",
+        "title": "Finisher",
+        "durationSec": 360,
+        "movements": [
+          {
+            "movementId": "kb_swing",
+            "reps": 10
+          },
+          {
+            "movementId": "sit_up",
+            "reps": 10
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "deadlift-day",
+      "day:hinge-strength",
+      "power",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Dynamic-effort hinge: 60% pulls for bar speed alternated with broad jumps (24 contacts, R22/R23), then bench. Counts as heavy hinge for the pattern gate. Then 2-3 empty-bar / ramp-up sets of the main lift before the working sets (R24, R44)."
+  },
+  {
+    "id": "v2-zone2-bike-45",
+    "name": "Zone 2 Bike, 45 min",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "rounds": 1,
+        "workSec": 2700,
+        "restSec": 0,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 2700,
+            "loadNote": "conversational pace, 65-75% HRmax"
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 7,
+    "enabled": true,
+    "tags": [
+      "day:zone2",
+      "slog",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Low-intensity continuous work is where most conditioning volume belongs (R15). First 5 min easy is the warm-up."
+  },
+  {
+    "id": "v2-zone2-run-40",
+    "name": "Zone 2 Run, 40 min",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "rounds": 1,
+        "workSec": 2400,
+        "restSec": 0,
+        "movements": [
+          {
+            "movementId": "run",
+            "seconds": 2400,
+            "loadNote": "conversational pace, 65-75% HRmax"
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 7,
+    "enabled": true,
+    "tags": [
+      "day:zone2",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Running interferes with strength more than cycling (R17), so keep this one truly easy and away from heavy squat days."
+  },
+  {
+    "id": "v2-zone2-row-bike-50",
+    "name": "Zone 2 Row + Bike, 50 min",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Conditioning",
+        "rounds": 1,
+        "movements": [
+          {
+            "movementId": "row",
+            "seconds": 1500,
+            "loadNote": "65-75% HRmax"
+          },
+          {
+            "movementId": "bike",
+            "seconds": 1500,
+            "loadNote": "65-75% HRmax"
+          }
+        ],
+        "timeCapSec": 3000
+      }
+    ],
+    "cadenceDays": 7,
+    "enabled": true,
+    "tags": [
+      "day:zone2",
+      "slog",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Split-modality Zone 2 to spread the orthopedic load (R15)."
+  },
+  {
+    "id": "v2-slog-row-bike-run-60",
+    "name": "The Slog: row / bike / run, 60 min",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Conditioning",
+        "rounds": 1,
+        "movements": [
+          {
+            "movementId": "row",
+            "seconds": 1200,
+            "loadNote": "steady"
+          },
+          {
+            "movementId": "bike",
+            "seconds": 1200,
+            "loadNote": "steady"
+          },
+          {
+            "movementId": "run",
+            "seconds": 1200,
+            "loadNote": "steady"
+          }
+        ],
+        "timeCapSec": 3600
+      }
+    ],
+    "cadenceDays": 21,
+    "enabled": true,
+    "tags": [
+      "day:zone2",
+      "slog",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "The monthly long moderate effort (patterns_and_rules.md), kept at Zone 2 so it adds aerobic base rather than a third hard day (R15)."
+  },
+  {
+    "id": "v2-norwegian-4x4-row",
+    "name": "Norwegian 4x4 Row",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "interval",
+        "title": "Warm-up",
+        "rounds": 1,
+        "workSec": 600,
+        "restSec": 0,
+        "movements": [
+          {
+            "movementId": "row",
+            "seconds": 600,
+            "loadNote": "easy, build to moderate in the last 2 min"
+          }
+        ]
+      },
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "rounds": 4,
+        "workSec": 240,
+        "restSec": 180,
+        "movements": [
+          {
+            "movementId": "row",
+            "seconds": 240,
+            "loadNote": "90-95% HRmax; paddle easy for the 3 min recovery"
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 7,
+    "enabled": true,
+    "tags": [
+      "day:hiit",
+      "hiit",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Helgerud's 4x4 protocol (R13): the best-evidenced VO2max session, 2-3x/wk max. Counts toward the ~20-40 min/wk of true high-intensity work (R15)."
+  },
+  {
+    "id": "v2-norwegian-4x4-run",
+    "name": "Norwegian 4x4 Run",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "interval",
+        "title": "Warm-up",
+        "rounds": 1,
+        "workSec": 600,
+        "restSec": 0,
+        "movements": [
+          {
+            "movementId": "run",
+            "seconds": 600,
+            "loadNote": "easy jog"
+          }
+        ]
+      },
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "rounds": 4,
+        "workSec": 240,
+        "restSec": 180,
+        "movements": [
+          {
+            "movementId": "run",
+            "seconds": 240,
+            "loadNote": "90-95% HRmax; walk/jog the 3 min recovery"
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 7,
+    "enabled": true,
+    "tags": [
+      "day:hiit",
+      "hiit",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Running version of R13. Higher impact than the bike/row versions (R17), so not the day after heavy squats."
+  },
+  {
+    "id": "v2-billat-30-30-bike",
+    "name": "Billat 30/30 Bike",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "interval",
+        "title": "Warm-up",
+        "rounds": 1,
+        "workSec": 480,
+        "restSec": 0,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 480,
+            "loadNote": "easy spin"
+          }
+        ]
+      },
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "rounds": 20,
+        "workSec": 30,
+        "restSec": 30,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 30,
+            "loadNote": "30 s at vVO2max effort / 30 s easy spin"
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 7,
+    "enabled": true,
+    "tags": [
+      "day:hiit",
+      "hiit",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "R14: 30/30 accumulates time near VO2max at lower orthopedic cost than long intervals. Stop early if the 30 s work pace can no longer be held."
+  },
+  {
+    "id": "v2-billat-30-30-row",
+    "name": "Billat 30/30 Row",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "interval",
+        "title": "Warm-up",
+        "rounds": 1,
+        "workSec": 480,
+        "restSec": 0,
+        "movements": [
+          {
+            "movementId": "row",
+            "seconds": 480,
+            "loadNote": "easy"
+          }
+        ]
+      },
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "rounds": 16,
+        "workSec": 30,
+        "restSec": 30,
+        "movements": [
+          {
+            "movementId": "row",
+            "seconds": 30,
+            "loadNote": "30 s hard / 30 s easy paddle"
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 7,
+    "enabled": true,
+    "tags": [
+      "day:hiit",
+      "hiit",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Rowing version of R14, 16 reps."
+  },
+  {
+    "id": "v2-true-tabata-row",
+    "name": "True Tabata Row",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "interval",
+        "title": "Warm-up",
+        "rounds": 1,
+        "workSec": 300,
+        "restSec": 0,
+        "movements": [
+          {
+            "movementId": "row",
+            "seconds": 300,
+            "loadNote": "easy, two 10 s pick-ups at the end"
+          }
+        ]
+      },
+      {
+        "format": "tabata",
+        "title": "Conditioning",
+        "rounds": 8,
+        "workSec": 20,
+        "restSec": 10,
+        "movements": [
+          {
+            "movementId": "row",
+            "seconds": 20,
+            "loadNote": "supramaximal, all-out"
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 7,
+    "enabled": true,
+    "tags": [
+      "day:hiit",
+      "hiit",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Single-movement 8x20/10 at supramaximal intensity (R12). Only 4 min of work; if it feels easy the intensity was wrong, not the duration."
+  },
+  {
+    "id": "v2-bike-2min-repeats",
+    "name": "Bike 6x2 min repeats",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "interval",
+        "title": "Warm-up",
+        "rounds": 1,
+        "workSec": 480,
+        "restSec": 0,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 480,
+            "loadNote": "easy spin"
+          }
+        ]
+      },
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "rounds": 6,
+        "workSec": 120,
+        "restSec": 120,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 120,
+            "loadNote": "hard, even pacing"
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 7,
+    "enabled": true,
+    "tags": [
+      "day:hiit",
+      "hiit",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "12 min of work at VO2max-ish intensity with equal recovery, between the 4x4 and 30/30 protocols in interval length (R13-R15)."
+  },
+  {
+    "id": "v2-conditioning-priority-upper-accessory",
+    "name": "Conditioning-priority day + upper accessory",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "row",
+            "distanceM": 250
+          },
+          {
+            "movementId": "jumping_jack",
+            "reps": 20
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "pvc_passthrough",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "amrap",
+        "title": "Conditioning",
+        "durationSec": 1200,
+        "movements": [
+          {
+            "movementId": "row",
+            "distanceM": 250
+          },
+          {
+            "movementId": "kb_swing",
+            "reps": 15
+          },
+          {
+            "movementId": "push_up",
+            "reps": 10
+          },
+          {
+            "movementId": "step_up",
+            "reps": 10,
+            "loadNote": "steady ~80% effort, repeatable rounds"
+          }
+        ]
+      },
+      {
+        "format": "rounds",
+        "title": "Accessory",
+        "rounds": 3,
+        "movements": [
+          {
+            "movementId": "ring_row",
+            "reps": 10
+          },
+          {
+            "movementId": "dumbbell_row",
+            "reps": 10,
+            "loadNote": "light"
+          }
+        ],
+        "timeCapSec": 480
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "day:conditioning",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "R26 D2: the conditioning-priority day of the 4-day split, with light upper accessory work and no heavy barbell so the mandatory day stays fresh."
+  },
+  {
+    "id": "v2-chipper-work-capacity",
+    "name": "Work-capacity chipper",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "row",
+            "distanceM": 250
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "cossack_squat",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "chipper",
+        "title": "Conditioning",
+        "timeCapSec": 1500,
+        "movements": [
+          {
+            "movementId": "row",
+            "distanceM": 1000
+          },
+          {
+            "movementId": "wall_ball",
+            "reps": 40
+          },
+          {
+            "movementId": "kb_swing",
+            "reps": 30
+          },
+          {
+            "movementId": "burpee",
+            "reps": 20
+          },
+          {
+            "movementId": "pull_up",
+            "reps": 10
+          },
+          {
+            "movementId": "row",
+            "distanceM": 500
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "day:conditioning",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "A mixed-modal for-time piece (R16): legitimate work-capacity training, deliberately without a heavy lift in front of it (R20)."
+  },
+  {
+    "id": "v2-death-by-burpees",
+    "name": "Death by Burpees",
+    "intensity": "H",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "jumping_jack",
+            "reps": 20
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          }
+        ],
+        "timeCapSec": 300
+      },
+      {
+        "format": "death_by",
+        "title": "Conditioning",
+        "movements": [
+          {
+            "movementId": "burpee",
+            "reps": 1
+          }
+        ]
+      },
+      {
+        "format": "interval",
+        "title": "Cool-down",
+        "rounds": 1,
+        "workSec": 300,
+        "restSec": 0,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 300,
+            "loadNote": "easy spin"
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "day:conditioning",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Progressive-rep anaerobic test (workout_formats.md). Short, no equipment beyond the cool-down bike."
+  },
+  {
+    "id": "v2-emom-aerobic-30",
+    "name": "Aerobic EMOM 30: row / bike / burpee",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "emom",
+        "title": "Conditioning",
+        "rounds": 30,
+        "intervalSec": 60,
+        "movements": [
+          {
+            "movementId": "row",
+            "calories": 12
+          },
+          {
+            "movementId": "bike",
+            "calories": 10
+          },
+          {
+            "movementId": "burpee",
+            "reps": 8,
+            "loadNote": "finish each minute with >=15 s rest"
+          }
+        ],
+        "alternate": true
+      }
+    ],
+    "cadenceDays": 7,
+    "enabled": true,
+    "tags": [
+      "day:conditioning",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Moderate steady work with built-in rest. R15 caps moderate \"grey zone\" volume, so use this instead of, not in addition to, a hard interval day that week."
+  },
+  {
+    "id": "v2-active-recovery-bike-mobility",
+    "name": "Active recovery: easy bike + mobility",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "rounds": 1,
+        "workSec": 1200,
+        "restSec": 0,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 1200,
+            "loadNote": "Zone 1, nose-breathing pace"
+          }
+        ]
+      },
+      {
+        "format": "rounds",
+        "title": "Mobility",
+        "rounds": 3,
+        "movements": [
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "cossack_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "pvc_passthrough",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 600
+      }
+    ],
+    "cadenceDays": 7,
+    "enabled": true,
+    "tags": [
+      "day:recovery",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "The lower-intensity day R26 asks for after the mandatory deadlift + push press day. Nothing here counts as heavy loading for the pattern gate."
+  },
+  {
+    "id": "v2-active-recovery-row-carries",
+    "name": "Active recovery: easy row + carries",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "rounds": 1,
+        "workSec": 900,
+        "restSec": 0,
+        "movements": [
+          {
+            "movementId": "row",
+            "seconds": 900,
+            "loadNote": "Zone 1, easy"
+          }
+        ]
+      },
+      {
+        "format": "rounds",
+        "title": "Carries",
+        "rounds": 4,
+        "movements": [
+          {
+            "movementId": "farmers_carry",
+            "reps": 1,
+            "loadNote": "40 m, light"
+          },
+          {
+            "movementId": "bear_crawl",
+            "reps": 1,
+            "loadNote": "20 m"
+          },
+          {
+            "movementId": "plank",
+            "seconds": 30
+          }
+        ],
+        "timeCapSec": 600
+      }
+    ],
+    "cadenceDays": 7,
+    "enabled": true,
+    "tags": [
+      "day:recovery",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Blood flow and trunk work without loading the hinge/squat/press patterns (R21)."
+  },
+  {
+    "id": "v2-recovery-walk-jog-30",
+    "name": "Recovery walk / jog, 30 min",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "interval",
+        "title": "Conditioning",
+        "rounds": 1,
+        "workSec": 1800,
+        "restSec": 0,
+        "movements": [
+          {
+            "movementId": "run",
+            "seconds": 1800,
+            "loadNote": "walk or easy jog, conversational, Zone 1"
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 7,
+    "enabled": true,
+    "tags": [
+      "day:recovery",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "No-equipment recovery day. Keep it genuinely easy (R15, R17)."
+  },
+  {
+    "id": "v2-deload-squat-technique",
+    "name": "Deload: squat technique at 60%",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 120
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "cossack_squat",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 3,
+        "restSec": 120,
+        "movements": [
+          {
+            "movementId": "back_squat",
+            "reps": 5,
+            "loadPct": 60,
+            "targetRpe": 6,
+            "loadNote": "technique and bar speed"
+          }
+        ]
+      },
+      {
+        "format": "rounds",
+        "title": "Accessory",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "ring_row",
+            "reps": 10
+          },
+          {
+            "movementId": "push_up",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 300
+      },
+      {
+        "format": "interval",
+        "title": "Cool-down",
+        "rounds": 1,
+        "workSec": 600,
+        "restSec": 0,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 600,
+            "loadNote": "easy spin"
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 7,
+    "enabled": true,
+    "tags": [
+      "day:recovery",
+      "deload",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "A deload-week session (R29, R41: volume -40-60%, intensity -10-20%). Also useful as the one-session 10% back-off after a stall (R33)."
+  },
+  {
+    "id": "v2-deload-hinge-technique",
+    "name": "Deload: hinge technique, light RDL + swings",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "row",
+            "distanceM": 250
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "cossack_squat",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 3,
+        "restSec": 120,
+        "movements": [
+          {
+            "movementId": "romanian_deadlift",
+            "reps": 8,
+            "loadPct": 50,
+            "targetRpe": 6,
+            "loadNote": "slow eccentric, feel the hamstrings"
+          }
+        ]
+      },
+      {
+        "format": "rounds",
+        "title": "Accessory",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "kb_swing",
+            "reps": 10,
+            "loadNote": "light"
+          },
+          {
+            "movementId": "dead_bug",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 300
+      },
+      {
+        "format": "interval",
+        "title": "Cool-down",
+        "rounds": 1,
+        "workSec": 600,
+        "restSec": 0,
+        "movements": [
+          {
+            "movementId": "row",
+            "seconds": 600,
+            "loadNote": "easy"
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 7,
+    "enabled": true,
+    "tags": [
+      "day:recovery",
+      "deload",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Hinge-pattern deload session (R29, R41)."
+  },
+  {
+    "id": "v2-deload-press-pull-technique",
+    "name": "Deload: press + pull technique at 60%",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 120
+          },
+          {
+            "movementId": "jumping_jack",
+            "reps": 20
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "pvc_passthrough",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 3,
+        "restSec": 120,
+        "movements": [
+          {
+            "movementId": "strict_press",
+            "reps": 5,
+            "loadPct": 60,
+            "targetRpe": 6
+          }
+        ]
+      },
+      {
+        "format": "rounds",
+        "title": "Accessory",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "ring_row",
+            "reps": 10
+          },
+          {
+            "movementId": "kb_press",
+            "reps": 8,
+            "loadNote": "light, each arm"
+          }
+        ],
+        "timeCapSec": 300
+      },
+      {
+        "format": "interval",
+        "title": "Cool-down",
+        "rounds": 1,
+        "workSec": 600,
+        "restSec": 0,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 600,
+            "loadNote": "easy spin"
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 7,
+    "enabled": true,
+    "tags": [
+      "day:recovery",
+      "deload",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Upper-body deload session (R29, R41)."
+  },
+  {
+    "id": "v2-core-stability-diversity",
+    "name": "Core & stability diversity day",
+    "intensity": "L",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "row",
+            "distanceM": 250
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "cossack_squat",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "rounds",
+        "title": "Stability",
+        "rounds": 4,
+        "movements": [
+          {
+            "movementId": "turkish_getup",
+            "reps": 2,
+            "loadNote": "each side, light"
+          },
+          {
+            "movementId": "landmine_twist",
+            "reps": 8,
+            "loadNote": "each side"
+          },
+          {
+            "movementId": "dead_bug",
+            "reps": 10
+          },
+          {
+            "movementId": "plank",
+            "seconds": 45
+          },
+          {
+            "movementId": "farmers_carry",
+            "reps": 1,
+            "loadNote": "40 m"
+          }
+        ],
+        "timeCapSec": 900
+      },
+      {
+        "format": "interval",
+        "title": "Cool-down",
+        "rounds": 1,
+        "workSec": 600,
+        "restSec": 0,
+        "movements": [
+          {
+            "movementId": "row",
+            "seconds": 600,
+            "loadNote": "easy"
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 7,
+    "enabled": true,
+    "tags": [
+      "diversity",
+      "day:recovery",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "requirements.md's technical/diversity day: stability muscles, no heavy barbell."
+  },
+  {
+    "id": "v2-unilateral-diversity",
+    "name": "Unilateral diversity: pistols / single-leg RDL",
+    "intensity": "M",
+    "blocks": [
+      {
+        "format": "rounds",
+        "title": "Warm-up",
+        "rounds": 2,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 120
+          },
+          {
+            "movementId": "air_squat",
+            "reps": 10
+          },
+          {
+            "movementId": "inchworm",
+            "reps": 5
+          },
+          {
+            "movementId": "cossack_squat",
+            "reps": 10
+          }
+        ],
+        "timeCapSec": 480
+      },
+      {
+        "format": "strength",
+        "title": "Strength",
+        "sets": 4,
+        "restSec": 60,
+        "movements": [
+          {
+            "movementId": "pistol_squat",
+            "reps": 8,
+            "loadNote": "pistol, lunge or side lunge - pick one per set"
+          }
+        ]
+      },
+      {
+        "format": "strength",
+        "title": "Accessory",
+        "sets": 3,
+        "restSec": 60,
+        "movements": [
+          {
+            "movementId": "single_leg_rdl",
+            "reps": 8,
+            "loadNote": "each leg"
+          },
+          {
+            "movementId": "step_up",
+            "reps": 10
+          }
+        ]
+      },
+      {
+        "format": "interval",
+        "title": "Finisher",
+        "rounds": 6,
+        "workSec": 30,
+        "restSec": 30,
+        "movements": [
+          {
+            "movementId": "bike",
+            "seconds": 30,
+            "loadNote": "moderate"
+          }
+        ]
+      }
+    ],
+    "cadenceDays": 14,
+    "enabled": true,
+    "tags": [
+      "diversity",
+      "seed:v2"
+    ],
+    "source": "manual",
+    "notes": "Single-leg strength and balance (requirements.md diversity day); bodyweight rest intervals per R11."
   }
 ]
