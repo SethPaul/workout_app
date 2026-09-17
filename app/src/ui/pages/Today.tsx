@@ -1,6 +1,6 @@
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
-import type { SelectReason } from '../../domain/select';
+import { viableWorkouts, type SelectReason } from '../../domain/select';
 import { estimateWorkoutSeconds, formatDurationMin } from '../../domain/estimate';
 import { weeklyNeed } from '../../domain/weekly';
 import { cycleWeek, isDeloadWeek } from '../../domain/program/cycle';
@@ -12,6 +12,8 @@ import {
   currentTodayWorkout,
   dismissFlags,
   pullToday,
+  resetHopper,
+  setHopperMode,
   state,
   todayWorkout,
 } from '../../state/store';
@@ -19,6 +21,12 @@ import { beginRunSession, clearRunSession, runSession } from '../../state/run';
 import { BlockSummary } from '../components/BlockSummary';
 import { INTENSITY_LABELS } from '../helpers';
 import type { PoolWorkout } from '../../domain/types';
+
+/** The hopper counts shown in the status line under the card (SPEC 3.1). */
+interface Hopper {
+  viable: PoolWorkout[];
+  remaining: PoolWorkout[];
+}
 
 const REASON_MESSAGES: Record<SelectReason, string> = {
   'no-enabled': 'No workouts are enabled in your pool yet. Enable some in the Pool tab.',
@@ -51,7 +59,9 @@ export function Today() {
   const inProgress = runSession.value;
   const today = currentTodayWorkout();
   const [failReason, setFailReason] = useState<SelectReason | null>(null);
+  const [hopper, setHopper] = useState<Hopper | null>(null);
   const now = new Date();
+  const mode = today?.mode ?? 'viable';
 
   // SPEC 9.5/9.9: the card renders today's wave-transformed snapshot, not
   // the raw pool entry — that's what carries the current week's targetRpe,
@@ -71,7 +81,29 @@ export function Today() {
   const activeFlags: FatigueFlag[] = allFlags.filter((f) => !program.dismissedFlags.includes(f.id));
   const showDeloadBanner = !onDeload && deloadSuggested(allFlags, program, s.settings, now);
 
-  function runSelection(ignoreCadence: boolean) {
+  // SPEC 3.1: on a reload, a workout is remembered (today.workoutId) but no
+  // SelectResult is in component state, so the status line would be blank.
+  // Recompute the hopper counts from the remembered mode/exclusions once.
+  useEffect(() => {
+    if (hopper !== null || !today?.workoutId) return;
+    const { viable } = viableWorkouts({
+      pool: s.pool,
+      movements: s.movements,
+      logs: s.logs,
+      settings: s.settings,
+      now,
+      ignoreCadence: mode === 'all',
+    });
+    const remaining = viable.filter((w) => !today.excluded.includes(w.id));
+    setHopper({ viable, remaining });
+    // Intentionally runs once on mount: this reconstructs the counts for a
+    // workout the store already remembered, it doesn't react to later pulls
+    // (those flow through runSelection instead).
+    // (No react-hooks/exhaustive-deps configured in this project's eslint.)
+  }, []);
+
+  /** Pulls today's workout; the hopper mode (persisted on `today`) decides `ignoreCadence` (SPEC 3.1). */
+  function runSelection() {
     const result = pullToday({
       pool: s.pool,
       movements: s.movements,
@@ -79,18 +111,26 @@ export function Today() {
       settings: s.settings,
       now,
       program: s.program,
-      ignoreCadence,
     });
-    if (result.workout) {
-      setFailReason(null);
-    } else {
-      setFailReason(result.reason);
-    }
+    setHopper(result.hopper);
+    setFailReason(result.workout ? null : result.reason);
   }
 
   function bump() {
     bumpTodayWorkout();
-    runSelection(false);
+    runSelection();
+  }
+
+  /** SPEC 3.1 "Start over": clears today's bumped exclusions and pulls again. */
+  function startOver() {
+    resetHopper(now);
+    runSelection();
+  }
+
+  /** SPEC 3.1 "Use all workouts": switches to the persistent 'all' hopper mode and pulls again. */
+  function useAllWorkouts() {
+    setHopperMode('all', now);
+    runSelection();
   }
 
   function start() {
@@ -197,6 +237,12 @@ export function Today() {
               ))}
             </div>
           </div>
+          {hopper && (
+            <div class="muted">
+              Hopper: {hopper.remaining.length} of {hopper.viable.length} left
+              {mode === 'all' && ' · all workouts'}
+            </div>
+          )}
           <div class="btn-row">
             <button class="btn" onClick={bump}>
               Bump
@@ -206,24 +252,49 @@ export function Today() {
             </button>
           </div>
         </div>
-      ) : failReason ? (
+      ) : failReason === 'excluded' ? (
+        <div class="stack">
+          <div class="banner banner-warn">
+            You&rsquo;ve bumped through all {hopper?.viable.length ?? 0} workouts in today&rsquo;s
+            hopper.
+          </div>
+          <div class="stack">
+            <button class="btn btn-block" onClick={startOver}>
+              Start over
+            </button>
+            {mode !== 'all' && (
+              <button class="btn btn-block" onClick={useAllWorkouts}>
+                Use all workouts
+              </button>
+            )}
+            <a class="btn btn-block" href="/enter">
+              Pick a workout
+            </a>
+          </div>
+        </div>
+      ) : failReason === 'cadence' || failReason === 'pattern' ? (
         <div class="stack">
           <div class="banner banner-warn">{REASON_MESSAGES[failReason]}</div>
           <div class="stack">
-            {(failReason === 'cadence' || failReason === 'pattern') && (
-              <button class="btn btn-block" onClick={() => runSelection(true)}>
-                Ignore cadence and pick anyway
-              </button>
-            )}
-            <a class="btn btn-block" href="/pool">
-              Pick manually from Pool
+            <button class="btn btn-block" onClick={useAllWorkouts}>
+              Use all workouts
+            </button>
+            <a class="btn btn-block" href="/enter">
+              Pick a workout
             </a>
           </div>
+        </div>
+      ) : failReason ? (
+        <div class="stack">
+          <div class="banner banner-warn">{REASON_MESSAGES[failReason]}</div>
+          <a class="btn btn-block" href="/enter">
+            Pick a workout
+          </a>
         </div>
       ) : (
         <div class="empty-state">
           <p>No workout pulled yet today.</p>
-          <button class="btn btn-primary btn-big btn-block" onClick={() => runSelection(false)}>
+          <button class="btn btn-primary btn-big btn-block" onClick={runSelection}>
             Get Today&rsquo;s Workout
           </button>
         </div>

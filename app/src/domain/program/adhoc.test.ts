@@ -48,6 +48,24 @@ describe('buildAdhocLog', () => {
     expect(log.results[0].rpe).toBe(9);
   });
 
+  it('stores each set’s own rpe on SetResult, not just the hardest-set rpe (bug fix)', () => {
+    const log = buildAdhocLog({
+      date: '2024-01-01T00:00:00.000Z',
+      entries: [
+        {
+          movementId: 'squat',
+          sets: [
+            { weight: 200, reps: 5, rpe: 7 },
+            { weight: 200, reps: 5, rpe: 9 },
+          ],
+        },
+      ],
+      id: 'l3b',
+    });
+    expect(log.results[0].sets?.map((s) => s.rpe)).toEqual([7, 9]);
+    expect(log.results[0].rpe).toBe(9);
+  });
+
   it('produces one strength block per movement for multiple entries', () => {
     const log = buildAdhocLog({
       date: '2024-01-01T00:00:00.000Z',
@@ -58,7 +76,10 @@ describe('buildAdhocLog', () => {
       id: 'l4',
     });
     expect(log.workoutSnapshot.blocks).toHaveLength(2);
-    expect(log.workoutSnapshot.blocks.map((b) => b.movements[0].movementId)).toEqual(['squat', 'bench']);
+    expect(log.workoutSnapshot.blocks.map((b) => b.movements[0].movementId)).toEqual([
+      'squat',
+      'bench',
+    ]);
   });
 
   it('generates a unique id when none is given', () => {

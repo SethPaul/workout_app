@@ -112,6 +112,7 @@ export interface PoolWorkout {
 export interface SetResult {
   weight?: number;
   reps?: number;
+  rpe?: number; // SPEC 9.1: the per-set RPE entered by the user, 1-10
 }
 
 export interface MovementResult {
@@ -120,7 +121,10 @@ export interface MovementResult {
   weight?: number; // load used, if loadable
   reps?: number; // total reps or reps per round
   notes?: string;
-  rpe?: number; // SPEC 9.1: per-movement RPE of the hardest set, 1-10
+  // SPEC 9.1: the movement's hardest-set RPE, 1-10. Derived as the max over
+  // `sets[].rpe` when any set has one; kept stored (rather than computed on
+  // read) so the programming layer (progression/fatigue/e1rm) is unchanged.
+  rpe?: number;
   // Index into workoutSnapshot.blocks identifying which block this result
   // came from — a movement appearing in more than one block (e.g. cleans in
   // both a strength block and a conditioning block) gets one MovementResult

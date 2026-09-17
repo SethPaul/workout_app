@@ -1,5 +1,10 @@
 import { daysSince, lastPerformedMovement, lastPerformedWorkout } from './cadence';
-import { heavyMovementsInWorkout, movementPatterns, patternCadenceDays, type Pattern } from './patterns';
+import {
+  heavyMovementsInWorkout,
+  movementPatterns,
+  patternCadenceDays,
+  type Pattern,
+} from './patterns';
 import type { Movement, PoolWorkout, Settings, WorkoutLog } from './types';
 import { dayType, weeklyNeed } from './weekly';
 
@@ -11,6 +16,12 @@ export interface SelectResult {
   candidates: PoolWorkout[];
   /** A `day:*` type still owed this week (SPEC section 3), or null if none is. */
   needed: string | null;
+  /**
+   * SPEC 3.1: the hopper. `viable` is the full gate-1/2 survivor list
+   * (ignoring `exclude`); `remaining` is `viable` minus `exclude` (the
+   * current pick, if any, is part of it).
+   */
+  hopper: { viable: PoolWorkout[]; remaining: PoolWorkout[] };
 }
 
 export interface SelectInput {
@@ -38,7 +49,11 @@ function movementEquipmentOk(movement: Movement | undefined, available: Set<stri
   return required.every((e) => available.has(e));
 }
 
-function movementCadenceOk(movement: Movement | undefined, logs: WorkoutLog[], now: string | Date): boolean {
+function movementCadenceOk(
+  movement: Movement | undefined,
+  logs: WorkoutLog[],
+  now: string | Date,
+): boolean {
   if (!movement) return true; // unknown movement id: treat as never performed (passes)
   const last = lastPerformedMovement(logs, movement.id);
   if (last === null) return true;
@@ -108,7 +123,9 @@ function focusMultiplier(workout: PoolWorkout, focus: Settings['focus']): number
 
   if (focus === 'strength') {
     const firstBlock = workout.blocks[0];
-    const strengthLed = firstBlock !== undefined && (firstBlock.format === 'strength' || firstBlock.title === 'Power');
+    const strengthLed =
+      firstBlock !== undefined &&
+      (firstBlock.format === 'strength' || firstBlock.title === 'Power');
     return strengthLed ? 1.5 : 1;
   }
 
@@ -149,60 +166,93 @@ function scoreWorkout(
 }
 
 /**
- * Implements SPEC section 3: gate the pool, score survivors, take the top
- * slice, and pick one uniformly at random from that slice.
+ * SPEC 3.1: the hopper. Runs gates 1-2 (enabled, equipment, cadence,
+ * pattern, weekly-need restriction) *ignoring* `exclude` entirely, so a
+ * caller can tell "nothing is eligible today" (a gate reason) apart from
+ * "everything eligible has already been bumped" (`selectWorkout`'s
+ * `'excluded'`, computed by subtracting `exclude` from `viable` afterwards).
+ * `ignoreCadence` skips the cadence and pattern gates only; equipment still
+ * applies.
  */
-export function selectWorkout(input: SelectInput): SelectResult {
+export function viableWorkouts(input: Omit<SelectInput, 'exclude'>): {
+  viable: PoolWorkout[];
+  /** The gated survivors before the weekly-need restriction (equals `viable` when none applied). */
+  unrestricted: PoolWorkout[];
+  reason: SelectReason;
+} {
   const { pool, movements, logs, settings, now } = input;
-  const exclude = input.exclude ?? [];
-  const rng = input.rng ?? Math.random;
-
   const movementById = new Map(movements.map((m) => [m.id, m]));
   const available = new Set(settings.availableEquipment);
-  const needed = weeklyNeed(logs, now);
 
   const enabledPool = pool.filter((w) => w.enabled);
-  if (enabledPool.length === 0) {
-    return { workout: null, reason: 'no-enabled', candidates: [], needed };
-  }
+  if (enabledPool.length === 0) return { viable: [], unrestricted: [], reason: 'no-enabled' };
 
-  const notExcluded = enabledPool.filter((w) => !exclude.includes(w.id));
-  if (notExcluded.length === 0) {
-    return { workout: null, reason: 'excluded', candidates: [], needed };
-  }
-
-  const equipmentOk = notExcluded.filter((w) =>
+  const equipmentOk = enabledPool.filter((w) =>
     workoutMovementIds(w).every((id) => movementEquipmentOk(movementById.get(id), available)),
   );
-  if (equipmentOk.length === 0) {
-    return { workout: null, reason: 'equipment', candidates: [], needed };
-  }
+  if (equipmentOk.length === 0) return { viable: [], unrestricted: [], reason: 'equipment' };
 
   const cadenceOk = input.ignoreCadence
     ? equipmentOk
     : equipmentOk.filter((w) => {
         if (!workoutCadenceOk(w, logs, now)) return false;
-        return workoutMovementIds(w).every((id) => movementCadenceOk(movementById.get(id), logs, now));
+        return workoutMovementIds(w).every((id) =>
+          movementCadenceOk(movementById.get(id), logs, now),
+        );
       });
-  if (cadenceOk.length === 0) {
-    return { workout: null, reason: 'cadence', candidates: [], needed };
-  }
+  if (cadenceOk.length === 0) return { viable: [], unrestricted: [], reason: 'cadence' };
 
   const patternOk = input.ignoreCadence
     ? cadenceOk
     : cadenceOk.filter((w) => patternCadenceOk(w, movementById, logs, now, settings));
-  if (patternOk.length === 0) {
-    return { workout: null, reason: 'pattern', candidates: [], needed };
-  }
+  if (patternOk.length === 0) return { viable: [], unrestricted: [], reason: 'pattern' };
 
   // Weekly mandatory-day gate (SPEC section 3, AUDIT.md C2): restrict to the
   // needed day type only if a gated survivor actually has it, otherwise fall
   // through to the normal pool rather than returning empty.
+  const needed = weeklyNeed(logs, now);
   const needMatches = needed ? patternOk.filter((w) => dayType(w) === needed) : [];
   const gated = needMatches.length > 0 ? needMatches : patternOk;
 
-  const scored = gated
-    .map((workout) => ({ workout, score: scoreWorkout(workout, movementById, logs, now, rng, settings.focus) }))
+  return { viable: gated, unrestricted: patternOk, reason: 'ok' };
+}
+
+/**
+ * Implements SPEC section 3 / 3.1: compute the hopper (`viableWorkouts`,
+ * ignoring `exclude`), subtract `exclude` to get `hopper.remaining`, then
+ * score/slice/pick from what remains. When the hopper is non-empty but every
+ * entry has been excluded (bumped) today, the reason is `'excluded'` rather
+ * than whatever gate would otherwise apply to the leftovers — exclusions are
+ * applied strictly after the gates, never mixed into them.
+ */
+export function selectWorkout(input: SelectInput): SelectResult {
+  const { movements, logs, settings, now } = input;
+  const exclude = input.exclude ?? [];
+  const rng = input.rng ?? Math.random;
+  const needed = weeklyNeed(logs, now);
+
+  const { viable: restricted, unrestricted, reason } = viableWorkouts(input);
+  const notExcluded = (list: PoolWorkout[]) => list.filter((w) => !exclude.includes(w.id));
+  // The weekly-need restriction (step 2) never empties the pool on its own:
+  // once every needed-day workout has been bumped today, the hopper widens
+  // to the unrestricted survivors rather than reporting itself exhausted.
+  const widen = restricted.length > 0 && notExcluded(restricted).length === 0;
+  const viable = widen ? unrestricted : restricted;
+  const hopper = { viable, remaining: notExcluded(viable) };
+
+  if (viable.length === 0) {
+    return { workout: null, reason, candidates: [], needed, hopper };
+  }
+  if (hopper.remaining.length === 0) {
+    return { workout: null, reason: 'excluded', candidates: [], needed, hopper };
+  }
+
+  const movementById = new Map(movements.map((m) => [m.id, m]));
+  const scored = hopper.remaining
+    .map((workout) => ({
+      workout,
+      score: scoreWorkout(workout, movementById, logs, now, rng, settings.focus),
+    }))
     .sort((a, b) => b.score - a.score);
 
   const sliceSize = Math.max(3, Math.ceil(scored.length * 0.25));
@@ -211,5 +261,5 @@ export function selectWorkout(input: SelectInput): SelectResult {
   const pickIndex = Math.floor(rng() * candidates.length);
   const workout = candidates[Math.min(pickIndex, candidates.length - 1)];
 
-  return { workout, reason: 'ok', candidates, needed };
+  return { workout, reason: 'ok', candidates, needed, hopper };
 }

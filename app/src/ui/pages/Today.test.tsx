@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/preact';
 import { LocationProvider } from 'preact-iso';
 import { Today } from './Today';
-import { clearTodayWorkout, setStorage, state } from '../../state/store';
+import { clearTodayWorkout, setStorage, state, todayWorkout } from '../../state/store';
 import { beginRunSession, clearRunSession, runSession } from '../../state/run';
 import type { AppState, PoolWorkout, WorkoutLog } from '../../domain/types';
 import type { Storage } from '../../storage/storage';
@@ -330,5 +330,115 @@ describe('Today page — in-progress run card', () => {
     // Declined: the original in-progress session is untouched.
     expect(runSession.value?.poolWorkoutId).toBe('w1');
     confirmSpy.mockRestore();
+  });
+});
+
+/** A minimal enabled, equipment-free, never-performed pool workout. */
+function hopperWorkout(id: string): PoolWorkout {
+  return {
+    id,
+    name: id,
+    intensity: 'M',
+    blocks: [{ format: 'strength', movements: [{ movementId: 'row' }] }],
+    cadenceDays: 0,
+    enabled: true,
+    source: 'manual',
+  };
+}
+
+function stateWithHopper(count: number): AppState {
+  return {
+    ...fixtureState(),
+    pool: Array.from({ length: count }, (_, i) => hopperWorkout(`h${i}`)),
+  };
+}
+
+describe('Today page — hopper (SPEC 3.1)', () => {
+  beforeEach(() => {
+    clearTodayWorkout();
+  });
+
+  afterEach(() => {
+    cleanup();
+    clearTodayWorkout();
+  });
+
+  it('shows "Hopper: 1 of 1 left" for the fixture pool', () => {
+    state.value = fixtureState();
+    renderToday();
+    fireEvent.click(screen.getByRole('button', { name: /Get Today.s Workout/i }));
+    expect(screen.getByText('Hopper: 1 of 1 left')).toBeInTheDocument();
+  });
+
+  it('bumping through every viable workout shows the excluded banner', () => {
+    state.value = stateWithHopper(2);
+    renderToday();
+    fireEvent.click(screen.getByRole('button', { name: /Get Today.s Workout/i }));
+    expect(screen.getByText('Hopper: 2 of 2 left')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Bump' }));
+    expect(screen.getByText('Hopper: 1 of 2 left')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Bump' }));
+    expect(
+      screen.getByText(/bumped through all 2 workouts in today.s hopper/i),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Start over' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Use all workouts' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Pick a workout' })).toBeInTheDocument();
+  });
+
+  it('Start over clears the exclusions and yields a workout again', () => {
+    state.value = stateWithHopper(2);
+    renderToday();
+    fireEvent.click(screen.getByRole('button', { name: /Get Today.s Workout/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Bump' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Bump' }));
+    expect(screen.getByText(/bumped through all/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Start over' }));
+    expect(screen.getByRole('button', { name: 'Bump' })).toBeInTheDocument();
+    expect(screen.getByText('Hopper: 2 of 2 left')).toBeInTheDocument();
+  });
+
+  function stateBlockedByCadence(): AppState {
+    // A single workout whose own cadence (14 days) hasn't elapsed since it
+    // was last logged yesterday -- viableWorkouts is empty from the start.
+    const pool: PoolWorkout[] = [{ ...hopperWorkout('w1'), cadenceDays: 14 }];
+    const logs: WorkoutLog[] = [
+      {
+        id: 'log-1',
+        poolWorkoutId: 'w1',
+        workoutSnapshot: pool[0],
+        startedAt: '2024-01-14T00:00:00.000Z',
+        finishedAt: '2024-01-14T00:00:00.000Z',
+        results: [],
+      },
+    ];
+    return { ...fixtureState(), pool, logs };
+  }
+
+  it('Use all workouts switches to persistent all-mode and yields a workout when cadence blocked everything', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2024-01-15T00:00:00.000Z')); // 1 day after the log
+    state.value = stateBlockedByCadence();
+    renderToday();
+    fireEvent.click(screen.getByRole('button', { name: /Get Today.s Workout/i }));
+    expect(screen.getByText(/still on cooldown/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Use all workouts' }));
+    expect(todayWorkout.value?.mode).toBe('all');
+    expect(screen.getByText('w1')).toBeInTheDocument();
+    expect(screen.getByText(/all workouts/)).toBeInTheDocument();
+
+    // A following Bump either yields a workout again or the excluded
+    // banner -- never a cadence failure, since mode 'all' persists.
+    fireEvent.click(screen.getByRole('button', { name: 'Bump' }));
+    expect(screen.queryByText(/still on cooldown/i)).not.toBeInTheDocument();
+    const gotWorkout = screen.queryByText('w1') !== null;
+    const excludedBanner = screen.queryByText(/bumped through all/i) !== null;
+    expect(gotWorkout || excludedBanner).toBe(true);
+
+    vi.useRealTimers();
   });
 });

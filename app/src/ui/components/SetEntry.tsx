@@ -31,8 +31,8 @@ export interface SetEntryProps {
 /**
  * Inline mid-set entry for a running strength block (SPEC: log weights/reps
  * as you go, not only at the end): one compact row per loadable movement in
- * the block, bound to the current set's weight/reps plus a per-movement RPE
- * input, prefilled with the target RPE as a placeholder. Rendered during
+ * the block, bound to the current set's weight/reps/RPE — each set keeps its
+ * own RPE value — prefilled with the target RPE as a placeholder. Rendered during
  * both the work phase (the set about to happen) and the rest phase that
  * follows it (the set just finished), so the numbers just lifted stay
  * editable through the rest period.
@@ -96,11 +96,11 @@ export function SetEntry({
                 max="10"
                 step="0.5"
                 placeholder={`target ${bm.targetRpe ?? 8}`}
-                value={entry.rpe}
+                value={set.rpe}
                 onInput={(e) => {
                   const v = (e.target as HTMLInputElement).value;
                   patchDraft(draft, onChange, (next) => {
-                    next.movements[entryIndex].rpe = v;
+                    next.movements[entryIndex].sets![setIdx].rpe = v;
                   });
                 }}
               />

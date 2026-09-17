@@ -17,10 +17,21 @@ function isStrengthBlockMovement(snapshot: PoolWorkout, movementId: string): boo
   );
 }
 
+/** The prescribed target RPE for a (block, movement) pair, for the RPE input's placeholder. */
+function targetRpeFor(
+  snapshot: PoolWorkout,
+  blockIndex: number,
+  movementId: string,
+): number | undefined {
+  return snapshot.blocks[blockIndex]?.movements.find((bm) => bm.movementId === movementId)
+    ?.targetRpe;
+}
+
 /**
- * Per-movement sets (weight, reps, per-movement RPE), score, session RPE,
- * and notes — the results form shared by Run's "finished" screen and
- * EditLog. Renders exactly the markup Run used to render inline.
+ * Per-movement sets (weight, reps, and — for strength movements — a per-set
+ * RPE), score, session RPE, and notes — the results form shared by Run's
+ * "finished" screen and EditLog. Renders exactly the markup Run used to
+ * render inline.
  */
 export function ResultsForm(props: ResultsFormProps) {
   const { snapshot, draft, onChange, movements } = props;
@@ -83,6 +94,23 @@ export function ResultsForm(props: ResultsFormProps) {
                         });
                       }}
                     />
+                    {loadable && (
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        min="1"
+                        max="10"
+                        step="0.5"
+                        placeholder={`target ${targetRpeFor(snapshot, m.blockIndex, m.movementId) ?? 8}`}
+                        value={set.rpe}
+                        onInput={(e) => {
+                          const v = (e.target as HTMLInputElement).value;
+                          patch((next) => {
+                            next.movements[mi].sets![si].rpe = v;
+                          });
+                        }}
+                      />
+                    )}
                   </div>
                 ))}
               </div>
@@ -116,7 +144,7 @@ export function ResultsForm(props: ResultsFormProps) {
                 />
               </div>
             )}
-            {loadable && (
+            {loadable && !m.sets && (
               <div class="field">
                 <label for={`rpe-${m.blockIndex}-${m.movementId}`}>RPE (1–10, optional)</label>
                 <input

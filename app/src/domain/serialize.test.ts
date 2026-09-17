@@ -111,6 +111,31 @@ describe('exportState / importState round-trip', () => {
     expect(imported).toEqual(state);
   });
 
+  it('round-trips a log with per-set rpe unchanged', () => {
+    const state = validState();
+    state.logs.push({
+      id: 'l1',
+      poolWorkoutId: 'w1',
+      workoutSnapshot: state.pool[0],
+      startedAt: '2024-01-01T00:00:00.000Z',
+      finishedAt: '2024-01-01T00:00:00.000Z',
+      kind: 'pool',
+      results: [
+        {
+          movementId: 'squat',
+          blockIndex: 0,
+          sets: [
+            { weight: 225, reps: 5, rpe: 7 },
+            { weight: 225, reps: 5, rpe: 8 },
+          ],
+          rpe: 8,
+        },
+      ],
+    });
+    const imported = importState(exportState(state));
+    expect(imported.logs[0].results).toEqual(state.logs[0].results);
+  });
+
   it('a v1 log without kind migrates to kind: "pool"', () => {
     const state = validState();
     state.logs.push({

@@ -123,6 +123,13 @@ export interface TodayWorkout {
    * than the raw pool entry.
    */
   snapshot?: PoolWorkout;
+  /**
+   * SPEC 3.1 hopper mode: `'viable'` (default, absent reads as this) gates
+   * on cadence/pattern as usual; `'all'` (set via `setHopperMode`) makes
+   * `pullToday` pass `ignoreCadence: true` so bumping cycles every enabled,
+   * equipment-OK workout. Day-scoped like `excluded`.
+   */
+  mode?: 'viable' | 'all';
 }
 
 const TODAY_KEY = 'todayWorkout';
@@ -165,6 +172,11 @@ export function currentTodayWorkout(now: Date = new Date()): TodayWorkout | null
   return current;
 }
 
+/** `TodayWorkout.mode`, defaulted (SPEC 3.1: absent reads as `'viable'`). */
+export function hopperMode(now: Date = new Date()): 'viable' | 'all' {
+  return currentTodayWorkout(now)?.mode ?? 'viable';
+}
+
 /** Records that `workoutId` was pulled as today's workout, optionally with its wave-transformed snapshot. */
 export function setTodayWorkout(
   workoutId: string,
@@ -177,6 +189,7 @@ export function setTodayWorkout(
     workoutId,
     excluded: existing?.excluded ?? [],
     snapshot,
+    mode: existing?.mode,
   };
   todayWorkout.value = next;
   writeLocalStorage(next);
@@ -196,7 +209,8 @@ export interface PullTodayInput extends Omit<SelectInput, 'exclude'> {
  */
 export function pullToday(input: PullTodayInput): SelectResult {
   const existing = currentTodayWorkout(input.now);
-  const result = selectWorkout({ ...input, exclude: existing?.excluded ?? [] });
+  const ignoreCadence = input.ignoreCadence ?? existing?.mode === 'all';
+  const result = selectWorkout({ ...input, exclude: existing?.excluded ?? [], ignoreCadence });
   if (result.workout) {
     const programState = resolveProgram(input.program, input.logs, input.now);
     const week = cycleWeek(programState, input.now);
@@ -238,19 +252,57 @@ export function chooseTodayWorkout(id: string, now: Date = new Date()): PoolWork
     workoutId: id,
     excluded: (existing?.excluded ?? []).filter((excludedId) => excludedId !== id),
     snapshot,
+    mode: existing?.mode,
   };
   todayWorkout.value = next;
   writeLocalStorage(next);
   return snapshot;
 }
 
-/** Bumps the current workout: adds it to the excluded list and clears the pick. */
+/** Bumps the current workout: adds it to the excluded list and clears the pick. Keeps `mode`. */
 export function bumpTodayWorkout(now: Date = new Date()): void {
   const existing = currentTodayWorkout(now);
   const excluded = existing?.workoutId
     ? [...existing.excluded, existing.workoutId]
     : (existing?.excluded ?? []);
-  const next: TodayWorkout = { date: todayDateString(now), workoutId: null, excluded };
+  const next: TodayWorkout = {
+    date: todayDateString(now),
+    workoutId: null,
+    excluded,
+    mode: existing?.mode,
+  };
+  todayWorkout.value = next;
+  writeLocalStorage(next);
+}
+
+/**
+ * SPEC 3.1 "Start over": clears `excluded` and `workoutId`, keeps `mode`.
+ * The UI follows this with a pull.
+ */
+export function resetHopper(now: Date = new Date()): void {
+  const existing = currentTodayWorkout(now);
+  const next: TodayWorkout = {
+    date: todayDateString(now),
+    workoutId: null,
+    excluded: [],
+    mode: existing?.mode,
+  };
+  todayWorkout.value = next;
+  writeLocalStorage(next);
+}
+
+/**
+ * SPEC 3.1 "Use all workouts": sets the persistent hopper `mode`, keeps
+ * `excluded`, clears `workoutId`. The UI follows this with a pull.
+ */
+export function setHopperMode(mode: 'viable' | 'all', now: Date = new Date()): void {
+  const existing = currentTodayWorkout(now);
+  const next: TodayWorkout = {
+    date: todayDateString(now),
+    workoutId: null,
+    excluded: existing?.excluded ?? [],
+    mode,
+  };
   todayWorkout.value = next;
   writeLocalStorage(next);
 }
