@@ -1,6 +1,10 @@
 import { useMemo, useState } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
-import { buildAdhocLog, type AdhocEntryInput, type AdhocSetInput } from '../../domain/program/adhoc';
+import {
+  buildAdhocLog,
+  type AdhocEntryInput,
+  type AdhocSetInput,
+} from '../../domain/program/adhoc';
 import { logAdhoc, state } from '../../state/store';
 import { resolveSettings, logKind } from '../../domain/program/context';
 import type { WorkoutLog } from '../../domain/types';
@@ -48,17 +52,19 @@ function isoDateOf(iso: string): string {
 function entriesFromLog(log: WorkoutLog): EntryDraft[] {
   return log.results.map((r) => {
     const sourceSets = r.sets && r.sets.length > 0 ? r.sets : [{ weight: r.weight, reps: r.reps }];
-    // SetResult has no per-set RPE — the log only keeps the movement's
-    // hardest-set RPE, so it's shown on every reconstructed set.
-    const rpe = r.rpe !== undefined ? String(r.rpe) : '';
-    return {
-      movementId: r.movementId,
-      sets: sourceSets.map((s) => ({
-        weight: s.weight !== undefined ? String(s.weight) : '',
-        reps: s.reps !== undefined ? String(s.reps) : '',
-        rpe,
-      })),
-    };
+    const anySetRpe = sourceSets.some((s) => s.rpe !== undefined);
+    const sets = sourceSets.map((s) => ({
+      weight: s.weight !== undefined ? String(s.weight) : '',
+      reps: s.reps !== undefined ? String(s.reps) : '',
+      rpe: s.rpe !== undefined ? String(s.rpe) : '',
+    }));
+    // Legacy logs kept only the movement's hardest-set RPE with no per-set
+    // breakdown — put that one value on the last set rather than guessing
+    // which set it belonged to (never on every set: that's the bug this fixes).
+    if (!anySetRpe && r.rpe !== undefined && sets.length > 0) {
+      sets[sets.length - 1].rpe = String(r.rpe);
+    }
+    return { movementId: r.movementId, sets };
   });
 }
 
@@ -84,7 +90,9 @@ export function AdhocLog({ initialLog, onSave, onSaved }: AdhocLogProps = {}) {
   const units = resolveSettings(s.settings).units;
 
   const [date, setDate] = useState(initialLog ? isoDateOf(initialLog.finishedAt) : todayIsoDate());
-  const [entries, setEntries] = useState<EntryDraft[]>(initialLog ? entriesFromLog(initialLog) : []);
+  const [entries, setEntries] = useState<EntryDraft[]>(
+    initialLog ? entriesFromLog(initialLog) : [],
+  );
   const [notes, setNotes] = useState(initialLog?.notes ?? '');
   const [maxTest, setMaxTest] = useState(initialLog ? logKind(initialLog) === 'max-test' : false);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -94,7 +102,12 @@ export function AdhocLog({ initialLog, onSave, onSaved }: AdhocLogProps = {}) {
     const q = pickerQuery.trim().toLowerCase();
     const already = new Set(entries.map((e) => e.movementId));
     const list = s.movements.filter(
-      (m) => !already.has(m.id) && (q ? m.name.toLowerCase().includes(q) || (m.aliases ?? []).some((a) => a.toLowerCase().includes(q)) : true),
+      (m) =>
+        !already.has(m.id) &&
+        (q
+          ? m.name.toLowerCase().includes(q) ||
+            (m.aliases ?? []).some((a) => a.toLowerCase().includes(q))
+          : true),
     );
     return list.slice(0, 25);
   }, [s.movements, entries, pickerQuery]);
@@ -110,18 +123,26 @@ export function AdhocLog({ initialLog, onSave, onSaved }: AdhocLogProps = {}) {
   }
 
   function addSet(movementId: string) {
-    setEntries((prev) => prev.map((e) => (e.movementId === movementId ? { ...e, sets: [...e.sets, blankSet()] } : e)));
+    setEntries((prev) =>
+      prev.map((e) => (e.movementId === movementId ? { ...e, sets: [...e.sets, blankSet()] } : e)),
+    );
   }
 
   function removeSet(movementId: string, index: number) {
     setEntries((prev) =>
-      prev.map((e) => (e.movementId === movementId ? { ...e, sets: e.sets.filter((_, i) => i !== index) } : e)),
+      prev.map((e) =>
+        e.movementId === movementId ? { ...e, sets: e.sets.filter((_, i) => i !== index) } : e,
+      ),
     );
   }
 
   function patchSet(movementId: string, index: number, fn: (set: SetDraft) => SetDraft) {
     setEntries((prev) =>
-      prev.map((e) => (e.movementId === movementId ? { ...e, sets: e.sets.map((set, i) => (i === index ? fn(set) : set)) } : e)),
+      prev.map((e) =>
+        e.movementId === movementId
+          ? { ...e, sets: e.sets.map((set, i) => (i === index ? fn(set) : set)) }
+          : e,
+      ),
     );
   }
 
@@ -129,7 +150,9 @@ export function AdhocLog({ initialLog, onSave, onSaved }: AdhocLogProps = {}) {
     return s.movements.find((m) => m.id === id)?.name ?? id;
   }
 
-  const canSave = entries.length > 0 && entries.every((e) => e.sets.some((set) => set.weight.trim() || set.reps.trim()));
+  const canSave =
+    entries.length > 0 &&
+    entries.every((e) => e.sets.some((set) => set.weight.trim() || set.reps.trim()));
 
   async function save() {
     if (!canSave) return;
@@ -170,7 +193,12 @@ export function AdhocLog({ initialLog, onSave, onSaved }: AdhocLogProps = {}) {
       <div class="stack">
         <div class="field">
           <label for="adhoc-date">Date</label>
-          <input id="adhoc-date" type="date" value={date} onInput={(e) => setDate((e.target as HTMLInputElement).value)} />
+          <input
+            id="adhoc-date"
+            type="date"
+            value={date}
+            onInput={(e) => setDate((e.target as HTMLInputElement).value)}
+          />
         </div>
 
         <div class="section-title">Movements</div>
@@ -179,7 +207,11 @@ export function AdhocLog({ initialLog, onSave, onSaved }: AdhocLogProps = {}) {
             <div class="card stack" key={entry.movementId}>
               <div class="row-between">
                 <span class="list-row-title">{movementName(entry.movementId)}</span>
-                <button class="icon-btn" onClick={() => removeMovement(entry.movementId)} aria-label={`Remove ${movementName(entry.movementId)}`}>
+                <button
+                  class="icon-btn"
+                  onClick={() => removeMovement(entry.movementId)}
+                  aria-label={`Remove ${movementName(entry.movementId)}`}
+                >
                   ×
                 </button>
               </div>
@@ -269,7 +301,11 @@ export function AdhocLog({ initialLog, onSave, onSaved }: AdhocLogProps = {}) {
 
         <div class="field">
           <label for="adhoc-notes">Notes</label>
-          <textarea id="adhoc-notes" value={notes} onInput={(e) => setNotes((e.target as HTMLTextAreaElement).value)} />
+          <textarea
+            id="adhoc-notes"
+            value={notes}
+            onInput={(e) => setNotes((e.target as HTMLTextAreaElement).value)}
+          />
         </div>
 
         <label class="toggle-row">
@@ -282,7 +318,11 @@ export function AdhocLog({ initialLog, onSave, onSaved }: AdhocLogProps = {}) {
           />
         </label>
 
-        <button class="btn btn-primary btn-big btn-block" disabled={!canSave} onClick={() => void save()}>
+        <button
+          class="btn btn-primary btn-big btn-block"
+          disabled={!canSave}
+          onClick={() => void save()}
+        >
           Save
         </button>
       </div>

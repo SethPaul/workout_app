@@ -317,9 +317,17 @@ export interface BlockMovement {      // addition
   targetRpe?: number;                 // default 8 for strength main lifts, 8 for accessory, 6 during deload
 }
 
+export interface SetResult {          // addition
+  rpe?: number;                       // per-set RPE entered by the user (optional, 1-10)
+}
+
 export interface MovementResult {     // addition
   rpe?: number;                       // per-movement RPE of the hardest set (optional, 1-10)
 }
+```
+`SetResult.rpe` is the per-set RPE entered by the user; `MovementResult.rpe` is derived as the
+max over sets on save (it stays stored for the programming layer).
+```ts
 
 export interface WorkoutLog {         // additions
   kind: 'pool' | 'adhoc' | 'max-test'; // existing logs migrate to 'pool'

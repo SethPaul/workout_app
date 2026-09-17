@@ -1,4 +1,11 @@
-import type { Block, BlockMovement, MovementResult, PoolWorkout, SetResult, WorkoutLog } from '../types';
+import type {
+  Block,
+  BlockMovement,
+  MovementResult,
+  PoolWorkout,
+  SetResult,
+  WorkoutLog,
+} from '../types';
 
 export interface AdhocSetInput {
   weight?: number;
@@ -59,7 +66,11 @@ export function buildAdhocLog(input: BuildAdhocLogInput): WorkoutLog {
   };
 
   const results: MovementResult[] = input.entries.map((entry) => {
-    const sets: SetResult[] = entry.sets.map((s) => ({ weight: s.weight, reps: s.reps }));
+    const sets: SetResult[] = entry.sets.map((s) => ({
+      weight: s.weight,
+      reps: s.reps,
+      rpe: s.rpe,
+    }));
     return { movementId: entry.movementId, sets, rpe: hardestSetRpe(entry.sets) };
   });
 

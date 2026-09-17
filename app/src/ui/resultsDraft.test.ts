@@ -6,7 +6,9 @@ import {
   draftFromLog,
   formatBlockOutcome,
   logFromDraft,
+  resultsFromDraft,
   scoreFromOutcomes,
+  type MovementDraft,
 } from './resultsDraft';
 import type { AppState } from '../domain/types';
 
@@ -247,6 +249,112 @@ describe('resultsFromDraft / draftFromLog with a duplicate movement across block
     log.results = log.results.map(({ blockIndex: _blockIndex, ...rest }) => rest);
     const draft = draftFromLog(log);
     expect(draft.movements.map((m) => m.blockIndex)).toEqual([0, 0]);
+  });
+});
+
+describe('per-set RPE (bug fix: RPE entered per set, not copied onto every set)', () => {
+  function strengthDraftMovement(): MovementDraft {
+    return buildResultsDraft(
+      {
+        movements: [
+          {
+            id: 'squat',
+            name: 'Back Squat',
+            tags: [],
+            equipment: ['barbell'],
+            cadenceDays: 7,
+            unit: 'reps',
+            loadable: true,
+          },
+        ],
+        pool: [],
+        logs: [],
+        settings: { availableEquipment: [], soundOn: true, vibrateOn: true, keepScreenOn: true },
+        schemaVersion: 2,
+      },
+      poolWorkout(),
+    ).movements.find((m) => m.movementId === 'squat')!;
+  }
+
+  it('entering rpe 7/8/9 on sets 1-3 yields per-set SetResult rpes and a hardest-set MovementResult.rpe', () => {
+    const entry = strengthDraftMovement();
+    entry.sets![0].rpe = '7';
+    entry.sets![1].rpe = '8';
+    entry.sets![2].rpe = '9';
+
+    const [result] = resultsFromDraft([entry]);
+    expect(result.sets?.map((s) => s.rpe)).toEqual([7, 8, 9]);
+    expect(result.rpe).toBe(9);
+  });
+
+  it('draftFromLog round-trips per-set rpe', () => {
+    const log = baseLog({
+      results: [
+        {
+          movementId: 'squat',
+          blockIndex: 0,
+          sets: [
+            { weight: 225, reps: 5, rpe: 7 },
+            { weight: 225, reps: 5, rpe: 8 },
+            { weight: 235, reps: 4, rpe: 9 },
+          ],
+          rpe: 9,
+        },
+      ],
+    });
+    const draft = draftFromLog(log);
+    const squat = draft.movements.find((m) => m.movementId === 'squat')!;
+    expect(squat.sets?.map((s) => s.rpe)).toEqual(['7', '8', '9']);
+
+    const restored = logFromDraft(log, draft);
+    expect(restored.results).toEqual(log.results);
+  });
+
+  it('a legacy log with only a movement-level rpe keeps it on save when no set rpe is entered', () => {
+    const log = baseLog({
+      results: [
+        {
+          movementId: 'squat',
+          blockIndex: 0,
+          sets: [
+            { weight: 225, reps: 5 },
+            { weight: 225, reps: 5 },
+          ],
+          rpe: 8,
+        },
+      ],
+    });
+    const draft = draftFromLog(log);
+    const squat = draft.movements.find((m) => m.movementId === 'squat')!;
+    // The fallback lives on the movement, not copied onto every set.
+    expect(squat.rpe).toBe('8');
+    expect(squat.sets?.every((s) => s.rpe === '')).toBe(true);
+
+    const restored = logFromDraft(log, draft);
+    expect(restored.results[0].rpe).toBe(8);
+  });
+
+  it('a set rpe entered on a legacy log overrides the movement-level fallback', () => {
+    const log = baseLog({
+      results: [
+        {
+          movementId: 'squat',
+          blockIndex: 0,
+          sets: [
+            { weight: 225, reps: 5 },
+            { weight: 225, reps: 5 },
+          ],
+          rpe: 8,
+        },
+      ],
+    });
+    const draft = draftFromLog(log);
+    const squat = draft.movements.find((m) => m.movementId === 'squat')!;
+    squat.sets![1].rpe = '9.5';
+
+    const restored = logFromDraft(log, draft);
+    expect(restored.results[0].rpe).toBe(9.5);
+    expect(restored.results[0].sets?.map((s) => s.rpe)).toEqual([undefined, 9.5]);
   });
 });
 

@@ -14,6 +14,7 @@ import { formatClock, movementById } from './helpers';
 export interface SetDraft {
   weight: string;
   reps: string;
+  rpe: string;
 }
 
 /** One movement's editable results (SPEC 9.9 results form / EditLog). */
@@ -23,7 +24,10 @@ export interface MovementDraft {
   sets?: SetDraft[]; // present for strength-block movements: one entry per set
   weight?: string; // present for non-strength (single-entry) movements
   reps?: string;
-  rpe: string; // per-movement RPE of the hardest set, optional
+  // Movement-level RPE. For entries with `sets`, this is a fallback used only
+  // when no set has its own rpe (older logs, or non-strength single entries
+  // where there's no per-set RPE to begin with).
+  rpe: string;
 }
 
 export interface ResultsDraft {
@@ -78,6 +82,7 @@ export function buildResultsDraft(appState: AppState, workout: PoolWorkout): Res
         const sets: SetDraft[] = Array.from({ length: block.sets ?? 1 }, () => ({
           weight: suggested,
           reps: bm.reps !== undefined ? String(bm.reps) : '',
+          rpe: '',
         }));
         movements.push({ movementId: bm.movementId, blockIndex, sets, rpe: '' });
       } else {
@@ -174,11 +179,19 @@ export function draftFromLog(log: WorkoutLog): ResultsDraft {
   const movements: MovementDraft[] = log.results.map((r) => {
     const blockIndex = r.blockIndex ?? inferBlockIndex(r.movementId);
     if (r.sets) {
+      const anySetRpe = r.sets.some((s) => s.rpe !== undefined);
       return {
         movementId: r.movementId,
         blockIndex,
-        sets: r.sets.map((s) => ({ weight: numToStr(s.weight), reps: numToStr(s.reps) })),
-        rpe: numToStr(r.rpe),
+        sets: r.sets.map((s) => ({
+          weight: numToStr(s.weight),
+          reps: numToStr(s.reps),
+          rpe: numToStr(s.rpe),
+        })),
+        // Older logs (or non-strength entries) only ever stored a
+        // movement-level RPE — surface it as a fallback rather than copying
+        // it onto every set.
+        rpe: anySetRpe ? '' : numToStr(r.rpe),
       };
     }
     return {
@@ -206,21 +219,24 @@ export function draftFromLog(log: WorkoutLog): ResultsDraft {
 /** Converts a draft's per-movement entries into `MovementResult[]` (shared by Run's save and `logFromDraft`). */
 export function resultsFromDraft(movements: MovementDraft[]): MovementResult[] {
   return movements.map((m) => {
-    const rpe = numOrUndef(m.rpe);
     if (m.sets) {
-      return {
-        movementId: m.movementId,
-        blockIndex: m.blockIndex,
-        sets: m.sets.map((s) => ({ weight: numOrUndef(s.weight), reps: numOrUndef(s.reps) })),
-        rpe,
-      };
+      const sets = m.sets.map((s) => ({
+        weight: numOrUndef(s.weight),
+        reps: numOrUndef(s.reps),
+        rpe: numOrUndef(s.rpe),
+      }));
+      const setRpes = sets.map((s) => s.rpe).filter((r): r is number => r !== undefined);
+      // Hardest set wins; fall back to the movement-level field when no set
+      // has its own RPE (legacy logs / RPE entered before any set was filled in).
+      const rpe = setRpes.length > 0 ? Math.max(...setRpes) : numOrUndef(m.rpe);
+      return { movementId: m.movementId, blockIndex: m.blockIndex, sets, rpe };
     }
     return {
       movementId: m.movementId,
       blockIndex: m.blockIndex,
       weight: numOrUndef(m.weight),
       reps: numOrUndef(m.reps),
-      rpe,
+      rpe: numOrUndef(m.rpe),
     };
   });
 }

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/preact';
 import { LocationProvider } from 'preact-iso';
 import { AdhocLog } from './AdhocLog';
+import { buildAdhocLog } from '../../domain/program/adhoc';
 import { setStorage, state } from '../../state/store';
 import { currentMax, e1rm } from '../../domain/program/e1rm';
 import type { AppState } from '../../domain/types';
@@ -20,8 +21,24 @@ class MemoryStorage implements Storage {
 function fixtureState(): AppState {
   return {
     movements: [
-      { id: 'deadlift', name: 'Deadlift', tags: ['hinge', 'compound'], equipment: ['barbell'], cadenceDays: 7, unit: 'reps', loadable: true },
-      { id: 'row', name: 'Row', tags: [], equipment: [], cadenceDays: 1, unit: 'meters', loadable: false },
+      {
+        id: 'deadlift',
+        name: 'Deadlift',
+        tags: ['hinge', 'compound'],
+        equipment: ['barbell'],
+        cadenceDays: 7,
+        unit: 'reps',
+        loadable: true,
+      },
+      {
+        id: 'row',
+        name: 'Row',
+        tags: [],
+        equipment: [],
+        cadenceDays: 1,
+        unit: 'meters',
+        loadable: false,
+      },
     ],
     pool: [],
     logs: [],
@@ -58,7 +75,9 @@ describe('AdhocLog ("Log something else", SPEC 9.8)', () => {
     renderPage();
 
     fireEvent.click(screen.getByRole('button', { name: /Add movement/i }));
-    fireEvent.input(screen.getByPlaceholderText(/Search movements/i), { target: { value: 'Deadlift' } });
+    fireEvent.input(screen.getByPlaceholderText(/Search movements/i), {
+      target: { value: 'Deadlift' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Deadlift' }));
 
     fireEvent.input(screen.getByPlaceholderText('weight (lb)'), { target: { value: '405' } });
@@ -84,7 +103,9 @@ describe('AdhocLog ("Log something else", SPEC 9.8)', () => {
     renderPage();
 
     fireEvent.click(screen.getByRole('button', { name: /Add movement/i }));
-    fireEvent.input(screen.getByPlaceholderText(/Search movements/i), { target: { value: 'Deadlift' } });
+    fireEvent.input(screen.getByPlaceholderText(/Search movements/i), {
+      target: { value: 'Deadlift' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Deadlift' }));
 
     fireEvent.input(screen.getByPlaceholderText('weight (lb)'), { target: { value: '315' } });
@@ -100,5 +121,31 @@ describe('AdhocLog ("Log something else", SPEC 9.8)', () => {
     expect(log.notes).toBe('Felt good');
     expect(log.results[0]).toMatchObject({ movementId: 'deadlift', rpe: 8 });
     expect(log.results[0].sets?.[0]).toMatchObject({ weight: 315, reps: 5 });
+  });
+
+  it('editing a log with per-set rpes shows each set with its own value', () => {
+    const log = buildAdhocLog({
+      date: '2024-01-01T00:00:00.000Z',
+      entries: [
+        {
+          movementId: 'deadlift',
+          sets: [
+            { weight: 315, reps: 5, rpe: 7 },
+            { weight: 315, reps: 5, rpe: 8 },
+            { weight: 335, reps: 3, rpe: 9 },
+          ],
+        },
+      ],
+      id: 'l1',
+    });
+
+    render(
+      <LocationProvider>
+        <AdhocLog initialLog={log} />
+      </LocationProvider>,
+    );
+
+    const rpeInputs = screen.getAllByPlaceholderText('RPE') as HTMLInputElement[];
+    expect(rpeInputs.map((i) => i.value)).toEqual(['7', '8', '9']);
   });
 });
