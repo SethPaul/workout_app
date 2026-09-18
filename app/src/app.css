@@ -620,6 +620,42 @@ a {
   color: var(--fg-muted);
 }
 
+.run-notes {
+  max-width: 34rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Pre-start warm-up stopwatch (Run screen, idle status) */
+.warmup-card {
+  width: 100%;
+  max-width: 26rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-elevated);
+}
+
+.warmup-clock {
+  font-size: clamp(2.4rem, 12vw, 4rem);
+}
+
+.warmup-targets {
+  justify-content: center;
+  margin-bottom: 0;
+}
+
+.warmup-controls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 .run-movements {
   display: flex;
   flex-direction: column;

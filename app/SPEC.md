@@ -239,6 +239,13 @@ available. Screen: `navigator.wakeLock` when available, gracefully ignored other
 2. **Execute** (`/run/:logDraftId`): big timer, current movement + reps, round counter, phase label,
    pause/next/round-done/fail/finish controls. On finish: results form (weight + reps per loadable
    movement, sets for strength; score; RPE; notes) then Save → History.
+   - **Ready step** (timer idle): shows the workout's `notes` (where the original seed keeps its
+     warm-up guidance) and a **warm-up stopwatch** (`app/src/domain/warmup.ts`): a count-up clock
+     with Start / Pause / Resume / Reset and a target picker (3 / 5 / 8 / 10 min, default 5) that
+     rings the bell cue once when the clock reaches the target, e.g. "cycle easy for 5 minutes". It
+     lives on the run session (`RunSession.warmup`) and persists like the timer (ticks throttled;
+     a running warm-up restores paused at its last persisted elapsed time). **Start workout** stops a
+     running warm-up and starts the timer; warm-up time is not part of any block or log.
 3. **Pool** (`/pool`): list with enable toggles, filter by tag/intensity, tap → edit. **Add** opens
    the same editor. Editor: name, intensity, cadence, blocks (format-specific fields), movement
    picker (searchable, can create a new movement inline).

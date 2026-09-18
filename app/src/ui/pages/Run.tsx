@@ -3,7 +3,14 @@ import { useLocation } from 'preact-iso';
 import type { Block, Format, WorkoutLog } from '../../domain/types';
 import type { Cue, TimerEvent, TimerState } from '../../domain/timer';
 import { clearTodayWorkout, state, update } from '../../state/store';
-import { clearRunSession, dispatchRun, runSession, updateRunDraft } from '../../state/run';
+import {
+  clearRunSession,
+  dispatchRun,
+  dispatchWarmup,
+  runSession,
+  updateRunDraft,
+} from '../../state/run';
+import { WARMUP_TARGET_OPTIONS_MIN, createWarmup, type WarmupEvent } from '../../domain/warmup';
 import { resumeAudio, playCue } from '../audio';
 import { vibrateForCue } from '../vibrate';
 import { acquireWakeLock, releaseWakeLock } from '../wakelock';
@@ -71,7 +78,13 @@ export function Run() {
   useEffect(() => {
     const id = setInterval(() => {
       const s = runSession.value;
-      if (!s || s.timer.status !== 'running') return;
+      if (!s) return;
+      if (s.timer.status === 'idle' && s.warmup?.running) {
+        const cues = dispatchWarmup({ type: 'tick', now: Date.now() });
+        playCues(cues, appState.settings.soundOn, appState.settings.vibrateOn);
+        return;
+      }
+      if (s.timer.status !== 'running') return;
       const timer = dispatchRun({ type: 'tick', now: Date.now() });
       if (timer)
         playCues(timer.pendingCues, appState.settings.soundOn, appState.settings.vibrateOn);
@@ -111,6 +124,8 @@ export function Run() {
   function handleStart() {
     resumeAudio();
     if (appState.settings.keepScreenOn) void acquireWakeLock();
+    // Starting the workout ends the warm-up clock (its elapsed time is kept).
+    if (session?.warmup?.running) dispatchWarmup({ type: 'pause', now: Date.now() });
     fire('start');
   }
 
@@ -155,8 +170,18 @@ export function Run() {
   const { timer, workoutSnapshot } = session;
   const block = workoutSnapshot.blocks[timer.blockIndex];
 
-  // ---- idle: pre-start summary ----
+  // ---- idle: pre-start summary + warm-up stopwatch ----
   if (timer.status === 'idle') {
+    const warmup = session.warmup ?? createWarmup();
+    const targetReached = warmup.elapsedMs >= warmup.targetMs;
+    function fireWarmup(event: WarmupEvent) {
+      if (event.type === 'start') {
+        resumeAudio();
+        if (appState.settings.keepScreenOn) void acquireWakeLock();
+      }
+      const cues = dispatchWarmup(event);
+      playCues(cues, appState.settings.soundOn, appState.settings.vibrateOn);
+    }
     return (
       <div class="run-screen">
         <div class="run-top">
@@ -171,10 +196,66 @@ export function Run() {
           <p>
             {workoutSnapshot.blocks.length} block{workoutSnapshot.blocks.length === 1 ? '' : 's'}
           </p>
+          {workoutSnapshot.notes && <p class="muted run-notes">{workoutSnapshot.notes}</p>}
+
+          <section class="warmup-card" aria-label="Warm-up stopwatch">
+            <p class="run-phase-label">Warm-up</p>
+            <p class="run-timer warmup-clock" data-testid="warmup-clock">
+              {formatClock(warmup.elapsedMs)}
+            </p>
+            <p class="muted">
+              {targetReached
+                ? `Target reached (${formatClock(warmup.targetMs)}) · bell rung`
+                : `Bell at ${formatClock(warmup.targetMs)}`}
+            </p>
+            <div class="chip-row warmup-targets" role="group" aria-label="Warm-up target">
+              {WARMUP_TARGET_OPTIONS_MIN.map((min) => {
+                const targetMs = min * 60 * 1000;
+                return (
+                  <button
+                    key={min}
+                    type="button"
+                    class={`chip-toggle${warmup.targetMs === targetMs ? ' active' : ''}`}
+                    aria-pressed={warmup.targetMs === targetMs}
+                    onClick={() => fireWarmup({ type: 'setTarget', targetMs })}
+                  >
+                    {min} min
+                  </button>
+                );
+              })}
+            </div>
+            <div class="warmup-controls">
+              <button
+                type="button"
+                class="btn btn-big"
+                onClick={() =>
+                  fireWarmup(
+                    warmup.running
+                      ? { type: 'pause', now: Date.now() }
+                      : { type: 'start', now: Date.now() },
+                  )
+                }
+              >
+                {warmup.running
+                  ? 'Pause warm-up'
+                  : warmup.elapsedMs > 0
+                    ? 'Resume warm-up'
+                    : 'Start warm-up'}
+              </button>
+              <button
+                type="button"
+                class="btn"
+                onClick={() => fireWarmup({ type: 'reset' })}
+                disabled={warmup.elapsedMs === 0 && !warmup.running}
+              >
+                Reset
+              </button>
+            </div>
+          </section>
         </div>
         <div class="run-controls">
           <button class="btn btn-primary btn-big" onClick={handleStart}>
-            Start
+            Start workout
           </button>
         </div>
       </div>

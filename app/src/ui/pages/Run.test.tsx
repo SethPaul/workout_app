@@ -1,9 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/preact';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/preact';
 import { LocationProvider } from 'preact-iso';
 import { Run } from './Run';
 import { setStorage, state } from '../../state/store';
-import { beginRunSession, clearRunSession, dispatchRun } from '../../state/run';
+import {
+  beginRunSession,
+  clearRunSession,
+  dispatchRun,
+  dispatchWarmup,
+  runSession,
+} from '../../state/run';
 import type { AppState, PoolWorkout } from '../../domain/types';
 import type { Storage } from '../../storage/storage';
 
@@ -65,6 +71,72 @@ function renderRun() {
     </LocationProvider>,
   );
 }
+
+describe('Run: warm-up stopwatch on the Ready screen', () => {
+  beforeEach(() => {
+    setStorage(new MemoryStorage());
+    state.value = fixtureState();
+    beginRunSession(
+      state.value,
+      { ...strengthWorkout(), notes: 'Warm-up: 5 min easy bike first.' },
+      new Date(0),
+    );
+  });
+
+  afterEach(() => {
+    cleanup();
+    clearRunSession();
+  });
+
+  it('shows the workout notes, a 0:00 stopwatch and the 5 min default target before starting', () => {
+    renderRun();
+    expect(screen.getByText('Ready')).toBeInTheDocument();
+    expect(screen.getByText('Warm-up: 5 min easy bike first.')).toBeInTheDocument();
+    expect(screen.getByTestId('warmup-clock')).toHaveTextContent('0:00');
+    expect(screen.getByText('Bell at 5:00')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '5 min' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Start warm-up' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Start workout' })).toBeInTheDocument();
+  });
+
+  it('runs, shows elapsed time, rings at the chosen target, pauses and resets', () => {
+    renderRun();
+    fireEvent.click(screen.getByRole('button', { name: '3 min' }));
+    expect(screen.getByText('Bell at 3:00')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Start warm-up' }));
+    expect(runSession.value?.warmup?.running).toBe(true);
+    // Drive the clock deterministically instead of waiting on the 100 ms interval.
+    const startedAt = runSession.value!.warmup!._lastTickAt!;
+    act(() => {
+      dispatchWarmup({ type: 'tick', now: startedAt + 65_000 });
+    });
+    expect(screen.getByTestId('warmup-clock')).toHaveTextContent('1:05');
+    expect(screen.getByRole('button', { name: 'Pause warm-up' })).toBeInTheDocument();
+
+    act(() => {
+      dispatchWarmup({ type: 'tick', now: startedAt + 181_000 });
+    });
+    expect(screen.getByText('Target reached (3:00) · bell rung')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Pause warm-up' }));
+    expect(runSession.value?.warmup?.running).toBe(false);
+    expect(screen.getByRole('button', { name: 'Resume warm-up' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    expect(screen.getByTestId('warmup-clock')).toHaveTextContent('0:00');
+    expect(screen.getByRole('button', { name: 'Start warm-up' })).toBeInTheDocument();
+  });
+
+  it('Start workout stops a running warm-up and starts the timer', () => {
+    renderRun();
+    fireEvent.click(screen.getByRole('button', { name: 'Start warm-up' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start workout' }));
+    expect(runSession.value?.timer.status).toBe('running');
+    expect(runSession.value?.warmup?.running).toBe(false);
+    expect(screen.getByText('Set 1 of 3')).toBeInTheDocument();
+  });
+});
 
 describe('Run: mid-workout set entry', () => {
   beforeEach(() => {
