@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { buildSeedState, ALL_EQUIPMENT, defaultSettings } from './seed';
+import { buildSeedState, catchUpSeed, loadSeedData, ALL_EQUIPMENT, defaultSettings } from './seed';
+import { SEED_REVISION, seedRevisionOf } from '../domain/seedRevision';
 import { VASA_SEED_MOVEMENTS } from '../domain/vasa/seedMovements';
 
 describe('buildSeedState', () => {
@@ -50,6 +51,36 @@ describe('defaultSettings', () => {
     expect(s.cycleWeeks).toBe(4);
     expect(s.focus).toBe('balanced');
     expect(s.masters).toBe(false);
+  });
+});
+
+describe('seed revisions (SPEC section 8)', () => {
+  it('stamps a fresh seed state with the shipped SEED_REVISION', async () => {
+    const state = await buildSeedState();
+    expect(state.seedRevision).toBe(SEED_REVISION);
+  });
+
+  it('ships at least one workout for every revision up to SEED_REVISION', async () => {
+    const { pool } = await loadSeedData();
+    for (let r = 1; r <= SEED_REVISION; r++) {
+      expect(pool.some((w) => seedRevisionOf(w) === r)).toBe(true);
+    }
+  });
+
+  it('ships no workout tagged beyond SEED_REVISION', async () => {
+    const { pool } = await loadSeedData();
+    expect(pool.filter((w) => seedRevisionOf(w) > SEED_REVISION)).toEqual([]);
+  });
+
+  it('catchUpSeed returns a current state by identity and upgrades an old one', async () => {
+    const current = { ...(await buildSeedState()), pool: [], movements: [] };
+    expect(await catchUpSeed(current)).toBe(current);
+
+    const old = { ...current, seedRevision: undefined };
+    const caughtUp = await catchUpSeed(old);
+    expect(caughtUp.seedRevision).toBe(SEED_REVISION);
+    expect(caughtUp.pool.length).toBeGreaterThan(0);
+    expect(caughtUp.pool.every((w) => seedRevisionOf(w) > 1)).toBe(true);
   });
 });
 

@@ -213,4 +213,8 @@ export interface AppState {
   // it for stored state, and program/context.ts's `resolveProgram` gives
   // internal consumers a default when it's absent.
   program?: ProgramState;
+  // SPEC section 8 (seed revisions): the highest seed revision this state
+  // has been brought up to. Absent = 1 (the original seed). `store.init`
+  // appends newer `seed:vN`-tagged workouts on load and stamps this.
+  seedRevision?: number;
 }

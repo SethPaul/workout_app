@@ -1,6 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { AppState, PoolWorkout } from '../domain/types';
-import { beginRunSession, clearRunSession, dispatchRun, runSession, updateRunDraft } from './run';
+import type { WarmupState } from '../domain/warmup';
+import {
+  beginRunSession,
+  clearRunSession,
+  dispatchRun,
+  dispatchWarmup,
+  runSession,
+  updateRunDraft,
+} from './run';
 
 const RUN_KEY = 'workout_app.runSession';
 
@@ -136,6 +144,76 @@ describe('run session persistence', () => {
     expect(restored!.timer._phaseElapsedMs).toBe(5000); // preserved, no jump
     expect(restored!.restoredAt).toBeDefined();
     expect(restored!.timer.pendingCues).toEqual([]);
+  });
+
+  it('beginRunSession starts with an idle warm-up stopwatch at 0', () => {
+    beginRunSession(fixtureState(), strengthWorkout(), new Date(0));
+    expect(runSession.value?.warmup).toEqual({
+      running: false,
+      elapsedMs: 0,
+      targetMs: 5 * 60 * 1000,
+      bellFired: false,
+    });
+  });
+
+  it('dispatchWarmup persists start/pause/reset/setTarget immediately and throttles ticks', () => {
+    beginRunSession(fixtureState(), strengthWorkout(), new Date(0));
+    const stored = () => JSON.parse(localStorage.getItem(RUN_KEY)!) as { warmup: WarmupState };
+
+    dispatchWarmup({ type: 'setTarget', targetMs: 3000 });
+    expect(stored().warmup.targetMs).toBe(3000);
+
+    dispatchWarmup({ type: 'start', now: 1000 });
+    expect(stored().warmup.running).toBe(true);
+
+    dispatchWarmup({ type: 'tick', now: 1500 }); // < 2 s since the persist at start: not written
+    expect(runSession.value?.warmup?.elapsedMs).toBe(500);
+    expect(stored().warmup.elapsedMs).toBe(0);
+
+    dispatchWarmup({ type: 'tick', now: 3100 }); // >= 2 s: written
+    expect(stored().warmup.elapsedMs).toBe(2100);
+
+    const cues = dispatchWarmup({ type: 'pause', now: 4500 });
+    expect(cues).toEqual([{ type: 'bell', at: 3000 }]);
+    expect(stored().warmup).toMatchObject({ running: false, elapsedMs: 3500, bellFired: true });
+
+    dispatchWarmup({ type: 'reset' });
+    expect(stored().warmup).toEqual({
+      running: false,
+      elapsedMs: 0,
+      targetMs: 3000,
+      bellFired: false,
+    });
+  });
+
+  it('a running warm-up restores paused at its last persisted elapsed time', async () => {
+    beginRunSession(fixtureState(), strengthWorkout(), new Date(0));
+    dispatchWarmup({ type: 'start', now: 0 });
+    dispatchWarmup({ type: 'tick', now: 5000 });
+
+    vi.resetModules();
+    const fresh = await import('./run');
+    const restored = fresh.runSession.value;
+    expect(restored?.timer.status).toBe('idle');
+    expect(restored?.warmup).toEqual({
+      running: false,
+      elapsedMs: 5000,
+      targetMs: 5 * 60 * 1000,
+      bellFired: false,
+    });
+  });
+
+  it('a session persisted before the warm-up existed restores without one and gains it on first event', async () => {
+    beginRunSession(fixtureState(), strengthWorkout(), new Date(0));
+    const raw = JSON.parse(localStorage.getItem(RUN_KEY)!) as Record<string, unknown>;
+    delete raw.warmup;
+    localStorage.setItem(RUN_KEY, JSON.stringify(raw));
+
+    vi.resetModules();
+    const fresh = await import('./run');
+    expect(fresh.runSession.value?.warmup).toBeUndefined();
+    fresh.dispatchWarmup({ type: 'start', now: 0 });
+    expect(fresh.runSession.value?.warmup?.running).toBe(true);
   });
 
   it('an idle/paused/between-blocks/finished session restores as-is', async () => {

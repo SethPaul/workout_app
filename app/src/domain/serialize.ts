@@ -293,6 +293,10 @@ export function importState(json: string): AppState {
 
   const program = validateProgram(parsed.program);
 
+  // SPEC section 8: optional; an older export without it is treated as seed
+  // revision 1 and caught up on the next load.
+  if (parsed.seedRevision !== undefined) assertNumber(parsed.seedRevision, 'seedRevision');
+
   const raw: AppState = {
     movements,
     pool,
@@ -300,6 +304,7 @@ export function importState(json: string): AppState {
     settings,
     schemaVersion: parsed.schemaVersion,
     program,
+    ...(parsed.seedRevision !== undefined ? { seedRevision: parsed.seedRevision } : {}),
   };
   // Upgrades a v1 import to v2 (SPEC 9.1) and is a no-op on an already-full v2 import.
   return migrate(raw);

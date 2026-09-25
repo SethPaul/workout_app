@@ -1296,5 +1296,151 @@
     "cadenceDays": 7,
     "unit": "reps",
     "loadable": true
+  },
+  {
+    "id": "air_squat",
+    "name": "Air Squat",
+    "aliases": [
+      "bodyweight squat"
+    ],
+    "tags": [
+      "bodyweight",
+      "squat",
+      "legs"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 1,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "inchworm",
+    "name": "Inchworm",
+    "aliases": [],
+    "tags": [
+      "bodyweight",
+      "core",
+      "mobility"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 1,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "cossack_squat",
+    "name": "Cossack Squat",
+    "aliases": [],
+    "tags": [
+      "bodyweight",
+      "legs",
+      "unilateral",
+      "mobility"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 1,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "pvc_passthrough",
+    "name": "PVC Pass-through",
+    "aliases": [
+      "shoulder pass through"
+    ],
+    "tags": [
+      "bodyweight",
+      "mobility"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 1,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "jumping_jack",
+    "name": "Jumping Jack",
+    "aliases": [],
+    "tags": [
+      "bodyweight",
+      "cardio"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 1,
+    "unit": "reps",
+    "loadable": false
+  },
+  {
+    "id": "kb_press",
+    "name": "Kettlebell Press",
+    "aliases": [
+      "single arm kb press"
+    ],
+    "tags": [
+      "accessory",
+      "push",
+      "unilateral"
+    ],
+    "equipment": [
+      "kettlebell"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true,
+    "progression": "double",
+    "repRange": [
+      8,
+      12
+    ]
+  },
+  {
+    "id": "single_leg_rdl",
+    "name": "Single-leg Romanian Deadlift",
+    "aliases": [
+      "single leg rdl"
+    ],
+    "tags": [
+      "accessory",
+      "hinge",
+      "unilateral"
+    ],
+    "equipment": [
+      "kettlebell"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": true,
+    "progression": "double",
+    "repRange": [
+      8,
+      12
+    ]
+  },
+  {
+    "id": "sit_up",
+    "name": "Sit-up",
+    "aliases": [
+      "situps"
+    ],
+    "tags": [
+      "bodyweight",
+      "core"
+    ],
+    "equipment": [
+      "none"
+    ],
+    "cadenceDays": 3,
+    "unit": "reps",
+    "loadable": false
   }
 ]

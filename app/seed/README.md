@@ -143,11 +143,13 @@ strings, so there is no "raw rows we could not map" list. Some choices worth rev
 
 ## Counts
 
-- `movements.json`: 71 movements.
-- `pool.json`: 52 workouts (target was 30-80; well within SPEC §8's "30-60 is plenty").
-- `validate.py` run: **0 errors**, 1 informational warning (14 movements in the library that no
+- `movements.json`: 71 movements at the original derivation; 72 after `revise.py`; **80** after
+  `expand.py`.
+- `pool.json`: 52 workouts at the original derivation (target was 30-80; well within SPEC §8's
+  "30-60 is plenty"); 59 after `revise.py`; **104** after `expand.py` (see "Seed revision 2").
+- `validate.py` run: **0 errors**, 1 informational warning (movements in the library that no
   pool workout currently references — expected, since they're included for library coverage per
-  the task brief rather than pulled from this particular log).
+  the task brief rather than pulled from this particular log; 8 as of revision 2).
 
 ## Unresolved / not confidently mapped
 
@@ -163,6 +165,52 @@ Rows with two accessory lists produce two conditioning blocks (Conditioning + Fi
 workouts each block originally received the full intensity duration, doubling the session length.
 The AMRAP budget is now split evenly across the AMRAP blocks: H 12 min, M 20 min, L 30 min total.
 Interval and rounds blocks were left as-is (10 x 30/30 per block; H 3 / M 4 / L 5 rounds per block).
+
+## Seed revision 2: pool expansion (`expand.py`)
+
+The reboot carried forward one spreadsheet row per (main lift, format) pair plus the seven
+AUDIT.md additions: 59 workouts, 52 of them the same `Strength -> Conditioning -> Finisher` shape
+built on seven main lifts. Sheet3 of the spreadsheet also names bench press, push press, strict
+press and jerk as main movements; none of those survived as a main lift, and the pool had one Zone 2
+session, one 4x4, one true Tabata, no plyometrics done fresh, no conditioning-priority day and no
+recovery or deload content. `expand.py` adds **45 workouts and 8 movements**, every workout tagged
+`seed:v2` with an id prefixed `v2-`, designed against `project_docs/training_evidence.md`:
+
+| group | count | what it adds | rules |
+|---|---|---|---|
+| Strength | 14 | Squat, deadlift, sumo, bench, strict press, push press, weighted pull-up and bent-over row as main lifts; heavy-triple / 5x5 / 4x6 / 4x8 variants for a daily-undulating wave; two more mandatory deadlift + push press variants (`cadenceDays` 6) | R1-R4, R10, R11, R32, R34, R35, R26 |
+| Power | 9 | Oly work first in the session (power snatch, hang clean, clean + jerk complex, snatch technique, jerk, power clean), 1-3 reps at 65-80% with 2.5-4 min rest; jumps done fresh (30 contacts); speed deadlifts; a kettlebell ballistic day | R5-R9, R22-R24 |
+| Stamina | 14 | Zone 2 bike / run / row-bike / 60 min slog; Norwegian 4x4 row and run; Billat 30/30 bike and row; true single-movement Tabata row; 2 min bike repeats; a conditioning-priority day for the 4-day split; a chipper; death by burpees; an aerobic EMOM | R12-R16, R26 |
+| Recovery | 8 | Active recovery (bike + mobility, row + carries, walk/jog); three deload technique sessions at 50-60% with `targetRpe` 6; a core/stability diversity day; a unilateral diversity day | R21, R29, R33, R41, R44 |
+
+Design conventions in the new entries, all of which the old 52 lack:
+
+- A real `Warm-up` block as `blocks[0]` (AUDIT.md C4), then `Power` (if any) -> `Strength` ->
+  `Accessory` -> `Finisher` (R24). Ramp-up sets for the main lift are in `notes`.
+- One finisher, short and moderate, after heavy lifting (R20); the two-conditioning-block shape
+  is not repeated.
+- Structured load targets: `targetRpe` on main lifts (8; 9 on heavy-triple days; 6 on deloads),
+  `loadPct` where the evidence gives a percentage (oly EMOMs 70%, speed pulls 60%, deloads
+  50-60%), `loadNote` for everything qualitative.
+- Warm-up / mobility movements (`air_squat`, `inchworm`, `cossack_squat`, `pvc_passthrough`,
+  `jumping_jack`) have `cadenceDays: 1`. The selection gate checks per-movement cadence for every
+  movement in a workout, warm-ups included, so a 3-day cadence there would silently gate whole
+  workouts.
+- `box_jump` and `broad_jump` appear only in a `Power` block, never in a fatigued block.
+- Conditioning-only and recovery workouts use `cadenceDays: 7` (the slog 21) so they can recur
+  weekly; strength and power days keep the 14-day default.
+- Two AUDIT-era entries were retagged for the day-type vocabulary in SPEC §8:
+  `new-bench-press-day` -> `day:press-strength`, `new-weighted-pullup-day` -> `day:pull-strength`
+  (fresh installs only; the catch-up never edits existing entries).
+
+Session length by the app's own estimator (`src/domain/estimate.ts`, which counts 30 s per
+strength set and so undercounts real barbell sessions): strength/power days 26-51 min, conditioning
+9-60 min, recovery 22-33 min. `validate.py`: 0 errors; the informational unused-movement warning
+now lists 8 (was 14).
+
+Existing installs receive these on their next load via the seed-revision catch-up
+(`src/domain/seedRevision.ts`, SPEC §8) without a reset; workouts deleted from the original seed
+are not brought back.
 
 ## Evidence-based revision (see AUDIT.md)
 

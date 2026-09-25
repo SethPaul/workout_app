@@ -1,6 +1,19 @@
 import { signal } from '@preact/signals';
-import { createTimer, timerReducer, type TimerEvent, type TimerState } from '../domain/timer';
+import {
+  createTimer,
+  timerReducer,
+  type Cue,
+  type TimerEvent,
+  type TimerState,
+} from '../domain/timer';
 import type { AppState, PoolWorkout } from '../domain/types';
+import {
+  createWarmup,
+  restoreWarmup,
+  warmupReducer,
+  type WarmupEvent,
+  type WarmupState,
+} from '../domain/warmup';
 import { applyBlockOutcomes, buildResultsDraft, type ResultsDraft } from '../ui/resultsDraft';
 
 export interface RunSession {
@@ -17,6 +30,11 @@ export interface RunSession {
    * paused rather than silently losing time. Cleared on `resume`.
    */
   restoredAt?: string; // ISO
+  /**
+   * The pre-start warm-up stopwatch (`domain/warmup.ts`), shown while the
+   * timer is idle. Optional so sessions persisted before it existed restore.
+   */
+  warmup?: WarmupState;
 }
 
 // --- Persistence (mirrors store.ts's TODAY_KEY handling) -----------------
@@ -64,7 +82,8 @@ function readPersistedRun(): RunSession | null {
       timer.status = 'paused';
       delete timer._lastTickAt;
     }
-    return { ...session, timer, restoredAt: new Date().toISOString() };
+    const warmup = session.warmup ? restoreWarmup(session.warmup) : undefined;
+    return { ...session, timer, warmup, restoredAt: new Date().toISOString() };
   } catch {
     return null; // localStorage unavailable (SSR/tests/private mode), or corrupt JSON
   }
@@ -94,6 +113,7 @@ export function beginRunSession(
     startedAt: now.toISOString(),
     timer: createTimer(workout.blocks, now.getTime()),
     draft: buildResultsDraft(appState, workout),
+    warmup: createWarmup(),
   };
   runSession.value = session;
   lastPersistedAt = now.getTime();
@@ -130,6 +150,33 @@ export function dispatchRun(event: TimerEvent): TimerState | null {
     writePersistedRun(next);
   }
   return timer;
+}
+
+/**
+ * Dispatches a warm-up stopwatch event against the current run session,
+ * returning the cues it fired (a bell when the target is reached). Ticks are
+ * throttled to storage exactly like timer ticks; everything else persists
+ * immediately. A session without a warm-up (persisted before the feature)
+ * gets one on the first event.
+ */
+export function dispatchWarmup(event: WarmupEvent): Cue[] {
+  const session = runSession.value;
+  if (!session) return [];
+  const { warmup, cues } = warmupReducer(session.warmup ?? createWarmup(), event);
+  if (warmup === session.warmup) return cues;
+  const next: RunSession = { ...session, warmup };
+  runSession.value = next;
+
+  if (event.type === 'tick') {
+    if (event.now - lastPersistedAt >= TICK_PERSIST_INTERVAL_MS) {
+      lastPersistedAt = event.now;
+      writePersistedRun(next);
+    }
+  } else {
+    if ('now' in event) lastPersistedAt = event.now;
+    writePersistedRun(next);
+  }
+  return cues;
 }
 
 /** Clears the run session (after saving/discarding a run). */

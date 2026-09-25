@@ -3,6 +3,8 @@ import type { AppState, Movement, PoolWorkout, WorkoutLog } from '../domain/type
 import type { Storage } from '../storage/storage';
 import { buildAdhocLog } from '../domain/program/adhoc';
 import { buildEnteredWorkout } from '../domain/vasa/pool';
+import { SEED_REVISION, seedRevisionOf } from '../domain/seedRevision';
+import { loadSeedData } from '../storage/seed';
 import {
   acceptDeload,
   addPoolWorkout,
@@ -36,6 +38,11 @@ class MemoryStorage implements Storage {
   }
 }
 
+/**
+ * A stored state with nothing in it, already at the shipped seed revision so
+ * `init()`'s seed catch-up (SPEC section 8) doesn't append the seed pool to
+ * fixtures that assert on exact pool contents.
+ */
 function emptyState(): AppState {
   return {
     movements: [],
@@ -43,6 +50,7 @@ function emptyState(): AppState {
     logs: [],
     settings: { availableEquipment: [], soundOn: true, vibrateOn: true, keepScreenOn: true },
     schemaVersion: 1,
+    seedRevision: SEED_REVISION,
   };
 }
 
@@ -82,6 +90,43 @@ describe('init / update', () => {
     // init() migrates the loaded (schemaVersion 1) state, which appends the
     // SPEC 10.2 Vasa seed movements alongside the pre-existing "squat" one.
     expect(state.value?.movements.filter((m) => m.id === 'squat')).toHaveLength(1);
+  });
+
+  it('brings an existing state up to the shipped seed revision on init (SPEC section 8)', async () => {
+    const seed = await loadSeedData();
+    const v2 = seed.pool.filter((w) => seedRevisionOf(w) === 2);
+    const v1 = seed.pool.filter((w) => seedRevisionOf(w) === 1);
+    expect(v2.length).toBeGreaterThan(0);
+    expect(v1.length).toBeGreaterThan(0);
+
+    const storage = new MemoryStorage();
+    // An install from before seed revisions existed: no seedRevision at all.
+    storage.saved = { ...emptyState(), pool: [v1[0]], schemaVersion: 3, seedRevision: undefined };
+    setStorage(storage);
+    await init();
+
+    const ids = state.value?.pool.map((w) => w.id) ?? [];
+    // Every revision-2 workout arrived, with the movements it needs...
+    for (const w of v2) expect(ids).toContain(w.id);
+    const movementIds = new Set(state.value?.movements.map((m) => m.id));
+    for (const w of v2) {
+      for (const b of w.blocks)
+        for (const m of b.movements) expect(movementIds.has(m.movementId)).toBe(true);
+    }
+    // ...but the revision-1 workouts this install never had (deleted, say) stay absent.
+    expect(ids.filter((id) => v1.some((w) => w.id === id))).toEqual([v1[0].id]);
+    expect(state.value?.seedRevision).toBe(SEED_REVISION);
+    // The catch-up is persisted so it doesn't recompute on every load.
+    expect(storage.saved?.seedRevision).toBe(SEED_REVISION);
+    expect(storage.saved?.pool.length).toBe(ids.length);
+  });
+
+  it('leaves a state already at the shipped seed revision alone on init', async () => {
+    const storage = new MemoryStorage();
+    storage.saved = { ...emptyState(), schemaVersion: 3, seedRevision: SEED_REVISION };
+    setStorage(storage);
+    await init();
+    expect(state.value?.pool).toEqual([]);
   });
 
   it('update() writes through to storage', async () => {
