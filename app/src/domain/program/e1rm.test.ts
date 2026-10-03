@@ -102,6 +102,20 @@ describe('e1rmHistory', () => {
     ];
     expect(e1rmHistory(logs, 'squat')[0].e1rm).toBeCloseTo(e1rm(100, 5)!);
   });
+
+  it('records the set behind the estimate and the heaviest set actually lifted', () => {
+    const logs = [
+      log('l1', '2024-01-01T00:00:00.000Z', [
+        { weight: 100, reps: 8 }, // best e1rm: 126.7
+        { weight: 110, reps: 1 },
+        { weight: 110, reps: 2 }, // heaviest, most reps at that weight
+        { weight: 150, reps: 0 }, // missed attempt, not lifted
+      ]),
+    ];
+    const [point] = e1rmHistory(logs, 'squat');
+    expect(point.bestSet).toEqual({ weight: 100, reps: 8 });
+    expect(point.heaviestSet).toEqual({ weight: 110, reps: 2 });
+  });
 });
 
 describe('currentMax', () => {

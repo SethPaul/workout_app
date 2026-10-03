@@ -1,7 +1,7 @@
 import { useMemo } from 'preact/hooks';
 import { resolveSettings } from '../../domain/program/context';
 import { acceptDeload, dismissFlags, startNewCycle, state } from '../../state/store';
-import { Sparkline } from '../components/Sparkline';
+import { TrendChart, TrendLegend } from '../components/TrendChart';
 import { fmtWeight } from '../helpers';
 import {
   cycleSummary,
@@ -40,9 +40,9 @@ function ProgressionRowView({ row, units }: { row: ProgressionRow; units: 'lb' |
           max {fmtWeight(row.currentMax, units)} · next {fmtWeight(row.nextLoad, units)}
           {row.lastSessionDate ? ` · last ${fmtDate(row.lastSessionDate)}` : ''}
         </div>
-        {row.sparkValues.length > 1 && (
-          <div style="max-width:160px;margin-top:0.35rem">
-            <Sparkline values={row.sparkValues} unit={units} />
+        {row.history.length > 1 && (
+          <div style="max-width:240px;margin-top:0.35rem">
+            <TrendChart history={row.history} units={units} compact />
           </div>
         )}
       </div>
@@ -178,6 +178,11 @@ export function Program() {
         <div class="empty-state">No strength sessions logged yet.</div>
       ) : (
         <div class="list" style="margin-bottom:1rem">
+          {rows.some((row) => row.history.length > 1) && (
+            <div>
+              <TrendLegend />
+            </div>
+          )}
           {rows.map((row) => (
             <ProgressionRowView row={row} units={units} key={row.movementId} />
           ))}

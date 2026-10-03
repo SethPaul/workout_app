@@ -445,8 +445,15 @@ pool logs. Max-test logs feed `currentMax` directly (9.2).
 ### 9.9 UI summary
 - **Today**: cycle week chip ("Week 2 of 4"), deload banner, suggested loads on the card.
 - **Run**: suggested load and target RPE per set; results form prefilled; per-movement RPE field.
-- **Movements → detail**: current max (estimate or tested, with date), e1rm trend (last 12 sessions,
-  inline SVG sparkline), progression status and next target, PRs (best e1rm, best single).
+- **Movements → detail**: current max (estimate or tested, with date), strength trend (last 12
+  sessions, inline SVG chart), progression status and next target, PRs (best e1rm, best single).
+  The trend chart plots two series on one labelled weight axis with dates along the bottom:
+  **estimated 1RM** (solid line, circles; tested maxes as diamonds) and the **heaviest set
+  actually lifted** that session (dashed line, squares). A legend names both; tapping, hovering,
+  or arrow keys select a session and a readout shows its date, the e1rm with the set it came
+  from (e.g. "from 215 × 5"), and the heaviest weight × reps. A "Show as table" view lists the
+  same data. Program rows show a compact, static version (min/max ticks, first/last date) under
+  one shared legend.
 - **History**: "Log something else"; adhoc and max-test rows marked.
 - **Settings**: units, deload policy, cycle length, focus, masters; changing units converts nothing,
   it only labels and sets increments (logs store the number as entered).
