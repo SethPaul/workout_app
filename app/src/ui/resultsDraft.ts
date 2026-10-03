@@ -130,6 +130,23 @@ export function withSetCount(draft: ResultsDraft, blockIndex: number, count: num
 }
 
 /**
+ * The hardest RPE entered for set `setIndex` (1-based) across block
+ * `blockIndex`'s movements — a superset round's effort — or undefined when
+ * none has been entered yet.
+ */
+export function setRpe(
+  draft: ResultsDraft,
+  blockIndex: number,
+  setIndex: number,
+): number | undefined {
+  const rpes = draft.movements
+    .filter((m) => m.blockIndex === blockIndex)
+    .map((m) => numOrUndef(m.sets?.[setIndex - 1]?.rpe))
+    .filter((r): r is number => r !== undefined && Number.isFinite(r));
+  return rpes.length > 0 ? Math.max(...rpes) : undefined;
+}
+
+/**
  * Formats one block's captured outcome as a short score fragment, e.g. "7
  * rounds" (amrap), "12:34" (rounds/chipper, for-time), "failed at minute 9"
  * (death_by). Returns '' for a skipped-status entry's format-specific text is

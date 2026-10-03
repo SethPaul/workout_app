@@ -224,6 +224,18 @@ describe('Run: live workout (blocks entered on the fly)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Set Done' }));
 
     expect(screen.getByText('Rest · after set 1')).toBeInTheDocument();
+    // Squat (loaded accessory) + push-up (bodyweight) at the default RPE 8: 1:30.
+    expect(screen.getByTestId('rest-target')).toHaveTextContent('Recommended rest 1:30');
+    expect(screen.getByText('1:30')).toHaveClass('run-timer');
+    // Entering a hard RPE for the set just done lengthens the rest.
+    fireEvent.input(screen.getByPlaceholderText('target 8'), { target: { value: '9.5' } });
+    expect(screen.getByTestId('rest-target')).toHaveTextContent('Recommended rest 2:00');
+    const restStart = runSession.value!.timer._lastTickAt!;
+    act(() => {
+      dispatchRun({ type: 'tick', now: restStart + 125_000 });
+    });
+    expect(screen.getByText('+0:05')).toHaveClass('run-timer');
+    expect(screen.getByTestId('rest-target')).toHaveTextContent('Rested 2:00');
     fireEvent.click(screen.getByRole('button', { name: 'Start set 2' }));
     expect(screen.getByText('Set 2')).toBeInTheDocument();
     // Set 2's row starts from set 1's weight.

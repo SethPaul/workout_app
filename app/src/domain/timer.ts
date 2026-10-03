@@ -35,6 +35,10 @@ export interface Phase {
   round?: number;
   /** emom/interval/tabata work/rest phases: total rounds. */
   roundCount?: number;
+  /** The phase's full length, when it's a countdown. */
+  durationMs?: number;
+  /** open-sets rest past its recommended length: how far past (the clock holds at 0:00). */
+  overtimeMs?: number;
 }
 
 export type TimerStatus =
@@ -68,6 +72,12 @@ interface InternalPhase {
   bellAtElapsedMs?: number;
   /** 'rounds' format only: auto-finish the block once roundsDone reaches this. */
   autoAdvanceRoundsTarget?: number;
+  /**
+   * open-sets rest: a countdown (once `setRest` gives it a length) that rings
+   * at zero and then holds, counting overtime, until the user starts the
+   * next set — the class, not the clock, decides when that is.
+   */
+  holdAtZero?: boolean;
 }
 
 interface InternalBlock {
@@ -116,6 +126,8 @@ export type TimerEvent =
   | { type: 'finish'; now: number }
   /** Ends the current block as completed (open-sets blocks have no natural end). */
   | { type: 'endBlock'; now: number }
+  /** Sets (or updates) the current open-sets rest's countdown length. */
+  | { type: 'setRest'; ms: number; now: number }
   /** Live workouts: adds a block; starts it immediately when the timer is awaiting one. */
   | { type: 'appendBlock'; block: Block; now: number };
 
@@ -140,7 +152,15 @@ function buildOpenSetPhase(kind: 'work' | 'rest', setIndex: number, movementIds:
   const phase: InternalPhase =
     kind === 'work'
       ? { kind, label: `Set ${setIndex}`, movementIds, setIndex }
-      : { kind, label: 'Rest', movementIds: [], setIndex };
+      : {
+          kind,
+          label: 'Rest',
+          movementIds: [],
+          setIndex,
+          holdAtZero: true,
+          countdownTicks: true,
+          tenSecondCue: true,
+        };
   return phase;
 }
 
@@ -357,6 +377,7 @@ function setPhaseFromInternal(state: TimerState, phase: InternalPhase): void {
     movementIds: phase.movementIds,
     repsDue: phase.repsDue,
     remainingMs: phase.durationMs,
+    durationMs: phase.durationMs,
     elapsedMs: 0,
     setIndex: phase.setIndex,
     setCount: phase.setCount,
@@ -549,7 +570,16 @@ function applyTick(state: TimerState, now: number): void {
     const remaining = Math.max(0, phase.durationMs - state._phaseElapsedMs);
     state.phase.remainingMs = remaining;
     fireCountdownCues(state, phase);
-    if (remaining <= 0) completeCurrentPhase(state);
+    if (remaining > 0) return;
+    if (!phase.holdAtZero) {
+      completeCurrentPhase(state);
+      return;
+    }
+    state.phase.overtimeMs = state._phaseElapsedMs - phase.durationMs;
+    if (!state._cueFiredMarks.includes('rested')) {
+      pushCue(state, 'bell', 0);
+      state._cueFiredMarks.push('rested');
+    }
   } else if (phase.kind === 'stopwatch') {
     if (
       phase.bellAtElapsedMs !== undefined &&
@@ -607,6 +637,30 @@ function applyRoundDone(state: TimerState): void {
 function applyEndBlock(state: TimerState): void {
   if (state.status !== 'running' && state.status !== 'paused') return;
   advanceBlock(state, 'completed');
+}
+
+function applySetRest(state: TimerState, ms: number): void {
+  const phase = currentInternalPhase(state);
+  if (!phase?.holdAtZero || state.status === 'finished') return;
+  phase.durationMs = ms;
+  state.phase.durationMs = ms;
+  const remaining = Math.max(0, ms - state._phaseElapsedMs);
+  state.phase.remainingMs = remaining;
+  state.phase.overtimeMs = remaining > 0 ? undefined : state._phaseElapsedMs - ms;
+  // Re-arm any cue the new length hasn't reached yet (a lengthened rest
+  // rings again at zero); a rest that's now already over rings on the next tick.
+  state._cueFiredMarks = state._cueFiredMarks.filter((mark) => {
+    if (mark === '10s') return remaining <= 10_000;
+    if (mark.startsWith('tick-')) return remaining <= Number(mark.slice('tick-'.length));
+    if (mark === 'rested') return remaining <= 0;
+    return true;
+  });
+  if (remaining <= 0) {
+    // Already over: skip straight to the bell instead of a burst of countdown beeps.
+    for (const mark of ['10s', 'tick-3000', 'tick-2000', 'tick-1000']) {
+      if (!state._cueFiredMarks.includes(mark)) state._cueFiredMarks.push(mark);
+    }
+  }
 }
 
 function applyAppendBlock(state: TimerState, block: Block, now: number): void {
@@ -677,6 +731,10 @@ export function timerReducer(state: TimerState, event: TimerEvent): TimerState {
     }
     case 'endBlock': {
       applyEndBlock(next);
+      break;
+    }
+    case 'setRest': {
+      applySetRest(next, event.ms);
       break;
     }
     case 'appendBlock': {

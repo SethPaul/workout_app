@@ -20,7 +20,8 @@ import { resumeAudio, playCue } from '../audio';
 import { vibrateForCue } from '../vibrate';
 import { acquireWakeLock, releaseWakeLock } from '../wakelock';
 import { formatClock, movementLine, strengthSuggestionLine, uid } from '../helpers';
-import { resultsFromDraft } from '../resultsDraft';
+import { resultsFromDraft, setRpe } from '../resultsDraft';
+import { recommendedRestSec } from '../../domain/program/rest';
 import { ResultsForm } from '../components/ResultsForm';
 import { BlockLogDetails, SetEntry } from '../components/SetEntry';
 
@@ -120,9 +121,27 @@ export function Run() {
     }
   }, [session?.timer.status]);
 
+  // Live open-sets rest counts down the recommended rest for the set just
+  // done (movement type x its hardest entered RPE), re-derived as RPE is
+  // typed in during the rest.
+  const restBlock = session?.workoutSnapshot.blocks[session.timer.blockIndex];
+  const restTargetMs =
+    session && restBlock?.openSets && session.timer.phase.kind === 'rest'
+      ? recommendedRestSec(
+          restBlock.movements
+            .map((bm) => appState.movements.find((m) => m.id === bm.movementId))
+            .filter((m) => m !== undefined),
+          setRpe(session.draft, session.timer.blockIndex, session.timer.phase.setIndex ?? 1),
+        ) * 1000
+      : undefined;
+  useEffect(() => {
+    if (restTargetMs === undefined || restTargetMs === session?.timer.phase.durationMs) return;
+    dispatchRun({ type: 'setRest', ms: restTargetMs, now: Date.now() });
+  }, [restTargetMs, session?.timer.phase.durationMs]);
+
   if (!session) return null;
 
-  function fire(type: Exclude<TimerEvent['type'], 'appendBlock'>) {
+  function fire(type: Exclude<TimerEvent['type'], 'appendBlock' | 'setRest'>) {
     const timer = dispatchRun({ type, now: Date.now() });
     if (timer) playCues(timer.pendingCues, appState.settings.soundOn, appState.settings.vibrateOn);
   }
@@ -364,9 +383,11 @@ export function Run() {
   const running = timer.status === 'running';
   const heading = phaseHeading(format, block, timer);
   const clock =
-    timer.phase.remainingMs !== undefined
-      ? formatClock(timer.phase.remainingMs)
-      : formatClock(timer.phase.elapsedMs);
+    timer.phase.overtimeMs !== undefined
+      ? `+${formatClock(timer.phase.overtimeMs)}`
+      : timer.phase.remainingMs !== undefined
+        ? formatClock(timer.phase.remainingMs)
+        : formatClock(timer.phase.elapsedMs);
   const currentMovements = block.movements.filter((bm) =>
     timer.phase.movementIds.includes(bm.movementId),
   );
@@ -400,6 +421,12 @@ export function Run() {
       <div class="run-body">
         <p class="run-phase-label">{heading}</p>
         <p class="run-timer">{clock}</p>
+        {openSets && timer.phase.kind === 'rest' && timer.phase.durationMs !== undefined && (
+          <p class="muted" data-testid="rest-target">
+            {timer.phase.overtimeMs !== undefined ? 'Rested' : 'Recommended rest'}{' '}
+            {formatClock(timer.phase.durationMs)}
+          </p>
+        )}
         {(format === 'amrap' || format === 'rounds') && (
           <p class="run-rounds">Rounds completed: {timer.roundsDone}</p>
         )}

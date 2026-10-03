@@ -666,3 +666,59 @@ describe('timer: live workouts', () => {
     expect(state._blocks).toHaveLength(1);
   });
 });
+
+describe('timer: open-sets recommended rest', () => {
+  const block: Block = { format: 'strength', movements: [{ movementId: 'squat' }], openSets: true };
+
+  function resting(): TimerState {
+    let state = createTimer([block], 0);
+    state = timerReducer(state, { type: 'start', now: 0 });
+    return timerReducer(state, { type: 'next', now: 0 }); // set 1 done
+  }
+
+  it('counts down the given rest, rings at zero, then holds and counts overtime', () => {
+    let state = timerReducer(resting(), { type: 'setRest', ms: 15_000, now: 0 });
+    expect(state.phase).toMatchObject({ kind: 'rest', durationMs: 15_000, remainingMs: 15_000 });
+
+    const run = runTicks(state, 0, 170); // 17s
+    state = run.state;
+    expect(state.phase.kind).toBe('rest'); // never starts the next set on its own
+    expect(state.phase.remainingMs).toBe(0);
+    expect(state.phase.overtimeMs).toBe(2000);
+    expect(run.cues.filter((c) => c.type === 'countdown').map((c) => c.at)).toEqual([
+      10_000, 3000, 2000, 1000,
+    ]);
+    expect(run.cues.filter((c) => c.type === 'bell')).toHaveLength(1);
+
+    state = timerReducer(state, { type: 'next', now: 17_000 });
+    expect(state.phase).toMatchObject({ kind: 'work', setIndex: 2 });
+    expect(state.phase.overtimeMs).toBeUndefined();
+  });
+
+  it('re-targets mid-rest (RPE entered late): longer re-arms the bell, shorter rings once', () => {
+    let state = timerReducer(resting(), { type: 'setRest', ms: 5000, now: 0 });
+    state = runTicks(state, 0, 60).state; // 6s: rang already
+    expect(state.phase.overtimeMs).toBe(1000);
+
+    state = timerReducer(state, { type: 'setRest', ms: 8000, now: 6000 });
+    expect(state.phase.remainingMs).toBe(2000);
+    expect(state.phase.overtimeMs).toBeUndefined();
+    let run = runTicks(state, 6000, 25);
+    expect(run.cues.filter((c) => c.type === 'bell')).toHaveLength(1);
+
+    // Shortened below the time already rested: just the bell, no countdown burst.
+    state = timerReducer(resting(), { type: 'setRest', ms: 60_000, now: 0 });
+    state = runTicks(state, 0, 300).state; // 30s
+    state = timerReducer(state, { type: 'setRest', ms: 20_000, now: 30_000 });
+    expect(state.phase.overtimeMs).toBe(10_000);
+    run = runTicks(state, 30_000, 1);
+    expect(run.cues).toEqual([{ type: 'bell', at: 0 }]);
+  });
+
+  it('ignores setRest outside an open-sets rest', () => {
+    let state = createTimer([block], 0);
+    state = timerReducer(state, { type: 'start', now: 0 });
+    state = timerReducer(state, { type: 'setRest', ms: 5000, now: 0 });
+    expect(state.phase.durationMs).toBeUndefined();
+  });
+});
