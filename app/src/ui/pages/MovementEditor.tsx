@@ -14,7 +14,7 @@ import { resolveSettings } from '../../domain/program/context';
 import { movementLibraries } from '../../domain/vasa/library';
 import { movementRegion, REGION_LABELS } from '../../domain/vasa/region';
 import { state, update } from '../../state/store';
-import { Sparkline } from '../components/Sparkline';
+import { TrendChart } from '../components/TrendChart';
 import { EQUIPMENT_LABELS, fmtWeight } from '../helpers';
 
 const ALL_EQUIPMENT = Object.keys(EQUIPMENT_LABELS) as Equipment[];
@@ -104,7 +104,7 @@ export function MovementEditor() {
     }
     return best;
   }, null);
-  const sparkValues = history.slice(-12).map((p) => p.e1rm);
+  const trend = history.slice(-12);
 
   async function save() {
     if (!draft) return;
@@ -146,8 +146,10 @@ export function MovementEditor() {
             <div class="muted">Log a set to calibrate.</div>
           )}
 
-          <div class="section-title">e1RM trend (last {sparkValues.length || 0} sessions)</div>
-          <Sparkline values={sparkValues} unit={units} />
+          <div class="section-title">
+            Strength trend{trend.length > 0 ? ` (last ${trend.length} sessions)` : ''}
+          </div>
+          <TrendChart history={trend} units={units} currentMax={maxValue} />
 
           <div class="section-title">Progression</div>
           <div class="stat-row">

@@ -777,14 +777,173 @@ hr.sep {
   margin: 1rem 0;
 }
 
-.sparkline {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
+/* Strength trend chart (TrendChart.tsx). Series colors are validated as a
+   pair for both themes; identity is also carried by marker shape and line
+   style, so color is never the only cue. */
+:root {
+  --series-e1rm: #2a78d6;
+  --series-actual: #eb6834;
 }
 
-.sparkline-labels {
-  font-size: 0.75rem;
+@media (prefers-color-scheme: dark) {
+  :root {
+    --series-e1rm: #3987e5;
+    --series-actual: #d95926;
+  }
+}
+
+.trend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.trend-chart {
+  display: block;
+  overflow: visible;
+}
+
+.trend-chart-interactive {
+  touch-action: pan-y;
+  cursor: crosshair;
+  border-radius: 6px;
+}
+
+.trend-chart-interactive:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.trend-grid {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.trend-axis-label {
+  fill: var(--fg-muted);
+  font-size: 11px;
+}
+
+.trend-line-e1rm,
+.trend-line-actual {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.trend-line-e1rm {
+  stroke: var(--series-e1rm);
+}
+
+.trend-line-actual {
+  stroke: var(--series-actual);
+  stroke-dasharray: 4 3;
+}
+
+.trend-dot-e1rm,
+.trend-dot-actual,
+.trend-dot-tested {
+  stroke: var(--bg-elevated);
+  stroke-width: 1.5;
+}
+
+.trend-dot-e1rm,
+.trend-dot-tested {
+  fill: var(--series-e1rm);
+}
+
+.trend-dot-actual {
+  fill: var(--series-actual);
+}
+
+.trend-ref-line {
+  stroke: var(--fg-muted);
+  stroke-width: 1.5;
+  stroke-dasharray: 8 3 2 3;
+}
+
+.trend-ref-label {
+  fill: var(--fg-muted);
+  font-size: 11px;
+  font-weight: 600;
+  stroke: var(--bg-elevated);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+
+.trend-crosshair {
+  stroke: var(--fg-muted);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}
+
+.trend-halo {
+  fill: none;
+  stroke: var(--fg);
+  stroke-width: 1.5;
+}
+
+.trend-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.9rem;
+  font-size: 0.8rem;
+  color: var(--fg-muted);
+}
+
+.trend-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.trend-readout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.875rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.trend-readout-date {
+  color: var(--fg-muted);
+  font-size: 0.8rem;
+}
+
+.trend-readout-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.trend-table summary {
+  cursor: pointer;
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+}
+
+.trend-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  margin-top: 0.4rem;
+}
+
+.trend-table th,
+.trend-table td {
+  text-align: right;
+  padding: 0.25rem 0.3rem;
+  border-top: 1px solid var(--border);
+}
+
+.trend-table th:first-child,
+.trend-table td:first-child {
+  text-align: left;
+  padding-left: 0;
 }
 
 .stat-row {

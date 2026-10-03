@@ -11,7 +11,7 @@ import { daysSince } from '../domain/cadence';
 import { cycleWeek, isDeloadWeek, weekKind } from '../domain/program/cycle';
 import { resolveProgram, resolveSettings } from '../domain/program/context';
 import { deloadSuggested, fatigueFlags, type FatigueFlag } from '../domain/program/fatigue';
-import { currentMax, e1rmHistory } from '../domain/program/e1rm';
+import { currentMax, e1rmHistory, type E1rmPoint } from '../domain/program/e1rm';
 import {
   progressionStatus,
   strengthSessionsForMovement,
@@ -147,7 +147,7 @@ export interface ProgressionRow {
   currentMax: number | null;
   nextLoad: number | null;
   lastSessionDate: string | null;
-  sparkValues: number[]; // e1rm history, oldest first, capped to the last 12 sessions
+  history: E1rmPoint[]; // oldest first, capped to the last 12 sessions
 }
 
 const STATUS_ORDER: Record<ProgressionStatusValue, number> = {
@@ -179,7 +179,7 @@ export function progressionRows(state: AppState, now: Date): ProgressionRow[] {
       currentMax: currentMax(state.logs, movement.id, now),
       nextLoad: prog.nextLoad,
       lastSessionDate: sessions[0]?.log.finishedAt ?? null,
-      sparkValues: history.slice(-12).map((p) => p.e1rm),
+      history: history.slice(-12),
     });
   }
 

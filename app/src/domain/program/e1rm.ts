@@ -18,26 +18,60 @@ export function e1rm(weight: number, reps: number): number | null {
   return weight * (1 + reps / 30);
 }
 
+export interface LoggedSet {
+  weight: number;
+  reps: number;
+}
+
 export interface E1rmPoint {
   date: string; // the session's finishedAt
   e1rm: number;
   source: 'estimate' | 'max-test';
+  /** The set the session's e1rm was computed from. */
+  bestSet: LoggedSet;
+  /**
+   * The heaviest weight actually lifted that session (any rep count), with
+   * the most reps done at that weight — what was on the bar, as opposed to
+   * the estimate.
+   */
+  heaviestSet: LoggedSet;
 }
 
-function bestSetE1rm(sets: { weight?: number; reps?: number }[]): number | null {
-  let best: number | null = null;
+type RawSet = { weight?: number; reps?: number };
+
+function bestSetE1rm(sets: RawSet[]): { e1rm: number; set: LoggedSet } | null {
+  let best: { e1rm: number; set: LoggedSet } | null = null;
   for (const set of sets) {
     if (set.weight === undefined || set.reps === undefined) continue;
     const value = e1rm(set.weight, set.reps);
-    if (value !== null && (best === null || value > best)) best = value;
+    if (value !== null && (best === null || value > best.e1rm)) {
+      best = { e1rm: value, set: { weight: set.weight, reps: set.reps } };
+    }
   }
   return best;
+}
+
+function heaviestOf(sets: RawSet[]): LoggedSet | null {
+  let heaviest: LoggedSet | null = null;
+  for (const set of sets) {
+    if (set.weight === undefined || set.reps === undefined || set.reps < 1) continue;
+    if (
+      !heaviest ||
+      set.weight > heaviest.weight ||
+      (set.weight === heaviest.weight && set.reps > heaviest.reps)
+    ) {
+      heaviest = { weight: set.weight, reps: set.reps };
+    }
+  }
+  return heaviest;
 }
 
 /**
  * Per-session e1RM history for one movement (SPEC 9.2): the best qualifying
  * set (<=10 reps) each session that includes the movement, oldest first.
  * `source` is 'max-test' for a `kind: 'max-test'` log, 'estimate' otherwise.
+ * Each point also carries the set behind the estimate and the heaviest set
+ * actually lifted, so charts can show the estimate against real loads.
  */
 export function e1rmHistory(logs: WorkoutLog[], movementId: string): E1rmPoint[] {
   const points: E1rmPoint[] = [];
@@ -47,20 +81,20 @@ export function e1rmHistory(logs: WorkoutLog[], movementId: string): E1rmPoint[]
     // every matching result and take the best e1rm across all of them.
     const results = log.results.filter((r) => r.movementId === movementId);
     if (results.length === 0) continue;
-    let best: number | null = null;
-    for (const result of results) {
-      const sets =
-        result.sets && result.sets.length > 0
-          ? result.sets
-          : [{ weight: result.weight, reps: result.reps }];
-      const setBest = bestSetE1rm(sets);
-      if (setBest !== null && (best === null || setBest > best)) best = setBest;
-    }
+    const sets = results.flatMap((result) =>
+      result.sets && result.sets.length > 0
+        ? result.sets
+        : [{ weight: result.weight, reps: result.reps }],
+    );
+    const best = bestSetE1rm(sets);
     if (best === null) continue;
     points.push({
       date: log.finishedAt,
-      e1rm: best,
+      e1rm: best.e1rm,
       source: logKind(log) === 'max-test' ? 'max-test' : 'estimate',
+      bestSet: best.set,
+      // Non-null whenever `best` is: the e1rm set itself qualifies.
+      heaviestSet: heaviestOf(sets)!,
     });
   }
   return points.sort((a, b) => a.date.localeCompare(b.date));
