@@ -857,6 +857,22 @@ hr.sep {
   fill: var(--series-actual);
 }
 
+.trend-ref-line {
+  stroke: var(--fg-muted);
+  stroke-width: 1.5;
+  stroke-dasharray: 8 3 2 3;
+}
+
+.trend-ref-label {
+  fill: var(--fg-muted);
+  font-size: 11px;
+  font-weight: 600;
+  stroke: var(--bg-elevated);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+
 .trend-crosshair {
   stroke: var(--fg-muted);
   stroke-width: 1;

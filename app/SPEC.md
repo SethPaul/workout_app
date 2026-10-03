@@ -449,7 +449,8 @@ pool logs. Max-test logs feed `currentMax` directly (9.2).
   sessions, inline SVG chart), progression status and next target, PRs (best e1rm, best single).
   The trend chart plots two series on one labelled weight axis with dates along the bottom:
   **estimated 1RM** (solid line, circles; tested maxes as diamonds) and the **heaviest set
-  actually lifted** that session (dashed line, squares). A legend names both; tapping, hovering,
+  actually lifted** that session (dashed line, squares), plus a labelled gray reference line at
+  the **current max** (the axis widens to include it). A legend names each mark; tapping, hovering,
   or arrow keys select a session and a readout shows its date, the e1rm with the set it came
   from (e.g. "from 215 × 5"), and the heaviest weight × reps. A "Show as table" view lists the
   same data. Program rows show a compact, static version (min/max ticks, first/last date) under

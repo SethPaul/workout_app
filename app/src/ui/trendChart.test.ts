@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { nearestIndex, niceTicks, trendLayout, type TrendSession } from './trendChart';
+import {
+  nearestIndex,
+  niceTicks,
+  referenceLabelPlacement,
+  trendLayout,
+  type TrendSession,
+} from './trendChart';
 
 const MARGIN = { top: 10, right: 10, bottom: 20, left: 40 };
 
@@ -74,6 +80,20 @@ describe('trendLayout', () => {
     expect(xTicks).toEqual([{ index: 0, x: (left + right) / 2 }]);
   });
 
+  it('places a reference line and widens the axis to include it', () => {
+    const layout = trendLayout(sessions, 300, 150, MARGIN, 5, 3, 260);
+    const values = layout.yTicks.map((t) => t.value);
+    expect(values[values.length - 1]).toBeGreaterThanOrEqual(260);
+    expect(layout.referenceY).not.toBeNull();
+    expect(layout.referenceY!).toBeGreaterThanOrEqual(layout.top);
+    // Above every estimate point.
+    for (const p of layout.points) expect(layout.referenceY!).toBeLessThan(p.yE1rm);
+  });
+
+  it('has no reference line by default', () => {
+    expect(trendLayout(sessions, 300, 150, MARGIN).referenceY).toBeNull();
+  });
+
   it('labels first and last sessions on the x-axis', () => {
     const { xTicks } = trendLayout(sessions, 300, 150, MARGIN, 5, 2);
     expect(xTicks.map((t) => t.index)).toEqual([0, 2]);
@@ -86,5 +106,32 @@ describe('nearestIndex', () => {
     expect(nearestIndex(pts, 60)).toBe(1);
     expect(nearestIndex(pts, 99)).toBe(2);
     expect(nearestIndex(pts, -5)).toBe(0);
+  });
+});
+
+describe('referenceLabelPlacement', () => {
+  const rising: TrendSession[] = [
+    { date: '2024-01-01T00:00:00.000Z', e1rm: 200, actual: 180 },
+    { date: '2024-01-15T00:00:00.000Z', e1rm: 240, actual: 220 },
+  ];
+
+  it('is null without a reference line', () => {
+    expect(referenceLabelPlacement(trendLayout(rising, 300, 150, MARGIN), 80)).toBeNull();
+  });
+
+  it('moves the label away from where the lines cross the reference', () => {
+    // Reference at 235: the rising e1rm line crosses it near the right end,
+    // so the label should go to the left where the data is far below.
+    const layout = trendLayout(rising, 300, 150, MARGIN, 5, 3, 235);
+    const placement = referenceLabelPlacement(layout, 80)!;
+    expect(placement.anchor).toBe('start');
+    expect(placement.x).toBe(layout.left + 2);
+  });
+
+  it('prefers right-above when the data is well clear', () => {
+    const layout = trendLayout(rising, 300, 150, MARGIN, 5, 3, 120);
+    const placement = referenceLabelPlacement(layout, 80)!;
+    expect(placement.anchor).toBe('end');
+    expect(placement.y).toBeLessThan(layout.referenceY!);
   });
 });

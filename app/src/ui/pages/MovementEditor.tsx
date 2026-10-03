@@ -149,7 +149,7 @@ export function MovementEditor() {
           <div class="section-title">
             Strength trend{trend.length > 0 ? ` (last ${trend.length} sessions)` : ''}
           </div>
-          <TrendChart history={trend} units={units} />
+          <TrendChart history={trend} units={units} currentMax={maxValue} />
 
           <div class="section-title">Progression</div>
           <div class="stat-row">

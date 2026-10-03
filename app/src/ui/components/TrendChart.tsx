@@ -1,6 +1,11 @@
 import { useState } from 'preact/hooks';
 import type { E1rmPoint } from '../../domain/program/e1rm';
-import { nearestIndex, trendLayout, type TrendMargin } from '../trendChart';
+import {
+  nearestIndex,
+  referenceLabelPlacement,
+  trendLayout,
+  type TrendMargin,
+} from '../trendChart';
 
 type Units = 'lb' | 'kg';
 
@@ -27,7 +32,7 @@ const round = (v: number) => Math.round(v);
  * and line style, so identity never relies on color alone. Exported so the
  * Program page can show it once above a list of compact charts.
  */
-export function TrendLegend() {
+export function TrendLegend({ showCurrentMax = false }: { showCurrentMax?: boolean }) {
   return (
     <div class="trend-legend">
       <span class="trend-legend-item">
@@ -50,6 +55,14 @@ export function TrendLegend() {
         </svg>
         Tested max
       </span>
+      {showCurrentMax && (
+        <span class="trend-legend-item">
+          <svg width="22" height="10" aria-hidden="true">
+            <line x1="1" y1="5" x2="21" y2="5" class="trend-ref-line" />
+          </svg>
+          Current max
+        </span>
+      )}
     </div>
   );
 }
@@ -128,7 +141,13 @@ function Axes({
           class="trend-axis-label"
           // Keep the end labels inside the plot instead of clipping.
           text-anchor={
-            layout.xTicks.length === 1 ? 'middle' : i === 0 ? 'start' : i === last ? 'end' : 'middle'
+            layout.xTicks.length === 1
+              ? 'middle'
+              : i === 0
+                ? 'start'
+                : i === last
+                  ? 'end'
+                  : 'middle'
           }
         >
           {fmtShortDate(history[t.index].date)}
@@ -174,17 +193,21 @@ function Readout({ point, units }: { point: E1rmPoint; units: Units }) {
  * from the session's best set) and the heaviest weight actually lifted, on
  * one labelled weight axis with dates along the bottom. Tested maxes are
  * marked with a diamond. The full variant has a legend, a tap/hover/arrow-key
- * readout of the selected session, and a data table; the compact variant
+ * readout of the selected session, a data table, and (when `currentMax` is
+ * given) a labelled horizontal line at the current working max; the compact variant
  * (Program rows) is a static mini chart with min/max ticks and end dates.
  */
 export function TrendChart({
   history,
   units,
   compact = false,
+  currentMax = null,
 }: {
   history: E1rmPoint[];
   units: Units;
   compact?: boolean;
+  /** Full variant only: draws a reference line at this weight. */
+  currentMax?: number | null;
 }) {
   const [selected, setSelected] = useState<number | null>(null);
 
@@ -201,6 +224,7 @@ export function TrendChart({
     margin,
     compact ? 3 : 5,
     compact ? 2 : 3,
+    compact ? null : currentMax,
   );
 
   const latest = history[history.length - 1];
@@ -221,6 +245,10 @@ export function TrendChart({
     );
   }
 
+  const refLabelText = currentMax === null ? '' : `Current max ${round(currentMax)}`;
+  // ~6.5 viewBox units per character at 11px semibold.
+  const refLabel = referenceLabelPlacement(layout, refLabelText.length * 6.5);
+
   const active = selected ?? history.length - 1;
   const activePoint = layout.points[active];
 
@@ -240,7 +268,7 @@ export function TrendChart({
 
   return (
     <div class="trend">
-      <TrendLegend />
+      <TrendLegend showCurrentMax={layout.referenceY !== null} />
       <svg
         viewBox={`0 0 ${dims.width} ${dims.height}`}
         width="100%"
@@ -260,6 +288,27 @@ export function TrendChart({
           y2={layout.bottom}
           class="trend-crosshair"
         />
+        {layout.referenceY !== null && currentMax !== null && (
+          <g>
+            <line
+              x1={layout.left}
+              x2={layout.right}
+              y1={layout.referenceY}
+              y2={layout.referenceY}
+              class="trend-ref-line"
+            />
+            {refLabel && (
+              <text
+                x={refLabel.x}
+                y={refLabel.y}
+                class="trend-ref-label"
+                text-anchor={refLabel.anchor}
+              >
+                {refLabelText}
+              </text>
+            )}
+          </g>
+        )}
         <Marks history={history} layout={layout} compact={false} />
         {/* Halo the selected session's marks so the readout below maps back to them. */}
         <circle cx={activePoint.x} cy={activePoint.yE1rm} r={7} class="trend-halo" />
