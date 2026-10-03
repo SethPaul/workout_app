@@ -2,11 +2,14 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { AppState, PoolWorkout } from '../domain/types';
 import type { WarmupState } from '../domain/warmup';
 import {
+  appendLiveBlock,
+  beginLiveSession,
   beginRunSession,
   clearRunSession,
   dispatchRun,
   dispatchWarmup,
   runSession,
+  setLiveRegion,
   updateRunDraft,
 } from './run';
 
@@ -238,5 +241,136 @@ describe('run session persistence', () => {
     vi.resetModules();
     const fresh = await import('./run');
     expect(fresh.runSession.value).toBeNull();
+  });
+});
+
+describe('live run sessions', () => {
+  // A Tuesday: regionForDate defaults it to lower.
+  const tuesday = new Date('2026-09-29T09:00:00');
+
+  beforeEach(() => {
+    localStorage.clear();
+    clearRunSession();
+  });
+
+  afterEach(() => {
+    clearRunSession();
+    localStorage.clear();
+  });
+
+  function liveState(): AppState {
+    const s = fixtureState();
+    s.movements.push({
+      id: 'pushup',
+      name: 'Push-up',
+      tags: ['bodyweight'],
+      equipment: ['none'],
+      cadenceDays: 3,
+      unit: 'reps',
+      loadable: false,
+    });
+    return s;
+  }
+
+  it('starts with no blocks, an entered-workout snapshot and a live timer', () => {
+    beginLiveSession(liveState(), tuesday);
+    const session = runSession.value!;
+    expect(session.live).toBe(true);
+    expect(session.workoutSnapshot.blocks).toEqual([]);
+    expect(session.workoutSnapshot.tags).toContain('vasa');
+    expect(session.poolWorkoutId).toBe(session.workoutSnapshot.id);
+    dispatchRun({ type: 'start', now: 0 });
+    expect(runSession.value!.timer.status).toBe('awaiting-block');
+  });
+
+  it('adds a row per set (copying the last one) and settles the block when it ends', () => {
+    const appState = liveState();
+    beginLiveSession(appState, tuesday);
+    dispatchRun({ type: 'start', now: 0 });
+    appendLiveBlock(
+      appState,
+      {
+        format: 'strength',
+        title: 'Block 1',
+        movements: [{ movementId: 'squat' }, { movementId: 'pushup' }],
+        openSets: true,
+      },
+      100,
+    );
+    expect(runSession.value!.timer.status).toBe('running');
+    expect(runSession.value!.draft.movements.map((m) => m.sets?.length)).toEqual([1, 1]);
+
+    updateRunDraft((d) => {
+      const next = structuredClone(d);
+      next.movements[0].sets![0] = { weight: '95', reps: '10', rpe: '8' };
+      return next;
+    });
+    dispatchRun({ type: 'next', now: 200 }); // set 1 done -> rest
+    dispatchRun({ type: 'next', now: 300 }); // start set 2
+    expect(runSession.value!.draft.movements[0].sets).toEqual([
+      { weight: '95', reps: '10', rpe: '8' },
+      { weight: '95', reps: '10', rpe: '' },
+    ]);
+    dispatchRun({ type: 'next', now: 400 }); // set 2 done -> rest
+    dispatchRun({ type: 'next', now: 500 }); // start set 3
+    expect(runSession.value!.draft.movements[1].sets).toHaveLength(3);
+    dispatchRun({ type: 'pause', now: 550 });
+    dispatchRun({ type: 'endBlock', now: 600 });
+
+    const session = runSession.value!;
+    expect(session.timer.status).toBe('awaiting-block');
+    const block = session.workoutSnapshot.blocks[0];
+    expect(block.sets).toBe(3);
+    expect(block.openSets).toBeUndefined();
+    expect(session.draft.blockOutcomes[0]).toMatchObject({ setsDone: 3, status: 'completed' });
+
+    // The next block lands at index 1 with its own draft entries.
+    appendLiveBlock(
+      appState,
+      {
+        format: 'amrap',
+        title: 'Finisher',
+        movements: [{ movementId: 'pushup' }],
+        durationSec: 120,
+      },
+      700,
+    );
+    expect(runSession.value!.timer.blockIndex).toBe(1);
+    expect(runSession.value!.draft.movements.at(-1)).toMatchObject({
+      movementId: 'pushup',
+      blockIndex: 1,
+    });
+  });
+
+  it('trims the rows to the sets done when finishing mid-rest', () => {
+    const appState = liveState();
+    beginLiveSession(appState, tuesday);
+    dispatchRun({ type: 'start', now: 0 });
+    appendLiveBlock(
+      appState,
+      { format: 'strength', movements: [{ movementId: 'squat' }], openSets: true },
+      0,
+    );
+    dispatchRun({ type: 'next', now: 100 });
+    dispatchRun({ type: 'finish', now: 200 });
+    const session = runSession.value!;
+    expect(session.timer.status).toBe('finished');
+    expect(session.workoutSnapshot.blocks[0].sets).toBe(1);
+    expect(session.draft.movements[0].sets).toHaveLength(1);
+  });
+
+  it('setLiveRegion retags the workout and renames it unless it was renamed', () => {
+    beginLiveSession(liveState(), tuesday);
+    expect(runSession.value!.workoutSnapshot.name).toBe('Lower · Sep 29');
+    setLiveRegion('upper');
+    expect(runSession.value!.workoutSnapshot.name).toBe('Upper · Sep 29');
+    expect(runSession.value!.workoutSnapshot.tags).toEqual(['vasa', 'region:upper']);
+
+    runSession.value = {
+      ...runSession.value!,
+      workoutSnapshot: { ...runSession.value!.workoutSnapshot, name: 'Coach Sam' },
+    };
+    setLiveRegion('full');
+    expect(runSession.value!.workoutSnapshot.name).toBe('Coach Sam');
   });
 });

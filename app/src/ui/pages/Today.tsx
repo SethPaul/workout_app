@@ -47,6 +47,7 @@ const RUN_STATUS_LABELS: Record<string, string> = {
   running: 'In progress',
   paused: 'Paused',
   'between-blocks': 'Between blocks',
+  'awaiting-block': 'Picking the next block',
   finished: 'Ready to log results',
 };
 

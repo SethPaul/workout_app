@@ -149,14 +149,22 @@ export function strengthSuggestionLine(
   const sets = block.sets ?? 1;
   const reps = bm.reps;
   const targetRpe = bm.targetRpe ?? 8;
-  const repsLabel = reps !== undefined ? `${sets}x${reps}` : `${sets} set${sets === 1 ? '' : 's'}`;
+  // Open-sets blocks (live workouts) have no prescribed set count to show.
+  const repsLabel = block.openSets
+    ? reps !== undefined
+      ? `x${reps}`
+      : ''
+    : reps !== undefined
+      ? `${sets}x${reps}`
+      : `${sets} set${sets === 1 ? '' : 's'}`;
+  const head = repsLabel ? `${movement.name} ${repsLabel}` : movement.name;
 
   let load = loadForBlockMovement(bm, movement, appState.logs, resolved.units, now);
   const prog = progressionStatus(movement, appState.logs, appState.settings);
   if (prog.status === 'stall' && prog.nextLoad !== null) load = prog.nextLoad;
 
-  if (load === null) return `${movement.name} ${repsLabel} · log a set to calibrate`;
-  return `${movement.name} ${repsLabel} @ ${fmtWeight(load, resolved.units)} · RPE ${targetRpe}`;
+  if (load === null) return `${head} · log a set to calibrate`;
+  return `${head} @ ${fmtWeight(load, resolved.units)} · RPE ${targetRpe}`;
 }
 
 export function uid(prefix: string): string {

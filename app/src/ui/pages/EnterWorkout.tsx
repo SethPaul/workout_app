@@ -12,7 +12,7 @@ import {
 import { REGION_LABELS, movementRegion, regionForDate } from '../../domain/vasa/region';
 import { EQUIPMENT_LABELS, movementName } from '../helpers';
 import { addPoolWorkout, chooseTodayWorkout, state, update } from '../../state/store';
-import { beginRunSession, runSession } from '../../state/run';
+import { beginLiveSession, beginRunSession, runSession } from '../../state/run';
 import { BlockSummary } from '../components/BlockSummary';
 import { NewMovementSheet } from '../components/NewMovementSheet';
 import type { BodyRegion, Equipment, PoolWorkout, Unit, VasaStyle } from '../../domain/types';
@@ -109,6 +109,18 @@ export function EnterWorkout() {
     const snapshot = chooseTodayWorkout(w.id);
     if (!snapshot) return;
     beginRunSession(state.value!, snapshot);
+    location.route('/run');
+  }
+
+  /** Live: start now and pick each block's movements as the class goes (on `/run`). */
+  function startLive() {
+    if (
+      runSession.value &&
+      !confirm('A workout is already in progress. Discard it and start this one instead?')
+    ) {
+      return;
+    }
+    beginLiveSession(state.value!);
     location.route('/run');
   }
 
@@ -435,6 +447,10 @@ export function EnterWorkout() {
           <h1 class="page-title">Enter a workout</h1>
         </div>
         <div class="stack">
+          <button class="btn btn-primary btn-big btn-block" onClick={startLive}>
+            Start live workout
+          </button>
+          <p class="muted">Pick each block&rsquo;s movements as you go.</p>
           <input
             type="search"
             autoFocus

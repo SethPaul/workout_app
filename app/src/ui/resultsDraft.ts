@@ -73,31 +73,60 @@ function suggestedWeightStr(
  * load), everything else gets a single weight/reps entry.
  */
 export function buildResultsDraft(appState: AppState, workout: PoolWorkout): ResultsDraft {
-  const movements: MovementDraft[] = [];
-
-  workout.blocks.forEach((block, blockIndex) => {
-    for (const bm of block.movements) {
-      if (block.format === 'strength') {
-        const suggested = suggestedWeightStr(appState, bm);
-        const sets: SetDraft[] = Array.from({ length: block.sets ?? 1 }, () => ({
-          weight: suggested,
-          reps: bm.reps !== undefined ? String(bm.reps) : '',
-          rpe: '',
-        }));
-        movements.push({ movementId: bm.movementId, blockIndex, sets, rpe: '' });
-      } else {
-        movements.push({
-          movementId: bm.movementId,
-          blockIndex,
-          weight: '',
-          reps: bm.reps !== undefined ? String(bm.reps) : '',
-          rpe: '',
-        });
-      }
-    }
-  });
-
+  const movements = workout.blocks.flatMap((block, blockIndex) =>
+    blockMovementDrafts(appState, block, blockIndex),
+  );
   return { movements, score: '', rpe: '', notes: '', blockOutcomes: [], scoreAuto: true };
+}
+
+/**
+ * One block's draft entries (see `buildResultsDraft`). An open-sets strength
+ * block starts with a single set; `withSetCount` grows it as sets are done.
+ */
+export function blockMovementDrafts(
+  appState: AppState,
+  block: Block,
+  blockIndex: number,
+): MovementDraft[] {
+  return block.movements.map((bm) => {
+    if (block.format === 'strength') {
+      const suggested = suggestedWeightStr(appState, bm);
+      const count = block.openSets ? 1 : (block.sets ?? 1);
+      const sets: SetDraft[] = Array.from({ length: count }, () => ({
+        weight: suggested,
+        reps: bm.reps !== undefined ? String(bm.reps) : '',
+        rpe: '',
+      }));
+      return { movementId: bm.movementId, blockIndex, sets, rpe: '' };
+    }
+    return {
+      movementId: bm.movementId,
+      blockIndex,
+      weight: '',
+      reps: bm.reps !== undefined ? String(bm.reps) : '',
+      rpe: '',
+    };
+  });
+}
+
+/**
+ * Pads or trims every set list in block `blockIndex` to `count` sets — an
+ * open-sets block gains a row per Set done (copying the previous set's
+ * weight/reps, since supersets usually repeat the load) and is trimmed to
+ * the sets actually done when it ends. Returns `draft` itself when nothing
+ * changes.
+ */
+export function withSetCount(draft: ResultsDraft, blockIndex: number, count: number): ResultsDraft {
+  let changed = false;
+  const movements = draft.movements.map((m) => {
+    if (m.blockIndex !== blockIndex || !m.sets || m.sets.length === count) return m;
+    changed = true;
+    const sets = m.sets.slice(0, count);
+    const last = sets[sets.length - 1] ?? { weight: '', reps: '', rpe: '' };
+    while (sets.length < count) sets.push({ weight: last.weight, reps: last.reps, rpe: '' });
+    return { ...m, sets };
+  });
+  return changed ? { ...draft, movements } : draft;
 }
 
 /**

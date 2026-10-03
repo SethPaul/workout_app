@@ -6,7 +6,14 @@ import {
   type TimerEvent,
   type TimerState,
 } from '../domain/timer';
-import type { AppState, PoolWorkout } from '../domain/types';
+import type { AppState, Block, BodyRegion, PoolWorkout } from '../domain/types';
+import {
+  buildEnteredWorkout,
+  defaultWorkoutName,
+  workoutRegion,
+  workoutStyle,
+} from '../domain/vasa/pool';
+import { regionForDate } from '../domain/vasa/region';
 import {
   createWarmup,
   restoreWarmup,
@@ -14,7 +21,13 @@ import {
   type WarmupEvent,
   type WarmupState,
 } from '../domain/warmup';
-import { applyBlockOutcomes, buildResultsDraft, type ResultsDraft } from '../ui/resultsDraft';
+import {
+  applyBlockOutcomes,
+  blockMovementDrafts,
+  buildResultsDraft,
+  withSetCount,
+  type ResultsDraft,
+} from '../ui/resultsDraft';
 
 export interface RunSession {
   poolWorkoutId: string;
@@ -35,6 +48,11 @@ export interface RunSession {
    * timer is idle. Optional so sessions persisted before it existed restore.
    */
   warmup?: WarmupState;
+  /**
+   * A live workout: blocks are picked as the class goes (`appendLiveBlock`)
+   * and the finished workout is added to the pool when the log is saved.
+   */
+  live?: boolean;
 }
 
 // --- Persistence (mirrors store.ts's TODAY_KEY handling) -----------------
@@ -120,17 +138,127 @@ export function beginRunSession(
   writePersistedRun(session);
 }
 
+function isoDateOf(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+/**
+ * Starts a live run session: no blocks yet — the Run screen asks for each
+ * block's movements as the workout goes (`appendLiveBlock`). The snapshot is
+ * an entered (Vasa) workout so it joins the pool like one when saved.
+ */
+export function beginLiveSession(appState: AppState, now: Date = new Date()): void {
+  const workout = buildEnteredWorkout({
+    date: isoDateOf(now),
+    region: regionForDate(now),
+    blocks: [],
+  });
+  const session: RunSession = {
+    poolWorkoutId: workout.id,
+    workoutSnapshot: workout,
+    startedAt: now.toISOString(),
+    timer: createTimer([], now.getTime(), { live: true }),
+    draft: buildResultsDraft(appState, workout),
+    warmup: createWarmup(),
+    live: true,
+  };
+  runSession.value = session;
+  lastPersistedAt = now.getTime();
+  writePersistedRun(session);
+}
+
+/** Live sessions: adds the next block (and its draft entries) and starts it. */
+export function appendLiveBlock(
+  appState: AppState,
+  block: Block,
+  now: number = Date.now(),
+): TimerState | null {
+  const session = runSession.value;
+  if (!session?.live) return null;
+  const blockIndex = session.workoutSnapshot.blocks.length;
+  runSession.value = {
+    ...session,
+    workoutSnapshot: {
+      ...session.workoutSnapshot,
+      blocks: [...session.workoutSnapshot.blocks, block],
+    },
+    draft: {
+      ...session.draft,
+      movements: [...session.draft.movements, ...blockMovementDrafts(appState, block, blockIndex)],
+    },
+  };
+  return dispatchRun({ type: 'appendBlock', block, now });
+}
+
+/** Live sessions: changes the workout's body region (and its default name, unless renamed). */
+export function setLiveRegion(region: BodyRegion): void {
+  const session = runSession.value;
+  if (!session?.live) return;
+  const w = session.workoutSnapshot;
+  const date = isoDateOf(new Date(session.startedAt));
+  const style = workoutStyle(w) ?? undefined;
+  const oldRegion = workoutRegion(w);
+  const renamed = !oldRegion || w.name !== defaultWorkoutName(oldRegion, style, date);
+  const next: RunSession = {
+    ...session,
+    workoutSnapshot: {
+      ...w,
+      name: renamed ? w.name : defaultWorkoutName(region, style, date),
+      tags: [...(w.tags ?? []).filter((t) => !t.startsWith('region:')), `region:${region}`],
+    },
+  };
+  runSession.value = next;
+  writePersistedRun(next);
+}
+
+/**
+ * Keeps an open-sets block's snapshot and draft in step with the timer: one
+ * draft set per set started, and once the block ends, a plain strength block
+ * with `sets` = the sets actually done (so the saved workout repeats as an
+ * ordinary pool workout).
+ */
+function syncOpenSets(
+  snapshot: PoolWorkout,
+  draft: ResultsDraft,
+  prev: TimerState,
+  timer: TimerState,
+): { snapshot: PoolWorkout; draft: ResultsDraft } {
+  let blocks = snapshot.blocks;
+  for (const outcome of timer.blockOutcomes.slice(prev.blockOutcomes.length)) {
+    if (outcome.setsDone === undefined) continue;
+    const ended = blocks[outcome.blockIndex];
+    if (!ended?.openSets) continue;
+    const normalized: Block = { ...ended, sets: outcome.setsDone };
+    delete normalized.openSets;
+    blocks = blocks.map((b, i) => (i === outcome.blockIndex ? normalized : b));
+    draft = withSetCount(draft, outcome.blockIndex, outcome.setsDone!);
+  }
+  const current = blocks[timer.blockIndex];
+  const setIndex = timer.phase.setIndex;
+  if (current?.openSets && setIndex !== undefined) {
+    draft = withSetCount(draft, timer.blockIndex, setIndex);
+  }
+  return { snapshot: blocks === snapshot.blocks ? snapshot : { ...snapshot, blocks }, draft };
+}
+
 /** Dispatches a timer event against the current run session's timer, returning the cues it fired. */
 export function dispatchRun(event: TimerEvent): TimerState | null {
   const session = runSession.value;
   if (!session) return null;
   const timer = timerReducer(session.timer, event);
+  const { snapshot, draft: synced } =
+    event.type === 'tick'
+      ? { snapshot: session.workoutSnapshot, draft: session.draft }
+      : syncOpenSets(session.workoutSnapshot, session.draft, session.timer, timer);
   const draft =
     timer.blockOutcomes.length !== session.timer.blockOutcomes.length
-      ? applyBlockOutcomes(session.draft, timer.blockOutcomes, session.workoutSnapshot)
-      : session.draft;
+      ? applyBlockOutcomes(synced, timer.blockOutcomes, snapshot)
+      : synced;
   const next: RunSession = {
     ...session,
+    workoutSnapshot: snapshot,
     timer,
     draft,
     // Resuming means the reload note no longer applies.

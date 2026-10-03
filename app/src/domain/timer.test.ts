@@ -569,3 +569,100 @@ describe('timer: pause/resume', () => {
     expect(afterResume.phase.remainingMs).toBe(2900); // only the 100ms since resume counted
   });
 });
+
+describe('timer: open-sets strength', () => {
+  const block: Block = {
+    format: 'strength',
+    movements: [{ movementId: 'squat' }, { movementId: 'row' }],
+    openSets: true,
+  };
+
+  it('counts up through set -> rest -> set until End block, recording sets done', () => {
+    let state = createTimer([block], 0);
+    state = timerReducer(state, { type: 'start', now: 0 });
+    expect(state.phase).toMatchObject({ kind: 'work', label: 'Set 1', setIndex: 1 });
+    expect(state.phase.remainingMs).toBeUndefined();
+    expect(state.phase.movementIds).toEqual(['squat', 'row']);
+
+    state = runTicks(state, 0, 5).state;
+    expect(state.phase.elapsedMs).toBe(500);
+
+    state = timerReducer(state, { type: 'next', now: 500 });
+    expect(state.phase).toMatchObject({ kind: 'rest', setIndex: 1, elapsedMs: 0 });
+    expect(state.phase.remainingMs).toBeUndefined();
+    // Rest counts up with no end of its own.
+    state = runTicks(state, 500, 900).state;
+    expect(state.phase.kind).toBe('rest');
+    expect(state.phase.elapsedMs).toBe(90_000);
+
+    state = timerReducer(state, { type: 'next', now: 90_500 });
+    expect(state.phase).toMatchObject({ kind: 'work', label: 'Set 2', setIndex: 2 });
+    state = timerReducer(state, { type: 'next', now: 90_600 });
+    expect(state.phase).toMatchObject({ kind: 'rest', setIndex: 2 });
+
+    state = timerReducer(state, { type: 'endBlock', now: 90_700 });
+    expect(state.status).toBe('finished');
+    expect(state.blockOutcomes).toEqual([
+      expect.objectContaining({ blockIndex: 0, status: 'completed', setsDone: 2 }),
+    ]);
+  });
+
+  it('counts the set in progress when the block is ended mid-set', () => {
+    let state = createTimer([block], 0);
+    state = timerReducer(state, { type: 'start', now: 0 });
+    state = timerReducer(state, { type: 'next', now: 100 });
+    state = timerReducer(state, { type: 'next', now: 200 });
+    state = timerReducer(state, { type: 'endBlock', now: 300 });
+    expect(state.blockOutcomes[0].setsDone).toBe(2);
+  });
+});
+
+describe('timer: live workouts', () => {
+  const sets: Block = { format: 'strength', movements: [{ movementId: 'squat' }], openSets: true };
+  const finisher: Block = {
+    format: 'amrap',
+    movements: [{ movementId: 'burpee' }],
+    durationSec: 2,
+  };
+
+  it('waits for a block after start and after each block ends, until finish', () => {
+    let state = createTimer([], 0, { live: true });
+    expect(state.status).toBe('idle');
+
+    state = timerReducer(state, { type: 'start', now: 0 });
+    expect(state.status).toBe('awaiting-block');
+    // Ticks while waiting don't advance anything.
+    expect(timerReducer(state, { type: 'tick', now: 5000 }).status).toBe('awaiting-block');
+
+    state = timerReducer(state, { type: 'appendBlock', block: sets, now: 1000 });
+    expect(state.status).toBe('running');
+    expect(state.blockIndex).toBe(0);
+    expect(state.phase.label).toBe('Set 1');
+    state = runTicks(state, 1000, 3).state;
+    expect(state.phase.elapsedMs).toBe(300);
+
+    state = timerReducer(state, { type: 'endBlock', now: 1300 });
+    expect(state.status).toBe('awaiting-block');
+
+    state = timerReducer(state, { type: 'appendBlock', block: finisher, now: 2000 });
+    expect(state.status).toBe('running');
+    expect(state.blockIndex).toBe(1);
+    state = timerReducer(state, { type: 'roundDone', now: 2100 });
+    state = runTicks(state, 2000, 25).state; // the 2s AMRAP runs out
+    expect(state.status).toBe('awaiting-block');
+
+    state = timerReducer(state, { type: 'finish', now: 5000 });
+    expect(state.status).toBe('finished');
+    expect(state.blockOutcomes.map((o) => [o.blockIndex, o.status])).toEqual([
+      [0, 'completed'],
+      [1, 'completed'],
+    ]);
+    expect(state.blockOutcomes[1].roundsDone).toBe(1);
+  });
+
+  it('ignores appendBlock on a planned (non-live) workout', () => {
+    let state = createTimer([sets], 0);
+    state = timerReducer(state, { type: 'appendBlock', block: finisher, now: 0 });
+    expect(state._blocks).toHaveLength(1);
+  });
+});

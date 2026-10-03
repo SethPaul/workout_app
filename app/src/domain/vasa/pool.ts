@@ -210,3 +210,30 @@ function boost(w: PoolWorkout, opts: SearchPoolOptions): number {
   if (!w.enabled) score -= 5;
   return score;
 }
+
+/**
+ * Movements from the most recent entered workouts in `region`, newest
+ * workout first, deduped — the live block picker's quick-pick row. Classes
+ * repeat movements a lot, so these are usually the ones to tap.
+ */
+export function recentEnteredMovementIds(
+  logs: WorkoutLog[],
+  region: BodyRegion,
+  limit = 8,
+): string[] {
+  const ids: string[] = [];
+  const recent = logs
+    .filter(
+      (l) => isEnteredWorkout(l.workoutSnapshot) && workoutRegion(l.workoutSnapshot) === region,
+    )
+    .sort((a, b) => b.finishedAt.localeCompare(a.finishedAt));
+  for (const log of recent) {
+    for (const block of log.workoutSnapshot.blocks) {
+      for (const bm of block.movements) {
+        if (!ids.includes(bm.movementId)) ids.push(bm.movementId);
+        if (ids.length >= limit) return ids;
+      }
+    }
+  }
+  return ids;
+}

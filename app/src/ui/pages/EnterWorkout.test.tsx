@@ -116,6 +116,14 @@ describe('EnterWorkout ("/enter" screen, SPEC 10.8)', () => {
   });
 
   describe('search mode', () => {
+    it('Start live workout begins a live run with no blocks, without touching the pool', () => {
+      renderPage();
+      fireEvent.click(screen.getByRole('button', { name: 'Start live workout' }));
+      expect(runSession.value?.live).toBe(true);
+      expect(runSession.value?.workoutSnapshot.blocks).toEqual([]);
+      expect(state.value!.pool.map((w) => w.id)).toEqual(['w1']);
+    });
+
     it('lists a pool workout and expanding it shows Start', () => {
       renderPage();
       expect(screen.getByText('Lower Body Blast')).toBeInTheDocument();
