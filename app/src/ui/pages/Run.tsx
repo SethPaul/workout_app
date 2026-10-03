@@ -2,20 +2,26 @@ import { useEffect } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import type { Block, Format, WorkoutLog } from '../../domain/types';
 import type { Cue, TimerEvent, TimerState } from '../../domain/timer';
-import { clearTodayWorkout, state, update } from '../../state/store';
+import { addPoolWorkout, clearTodayWorkout, state, update } from '../../state/store';
 import {
+  appendLiveBlock,
   clearRunSession,
   dispatchRun,
   dispatchWarmup,
   runSession,
+  setLiveRegion,
   updateRunDraft,
 } from '../../state/run';
+import { workoutRegion } from '../../domain/vasa/pool';
+import { regionForDate } from '../../domain/vasa/region';
+import { LiveBlockPicker } from '../components/LiveBlockPicker';
 import { WARMUP_TARGET_OPTIONS_MIN, createWarmup, type WarmupEvent } from '../../domain/warmup';
 import { resumeAudio, playCue } from '../audio';
 import { vibrateForCue } from '../vibrate';
 import { acquireWakeLock, releaseWakeLock } from '../wakelock';
 import { formatClock, movementLine, strengthSuggestionLine, uid } from '../helpers';
-import { resultsFromDraft } from '../resultsDraft';
+import { resultsFromDraft, setRpe } from '../resultsDraft';
+import { recommendedRestSec } from '../../domain/program/rest';
 import { ResultsForm } from '../components/ResultsForm';
 import { BlockLogDetails, SetEntry } from '../components/SetEntry';
 
@@ -24,6 +30,7 @@ function phaseHeading(format: Format, block: Block, timer: TimerState): string {
   switch (format) {
     case 'strength': {
       const set = phase.setIndex ?? 1;
+      if (block.openSets) return phase.kind === 'rest' ? `Rest · after set ${set}` : `Set ${set}`;
       const count = phase.setCount ?? block.sets ?? 1;
       return phase.kind === 'rest'
         ? `Rest · after set ${set} of ${count}`
@@ -114,9 +121,27 @@ export function Run() {
     }
   }, [session?.timer.status]);
 
+  // Live open-sets rest counts down the recommended rest for the set just
+  // done (movement type x its hardest entered RPE), re-derived as RPE is
+  // typed in during the rest.
+  const restBlock = session?.workoutSnapshot.blocks[session.timer.blockIndex];
+  const restTargetMs =
+    session && restBlock?.openSets && session.timer.phase.kind === 'rest'
+      ? recommendedRestSec(
+          restBlock.movements
+            .map((bm) => appState.movements.find((m) => m.id === bm.movementId))
+            .filter((m) => m !== undefined),
+          setRpe(session.draft, session.timer.blockIndex, session.timer.phase.setIndex ?? 1),
+        ) * 1000
+      : undefined;
+  useEffect(() => {
+    if (restTargetMs === undefined || restTargetMs === session?.timer.phase.durationMs) return;
+    dispatchRun({ type: 'setRest', ms: restTargetMs, now: Date.now() });
+  }, [restTargetMs, session?.timer.phase.durationMs]);
+
   if (!session) return null;
 
-  function fire(type: TimerEvent['type']) {
+  function fire(type: Exclude<TimerEvent['type'], 'appendBlock' | 'setRest'>) {
     const timer = dispatchRun({ type, now: Date.now() });
     if (timer) playCues(timer.pendingCues, appState.settings.soundOn, appState.settings.vibrateOn);
   }
@@ -131,7 +156,7 @@ export function Run() {
 
   function handleFinishEarly() {
     const status = session!.timer.status;
-    if (status !== 'finished') {
+    if (status !== 'finished' && status !== 'awaiting-block') {
       if (!confirm('Finish this workout now? Any remaining blocks will be skipped.')) return;
     }
     fire('finish');
@@ -144,8 +169,18 @@ export function Run() {
     location.route('/', true);
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!session) return;
+    if (session.live) {
+      if (session.workoutSnapshot.blocks.length === 0) {
+        // Nothing was entered: there's no workout to log or add to the pool.
+        clearRunSession();
+        location.route('/', true);
+        return;
+      }
+      // Every live workout joins the pool, so it can be found and repeated.
+      await addPoolWorkout(session.workoutSnapshot);
+    }
     const results = resultsFromDraft(session.draft.movements);
     const log: WorkoutLog = {
       id: uid('log'),
@@ -160,11 +195,10 @@ export function Run() {
       blockOutcomes:
         session.draft.blockOutcomes.length > 0 ? session.draft.blockOutcomes : undefined,
     };
-    void update((s) => ({ ...s, logs: [...s.logs, log] })).then(() => {
-      clearTodayWorkout();
-      clearRunSession();
-      location.route('/history', true);
-    });
+    await update((s) => ({ ...s, logs: [...s.logs, log] }));
+    clearTodayWorkout();
+    clearRunSession();
+    location.route('/history', true);
   }
 
   const { timer, workoutSnapshot } = session;
@@ -193,9 +227,14 @@ export function Run() {
         </div>
         <div class="run-body">
           <p class="run-phase-label">Ready</p>
-          <p>
-            {workoutSnapshot.blocks.length} block{workoutSnapshot.blocks.length === 1 ? '' : 's'}
-          </p>
+          {session.live ? (
+            <p>Live workout · pick each block&rsquo;s movements as you go</p>
+          ) : (
+            <p>
+              {workoutSnapshot.blocks.length} block
+              {workoutSnapshot.blocks.length === 1 ? '' : 's'}
+            </p>
+          )}
           {workoutSnapshot.notes && <p class="muted run-notes">{workoutSnapshot.notes}</p>}
 
           <section class="warmup-card" aria-label="Warm-up stopwatch">
@@ -279,11 +318,28 @@ export function Run() {
           movements={appState.movements}
         />
         <div class="stack" style="padding-bottom:1rem">
-          <button class="btn btn-primary btn-big btn-block" onClick={handleSave}>
-            Save
+          <button class="btn btn-primary btn-big btn-block" onClick={() => void handleSave()}>
+            {session.live && workoutSnapshot.blocks.length === 0 ? 'Done' : 'Save'}
           </button>
         </div>
       </div>
+    );
+  }
+
+  // ---- live workout: pick the next block's movements ----
+  if (timer.status === 'awaiting-block') {
+    return (
+      <LiveBlockPicker
+        appState={appState}
+        blockNumber={workoutSnapshot.blocks.length + 1}
+        region={workoutRegion(workoutSnapshot) ?? regionForDate(new Date())}
+        onRegion={setLiveRegion}
+        onBegin={(next) => {
+          const t = appendLiveBlock(appState, next);
+          if (t) playCues(t.pendingCues, appState.settings.soundOn, appState.settings.vibrateOn);
+        }}
+        onFinish={() => fire('finish')}
+      />
     );
   }
 
@@ -327,17 +383,27 @@ export function Run() {
   const running = timer.status === 'running';
   const heading = phaseHeading(format, block, timer);
   const clock =
-    timer.phase.remainingMs !== undefined
-      ? formatClock(timer.phase.remainingMs)
-      : formatClock(timer.phase.elapsedMs);
+    timer.phase.overtimeMs !== undefined
+      ? `+${formatClock(timer.phase.overtimeMs)}`
+      : timer.phase.remainingMs !== undefined
+        ? formatClock(timer.phase.remainingMs)
+        : formatClock(timer.phase.elapsedMs);
   const currentMovements = block.movements.filter((bm) =>
     timer.phase.movementIds.includes(bm.movementId),
   );
 
   const canRoundDone = format === 'amrap' || format === 'rounds';
-  const canNext = format === 'chipper' || (format === 'strength' && timer.phase.kind === 'work');
+  const openSets = format === 'strength' && !!block.openSets;
+  const canNext =
+    format === 'chipper' || (format === 'strength' && (timer.phase.kind === 'work' || openSets));
+  const nextLabel =
+    format === 'chipper'
+      ? 'Next Movement'
+      : timer.phase.kind === 'rest'
+        ? `Start set ${(timer.phase.setIndex ?? 0) + 1}`
+        : 'Set Done';
   const canFail = format === 'death_by';
-  const canSkipBlock = format !== 'death_by';
+  const canSkipBlock = format !== 'death_by' && !openSets;
 
   return (
     <div class="run-screen">
@@ -346,13 +412,21 @@ export function Run() {
           Finish
         </button>
         <span class="muted">
-          Block {timer.blockIndex + 1} of {workoutSnapshot.blocks.length}
+          {session.live
+            ? block.title || `Block ${timer.blockIndex + 1}`
+            : `Block ${timer.blockIndex + 1} of ${workoutSnapshot.blocks.length}`}
         </span>
         <span class="run-top-spacer" />
       </div>
       <div class="run-body">
         <p class="run-phase-label">{heading}</p>
         <p class="run-timer">{clock}</p>
+        {openSets && timer.phase.kind === 'rest' && timer.phase.durationMs !== undefined && (
+          <p class="muted" data-testid="rest-target">
+            {timer.phase.overtimeMs !== undefined ? 'Rested' : 'Recommended rest'}{' '}
+            {formatClock(timer.phase.durationMs)}
+          </p>
+        )}
         {(format === 'amrap' || format === 'rounds') && (
           <p class="run-rounds">Rounds completed: {timer.roundsDone}</p>
         )}
@@ -404,7 +478,12 @@ export function Run() {
         )}
         {canNext && (
           <button class="btn btn-primary btn-big" onClick={() => fire('next')} disabled={!running}>
-            {format === 'chipper' ? 'Next Movement' : 'Set Done'}
+            {nextLabel}
+          </button>
+        )}
+        {openSets && (
+          <button class="btn" onClick={() => fire('endBlock')}>
+            End Block
           </button>
         )}
         {canFail && (

@@ -93,6 +93,10 @@ export interface Block {
   durationSec?: number; // amrap
   timeCapSec?: number; // rounds/chipper/strength optional cap
   alternate?: boolean; // emom: alternate movements per round instead of all each round
+  // strength only: open-ended sets entered live (no prescribed count or rest
+  // length) — set and rest clocks count up until the user ends the block.
+  // Normalised away (sets = setsDone) once the block ends; see state/run.ts.
+  openSets?: boolean;
 }
 
 export type Intensity = 'H' | 'M' | 'L';
@@ -146,6 +150,8 @@ export interface BlockOutcome {
   roundsDone?: number;
   /** every format: wall-clock ms spent in the block (excludes paused time). */
   elapsedMs: number;
+  /** open-sets strength: sets performed before the block was ended. */
+  setsDone?: number;
   /** death_by: the minute the user failed on (repsDue of the phase when 'fail' fired). */
   failedAtMinute?: number;
   /** 'completed' = ran to its natural end; 'skipped' = user hit Skip Block; 'failed' = death_by fail. */

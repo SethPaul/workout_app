@@ -35,9 +35,21 @@ export interface Phase {
   round?: number;
   /** emom/interval/tabata work/rest phases: total rounds. */
   roundCount?: number;
+  /** The phase's full length, when it's a countdown. */
+  durationMs?: number;
+  /** open-sets rest past its recommended length: how far past (the clock holds at 0:00). */
+  overtimeMs?: number;
 }
 
-export type TimerStatus = 'idle' | 'running' | 'paused' | 'between-blocks' | 'finished';
+export type TimerStatus =
+  | 'idle'
+  | 'running'
+  | 'paused'
+  | 'between-blocks'
+  // live workouts only: the last appended block has ended; waiting on
+  // `appendBlock` (or `finish`).
+  | 'awaiting-block'
+  | 'finished';
 
 interface InternalPhase {
   kind: PhaseKind;
@@ -60,6 +72,12 @@ interface InternalPhase {
   bellAtElapsedMs?: number;
   /** 'rounds' format only: auto-finish the block once roundsDone reaches this. */
   autoAdvanceRoundsTarget?: number;
+  /**
+   * open-sets rest: a countdown (once `setRest` gives it a length) that rings
+   * at zero and then holds, counting overtime, until the user starts the
+   * next set — the class, not the clock, decides when that is.
+   */
+  holdAtZero?: boolean;
 }
 
 interface InternalBlock {
@@ -68,6 +86,8 @@ interface InternalBlock {
   isDeathBy?: boolean;
   deathByMovementIds?: string[];
   chipperMovementIds?: string[];
+  /** open-sets strength: work/rest phases are appended one at a time as the user goes. */
+  openSets?: boolean;
 }
 
 export interface TimerState {
@@ -88,6 +108,11 @@ export interface TimerState {
   _cueFiredMarks: string[];
   _lastTickAt?: number;
   _chipperIndex?: number;
+  /**
+   * Live workout (blocks entered on the fly): running out of blocks waits in
+   * 'awaiting-block' for an `appendBlock` instead of finishing.
+   */
+  _live?: boolean;
 }
 
 export type TimerEvent =
@@ -98,7 +123,13 @@ export type TimerEvent =
   | { type: 'next'; now: number }
   | { type: 'roundDone'; now: number }
   | { type: 'fail'; now: number }
-  | { type: 'finish'; now: number };
+  | { type: 'finish'; now: number }
+  /** Ends the current block as completed (open-sets blocks have no natural end). */
+  | { type: 'endBlock'; now: number }
+  /** Sets (or updates) the current open-sets rest's countdown length. */
+  | { type: 'setRest'; ms: number; now: number }
+  /** Live workouts: adds a block; starts it immediately when the timer is awaiting one. */
+  | { type: 'appendBlock'; block: Block; now: number };
 
 function movementLabel(m: BlockMovement): string {
   return m.loadNote ? `${m.movementId} (${m.loadNote})` : m.movementId;
@@ -117,11 +148,36 @@ function buildDeathByMinutePhase(minute: number, movementIds: string[]): Interna
   };
 }
 
+function buildOpenSetPhase(kind: 'work' | 'rest', setIndex: number, movementIds: string[]) {
+  const phase: InternalPhase =
+    kind === 'work'
+      ? { kind, label: `Set ${setIndex}`, movementIds, setIndex }
+      : {
+          kind,
+          label: 'Rest',
+          movementIds: [],
+          setIndex,
+          holdAtZero: true,
+          countdownTicks: true,
+          tenSecondCue: true,
+        };
+  return phase;
+}
+
 function buildInternalBlock(block: Block): InternalBlock {
   const movementIds = block.movements.map((m) => m.movementId);
 
   switch (block.format) {
     case 'strength': {
+      if (block.openSets) {
+        // Count-up work and rest phases, appended one at a time by
+        // completeCurrentPhase until the user ends the block.
+        return {
+          format: 'strength',
+          phases: [buildOpenSetPhase('work', 1, movementIds)],
+          openSets: true,
+        };
+      }
       const sets = block.sets ?? 1;
       const restSec = block.restSec ?? 60;
       const repsDue = block.movements.length === 1 ? block.movements[0].reps : undefined;
@@ -321,6 +377,7 @@ function setPhaseFromInternal(state: TimerState, phase: InternalPhase): void {
     movementIds: phase.movementIds,
     repsDue: phase.repsDue,
     remainingMs: phase.durationMs,
+    durationMs: phase.durationMs,
     elapsedMs: 0,
     setIndex: phase.setIndex,
     setCount: phase.setCount,
@@ -335,8 +392,16 @@ function pushCue(state: TimerState, type: CueType, at: number): void {
   state.pendingCues.push({ type, at });
 }
 
-/** Builds the initial (idle) timer state for a workout's blocks. */
-export function createTimer(blocks: Block[], now: number): TimerState {
+/**
+ * Builds the initial (idle) timer state for a workout's blocks. `live` starts
+ * a workout whose blocks are appended as it goes (`appendBlock`); it may
+ * begin with none.
+ */
+export function createTimer(
+  blocks: Block[],
+  now: number,
+  opts: { live?: boolean } = {},
+): TimerState {
   const internalBlocks = blocks.map(buildInternalBlock);
   const state: TimerState = {
     blockIndex: 0,
@@ -352,9 +417,10 @@ export function createTimer(blocks: Block[], now: number): TimerState {
     _cueFiredMarks: [],
     _lastTickAt: now,
   };
+  if (opts.live) state._live = true;
   const first = internalBlocks[0]?.phases[0];
   if (first) setPhaseFromInternal(state, first);
-  else state.status = 'finished';
+  else if (!opts.live) state.status = 'finished';
   return state;
 }
 
@@ -390,6 +456,11 @@ function recordBlockOutcome(state: TimerState, status: BlockOutcome['status']): 
   if (block.format === 'amrap' || block.format === 'rounds') {
     outcome.roundsDone = state.roundsDone;
   }
+  if (block.openSets) {
+    // Ending mid-set counts that set: the usual reason is finishing the last
+    // set and tapping End block instead of Set done.
+    outcome.setsDone = state.phase.setIndex ?? 0;
+  }
   if (status === 'failed') {
     outcome.failedAtMinute = currentInternalPhase(state)?.repsDue;
   }
@@ -408,7 +479,7 @@ function advanceBlock(
   state._blockElapsedMs = 0;
   const block = currentBlock(state);
   if (!block) {
-    state.status = 'finished';
+    state.status = state._live ? 'awaiting-block' : 'finished';
     state.phase = emptyPhase();
     return;
   }
@@ -440,6 +511,14 @@ function completeCurrentPhase(state: TimerState): void {
   if (block.isDeathBy && state.phaseIndex === block.phases.length - 1) {
     const nextMinute = (phase.repsDue ?? 1) + 1;
     block.phases.push(buildDeathByMinutePhase(nextMinute, block.deathByMovementIds ?? []));
+  }
+  if (block.openSets && state.phaseIndex === block.phases.length - 1) {
+    const setIndex = phase.setIndex ?? 1;
+    block.phases.push(
+      phase.kind === 'work'
+        ? buildOpenSetPhase('rest', setIndex, [])
+        : buildOpenSetPhase('work', setIndex + 1, block.phases[0].movementIds),
+    );
   }
   advancePhase(state);
 }
@@ -491,7 +570,16 @@ function applyTick(state: TimerState, now: number): void {
     const remaining = Math.max(0, phase.durationMs - state._phaseElapsedMs);
     state.phase.remainingMs = remaining;
     fireCountdownCues(state, phase);
-    if (remaining <= 0) completeCurrentPhase(state);
+    if (remaining > 0) return;
+    if (!phase.holdAtZero) {
+      completeCurrentPhase(state);
+      return;
+    }
+    state.phase.overtimeMs = state._phaseElapsedMs - phase.durationMs;
+    if (!state._cueFiredMarks.includes('rested')) {
+      pushCue(state, 'bell', 0);
+      state._cueFiredMarks.push('rested');
+    }
   } else if (phase.kind === 'stopwatch') {
     if (
       phase.bellAtElapsedMs !== undefined &&
@@ -546,6 +634,46 @@ function applyRoundDone(state: TimerState): void {
   }
 }
 
+function applyEndBlock(state: TimerState): void {
+  if (state.status !== 'running' && state.status !== 'paused') return;
+  advanceBlock(state, 'completed');
+}
+
+function applySetRest(state: TimerState, ms: number): void {
+  const phase = currentInternalPhase(state);
+  if (!phase?.holdAtZero || state.status === 'finished') return;
+  phase.durationMs = ms;
+  state.phase.durationMs = ms;
+  const remaining = Math.max(0, ms - state._phaseElapsedMs);
+  state.phase.remainingMs = remaining;
+  state.phase.overtimeMs = remaining > 0 ? undefined : state._phaseElapsedMs - ms;
+  // Re-arm any cue the new length hasn't reached yet (a lengthened rest
+  // rings again at zero); a rest that's now already over rings on the next tick.
+  state._cueFiredMarks = state._cueFiredMarks.filter((mark) => {
+    if (mark === '10s') return remaining <= 10_000;
+    if (mark.startsWith('tick-')) return remaining <= Number(mark.slice('tick-'.length));
+    if (mark === 'rested') return remaining <= 0;
+    return true;
+  });
+  if (remaining <= 0) {
+    // Already over: skip straight to the bell instead of a burst of countdown beeps.
+    for (const mark of ['10s', 'tick-3000', 'tick-2000', 'tick-1000']) {
+      if (!state._cueFiredMarks.includes(mark)) state._cueFiredMarks.push(mark);
+    }
+  }
+}
+
+function applyAppendBlock(state: TimerState, block: Block, now: number): void {
+  if (!state._live || state.status === 'finished') return;
+  state._blocks.push(buildInternalBlock(block));
+  if (state.status !== 'awaiting-block' || state.blockIndex !== state._blocks.length - 1) return;
+  const first = state._blocks[state.blockIndex].phases[0];
+  setPhaseFromInternal(state, first);
+  state.status = 'running';
+  state._lastTickAt = now;
+  fireStartCues(state, first);
+}
+
 function applyFail(state: TimerState): void {
   if (state.status !== 'running') return;
   // death_by (and, generically, any format): failing ends the current block.
@@ -565,6 +693,10 @@ export function timerReducer(state: TimerState, event: TimerEvent): TimerState {
   switch (event.type) {
     case 'start': {
       if (next.status !== 'idle') break;
+      if (next._live && !currentBlock(next)) {
+        next.status = 'awaiting-block';
+        break;
+      }
       next.status = 'running';
       next._lastTickAt = event.now;
       fireStartCues(next, currentInternalPhase(next));
@@ -595,6 +727,18 @@ export function timerReducer(state: TimerState, event: TimerEvent): TimerState {
     }
     case 'fail': {
       applyFail(next);
+      break;
+    }
+    case 'endBlock': {
+      applyEndBlock(next);
+      break;
+    }
+    case 'setRest': {
+      applySetRest(next, event.ms);
+      break;
+    }
+    case 'appendBlock': {
+      applyAppendBlock(next, event.block, event.now);
       break;
     }
     case 'finish': {

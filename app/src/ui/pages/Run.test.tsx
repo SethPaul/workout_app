@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/preact';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/preact';
 import { LocationProvider } from 'preact-iso';
 import { Run } from './Run';
 import { setStorage, state } from '../../state/store';
 import {
+  beginLiveSession,
   beginRunSession,
   clearRunSession,
   dispatchRun,
@@ -169,5 +170,138 @@ describe('Run: mid-workout set entry', () => {
     expect(screen.getByText('Rest · after set 1 of 3')).toBeInTheDocument();
     // The value entered for set 1 stays editable during the rest that follows it.
     expect(screen.getByPlaceholderText('weight')).toHaveValue(225);
+  });
+});
+
+describe('Run: live workout (blocks entered on the fly)', () => {
+  function liveFixture(): AppState {
+    const s = fixtureState();
+    s.movements.push({
+      id: 'pushup',
+      name: 'Push-up',
+      tags: ['bodyweight', 'push'],
+      equipment: ['none'],
+      cadenceDays: 3,
+      unit: 'reps',
+      loadable: false,
+    });
+    return s;
+  }
+
+  beforeEach(() => {
+    setStorage(new MemoryStorage());
+    state.value = liveFixture();
+    beginLiveSession(state.value, new Date('2026-09-29T09:00:00'));
+  });
+
+  afterEach(() => {
+    cleanup();
+    clearRunSession();
+  });
+
+  function pick(name: string) {
+    fireEvent.input(screen.getByPlaceholderText('Search movements…'), {
+      target: { value: name },
+    });
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${name}`) }));
+  }
+
+  it('picks a superset, runs open sets with a rest clock, then saves the workout to the pool', async () => {
+    renderRun();
+    expect(screen.getByText(/pick each block/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Start workout' }));
+
+    expect(screen.getByText('Next: Block 1')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Begin block' })).toBeDisabled();
+    pick('Back Squat');
+    pick('Push-up');
+    expect(screen.getByText('Movements (2/3)')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Begin block' }));
+
+    expect(screen.getByText('Set 1')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Skip Block' })).toBeNull();
+    fireEvent.input(screen.getByPlaceholderText('weight'), { target: { value: '135' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Set Done' }));
+
+    expect(screen.getByText('Rest · after set 1')).toBeInTheDocument();
+    // Squat (loaded accessory) + push-up (bodyweight) at the default RPE 8: 1:30.
+    expect(screen.getByTestId('rest-target')).toHaveTextContent('Recommended rest 1:30');
+    expect(screen.getByText('1:30')).toHaveClass('run-timer');
+    // Entering a hard RPE for the set just done lengthens the rest.
+    fireEvent.input(screen.getByPlaceholderText('target 8'), { target: { value: '9.5' } });
+    expect(screen.getByTestId('rest-target')).toHaveTextContent('Recommended rest 2:00');
+    const restStart = runSession.value!.timer._lastTickAt!;
+    act(() => {
+      dispatchRun({ type: 'tick', now: restStart + 125_000 });
+    });
+    expect(screen.getByText('+0:05')).toHaveClass('run-timer');
+    expect(screen.getByTestId('rest-target')).toHaveTextContent('Rested 2:00');
+    fireEvent.click(screen.getByRole('button', { name: 'Start set 2' }));
+    expect(screen.getByText('Set 2')).toBeInTheDocument();
+    // Set 2's row starts from set 1's weight.
+    expect(screen.getByPlaceholderText('weight')).toHaveValue(135);
+    fireEvent.click(screen.getByRole('button', { name: 'Set Done' }));
+    fireEvent.click(screen.getByRole('button', { name: 'End Block' }));
+
+    expect(screen.getByText('Next: Block 2')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Finish workout' }));
+    expect(screen.getByText('Log results')).toBeInTheDocument();
+
+    const snapshot = runSession.value!.workoutSnapshot;
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(state.value!.logs).toHaveLength(1));
+
+    const saved = state.value!.pool.find((w) => w.id === snapshot.id)!;
+    expect(saved.blocks).toEqual([
+      {
+        format: 'strength',
+        title: 'Block 1',
+        movements: [{ movementId: 'squat' }, { movementId: 'pushup' }],
+        sets: 2,
+      },
+    ]);
+    const log = state.value!.logs[0];
+    expect(log.poolWorkoutId).toBe(snapshot.id);
+    expect(log.results[0].sets?.map((set) => set.weight)).toEqual([135, 135]);
+    expect(runSession.value).toBeNull();
+  });
+
+  it('offers recently used movements for the region as one-tap picks', () => {
+    state.value = {
+      ...state.value!,
+      logs: [
+        {
+          id: 'l1',
+          poolWorkoutId: 'old',
+          workoutSnapshot: {
+            id: 'old',
+            name: 'Lower · Sep 22',
+            intensity: 'M',
+            blocks: [{ format: 'strength', movements: [{ movementId: 'pushup' }], sets: 3 }],
+            cadenceDays: 14,
+            enabled: true,
+            source: 'manual',
+            tags: ['vasa', 'region:lower'],
+          },
+          startedAt: '2026-09-22T09:00:00.000Z',
+          finishedAt: '2026-09-22T10:00:00.000Z',
+          results: [],
+        },
+      ],
+    };
+    renderRun();
+    fireEvent.click(screen.getByRole('button', { name: 'Start workout' }));
+    const recent = screen.getByRole('group', { name: 'Recent movements' });
+    fireEvent.click(recent.querySelector('button')!);
+    expect(screen.getByText('Movements (1/3)')).toBeInTheDocument();
+  });
+
+  it('finishing before any block discards the session without logging', () => {
+    renderRun();
+    fireEvent.click(screen.getByRole('button', { name: 'Start workout' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Finish workout' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+    expect(runSession.value).toBeNull();
+    expect(state.value!.pool).toHaveLength(0);
   });
 });

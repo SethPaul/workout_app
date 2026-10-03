@@ -569,3 +569,156 @@ describe('timer: pause/resume', () => {
     expect(afterResume.phase.remainingMs).toBe(2900); // only the 100ms since resume counted
   });
 });
+
+describe('timer: open-sets strength', () => {
+  const block: Block = {
+    format: 'strength',
+    movements: [{ movementId: 'squat' }, { movementId: 'row' }],
+    openSets: true,
+  };
+
+  it('counts up through set -> rest -> set until End block, recording sets done', () => {
+    let state = createTimer([block], 0);
+    state = timerReducer(state, { type: 'start', now: 0 });
+    expect(state.phase).toMatchObject({ kind: 'work', label: 'Set 1', setIndex: 1 });
+    expect(state.phase.remainingMs).toBeUndefined();
+    expect(state.phase.movementIds).toEqual(['squat', 'row']);
+
+    state = runTicks(state, 0, 5).state;
+    expect(state.phase.elapsedMs).toBe(500);
+
+    state = timerReducer(state, { type: 'next', now: 500 });
+    expect(state.phase).toMatchObject({ kind: 'rest', setIndex: 1, elapsedMs: 0 });
+    expect(state.phase.remainingMs).toBeUndefined();
+    // Rest counts up with no end of its own.
+    state = runTicks(state, 500, 900).state;
+    expect(state.phase.kind).toBe('rest');
+    expect(state.phase.elapsedMs).toBe(90_000);
+
+    state = timerReducer(state, { type: 'next', now: 90_500 });
+    expect(state.phase).toMatchObject({ kind: 'work', label: 'Set 2', setIndex: 2 });
+    state = timerReducer(state, { type: 'next', now: 90_600 });
+    expect(state.phase).toMatchObject({ kind: 'rest', setIndex: 2 });
+
+    state = timerReducer(state, { type: 'endBlock', now: 90_700 });
+    expect(state.status).toBe('finished');
+    expect(state.blockOutcomes).toEqual([
+      expect.objectContaining({ blockIndex: 0, status: 'completed', setsDone: 2 }),
+    ]);
+  });
+
+  it('counts the set in progress when the block is ended mid-set', () => {
+    let state = createTimer([block], 0);
+    state = timerReducer(state, { type: 'start', now: 0 });
+    state = timerReducer(state, { type: 'next', now: 100 });
+    state = timerReducer(state, { type: 'next', now: 200 });
+    state = timerReducer(state, { type: 'endBlock', now: 300 });
+    expect(state.blockOutcomes[0].setsDone).toBe(2);
+  });
+});
+
+describe('timer: live workouts', () => {
+  const sets: Block = { format: 'strength', movements: [{ movementId: 'squat' }], openSets: true };
+  const finisher: Block = {
+    format: 'amrap',
+    movements: [{ movementId: 'burpee' }],
+    durationSec: 2,
+  };
+
+  it('waits for a block after start and after each block ends, until finish', () => {
+    let state = createTimer([], 0, { live: true });
+    expect(state.status).toBe('idle');
+
+    state = timerReducer(state, { type: 'start', now: 0 });
+    expect(state.status).toBe('awaiting-block');
+    // Ticks while waiting don't advance anything.
+    expect(timerReducer(state, { type: 'tick', now: 5000 }).status).toBe('awaiting-block');
+
+    state = timerReducer(state, { type: 'appendBlock', block: sets, now: 1000 });
+    expect(state.status).toBe('running');
+    expect(state.blockIndex).toBe(0);
+    expect(state.phase.label).toBe('Set 1');
+    state = runTicks(state, 1000, 3).state;
+    expect(state.phase.elapsedMs).toBe(300);
+
+    state = timerReducer(state, { type: 'endBlock', now: 1300 });
+    expect(state.status).toBe('awaiting-block');
+
+    state = timerReducer(state, { type: 'appendBlock', block: finisher, now: 2000 });
+    expect(state.status).toBe('running');
+    expect(state.blockIndex).toBe(1);
+    state = timerReducer(state, { type: 'roundDone', now: 2100 });
+    state = runTicks(state, 2000, 25).state; // the 2s AMRAP runs out
+    expect(state.status).toBe('awaiting-block');
+
+    state = timerReducer(state, { type: 'finish', now: 5000 });
+    expect(state.status).toBe('finished');
+    expect(state.blockOutcomes.map((o) => [o.blockIndex, o.status])).toEqual([
+      [0, 'completed'],
+      [1, 'completed'],
+    ]);
+    expect(state.blockOutcomes[1].roundsDone).toBe(1);
+  });
+
+  it('ignores appendBlock on a planned (non-live) workout', () => {
+    let state = createTimer([sets], 0);
+    state = timerReducer(state, { type: 'appendBlock', block: finisher, now: 0 });
+    expect(state._blocks).toHaveLength(1);
+  });
+});
+
+describe('timer: open-sets recommended rest', () => {
+  const block: Block = { format: 'strength', movements: [{ movementId: 'squat' }], openSets: true };
+
+  function resting(): TimerState {
+    let state = createTimer([block], 0);
+    state = timerReducer(state, { type: 'start', now: 0 });
+    return timerReducer(state, { type: 'next', now: 0 }); // set 1 done
+  }
+
+  it('counts down the given rest, rings at zero, then holds and counts overtime', () => {
+    let state = timerReducer(resting(), { type: 'setRest', ms: 15_000, now: 0 });
+    expect(state.phase).toMatchObject({ kind: 'rest', durationMs: 15_000, remainingMs: 15_000 });
+
+    const run = runTicks(state, 0, 170); // 17s
+    state = run.state;
+    expect(state.phase.kind).toBe('rest'); // never starts the next set on its own
+    expect(state.phase.remainingMs).toBe(0);
+    expect(state.phase.overtimeMs).toBe(2000);
+    expect(run.cues.filter((c) => c.type === 'countdown').map((c) => c.at)).toEqual([
+      10_000, 3000, 2000, 1000,
+    ]);
+    expect(run.cues.filter((c) => c.type === 'bell')).toHaveLength(1);
+
+    state = timerReducer(state, { type: 'next', now: 17_000 });
+    expect(state.phase).toMatchObject({ kind: 'work', setIndex: 2 });
+    expect(state.phase.overtimeMs).toBeUndefined();
+  });
+
+  it('re-targets mid-rest (RPE entered late): longer re-arms the bell, shorter rings once', () => {
+    let state = timerReducer(resting(), { type: 'setRest', ms: 5000, now: 0 });
+    state = runTicks(state, 0, 60).state; // 6s: rang already
+    expect(state.phase.overtimeMs).toBe(1000);
+
+    state = timerReducer(state, { type: 'setRest', ms: 8000, now: 6000 });
+    expect(state.phase.remainingMs).toBe(2000);
+    expect(state.phase.overtimeMs).toBeUndefined();
+    let run = runTicks(state, 6000, 25);
+    expect(run.cues.filter((c) => c.type === 'bell')).toHaveLength(1);
+
+    // Shortened below the time already rested: just the bell, no countdown burst.
+    state = timerReducer(resting(), { type: 'setRest', ms: 60_000, now: 0 });
+    state = runTicks(state, 0, 300).state; // 30s
+    state = timerReducer(state, { type: 'setRest', ms: 20_000, now: 30_000 });
+    expect(state.phase.overtimeMs).toBe(10_000);
+    run = runTicks(state, 30_000, 1);
+    expect(run.cues).toEqual([{ type: 'bell', at: 0 }]);
+  });
+
+  it('ignores setRest outside an open-sets rest', () => {
+    let state = createTimer([block], 0);
+    state = timerReducer(state, { type: 'start', now: 0 });
+    state = timerReducer(state, { type: 'setRest', ms: 5000, now: 0 });
+    expect(state.phase.durationMs).toBeUndefined();
+  });
+});
