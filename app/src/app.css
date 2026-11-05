@@ -677,8 +677,21 @@ a {
   padding: 1rem 0;
 }
 
+.run-controls {
+  gap: 0.75rem;
+}
+
 .run-controls .btn {
-  min-height: 56px;
+  min-height: 64px;
+  font-size: 1.15rem;
+}
+
+/* Primary in-workout actions (Set Done, +1 Round, Pause, Begin, …) get an
+   extra-large target so they're easy to hit mid-set with tired, sweaty hands. */
+.run-controls .btn-big {
+  min-height: 88px;
+  font-size: 1.4rem;
+  border-radius: calc(var(--radius) * 1.5);
 }
 
 .next-block-card {
