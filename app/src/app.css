@@ -560,7 +560,9 @@ a {
   display: flex;
   flex-direction: column;
   background: var(--bg);
-  padding: env(safe-area-inset-top, 0px) 1rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
+  /* No bottom padding here: .run-controls is pinned to the bottom edge and
+     carries the safe-area inset itself. */
+  padding: env(safe-area-inset-top, 0px) 1rem 0;
   overflow-y: auto;
 }
 
@@ -671,27 +673,44 @@ a {
 }
 
 .run-controls {
+  /* Pinned to the bottom of the run screen so the main actions are always
+     reachable without scrolling; the body scrolls underneath if it's long. */
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  padding: 1rem 0;
-}
-
-.run-controls {
-  gap: 0.75rem;
+  margin: 0 -1rem;
+  padding: 0.75rem 1rem calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+  background: var(--bg);
+  border-top: 1px solid var(--border);
 }
 
 .run-controls .btn {
-  min-height: 64px;
-  font-size: 1.15rem;
+  min-height: 60px;
+  font-size: 1.1rem;
 }
 
-/* Primary in-workout actions (Set Done, +1 Round, Pause, Begin, …) get an
+/* Primary in-workout actions (Set Done, +1 Round, Begin, …) get an
    extra-large target so they're easy to hit mid-set with tired, sweaty hands. */
 .run-controls .btn-big {
   min-height: 88px;
   font-size: 1.4rem;
   border-radius: calc(var(--radius) * 1.5);
+}
+
+/* Secondary actions (Pause, Skip/End Block) share one row to keep the
+   pinned bar short. */
+.run-controls-secondary {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 0.6rem;
+}
+
+.run-controls-secondary:empty {
+  display: none;
 }
 
 .next-block-card {
