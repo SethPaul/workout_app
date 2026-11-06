@@ -601,6 +601,12 @@ a {
   text-align: center;
 }
 
+/* Spacing comes from .run-body's gap; browser-default <p> margins (1em, so
+   ~90px around the big timer) would push the set inputs off small screens. */
+.run-body > p {
+  margin: 0;
+}
+
 .run-phase-label {
   font-size: 1.1rem;
   font-weight: 700;
@@ -711,6 +717,22 @@ a {
 
 .run-controls-secondary:empty {
   display: none;
+}
+
+/* Very short screens (e.g. original iPhone SE): trim the pinned bar and
+   header so a superset's inputs still fit above the buttons. */
+@media (max-height: 600px) {
+  .run-top {
+    padding: 0.4rem 0;
+  }
+
+  .run-controls .btn {
+    min-height: 52px;
+  }
+
+  .run-controls .btn-big {
+    min-height: 72px;
+  }
 }
 
 .next-block-card {
