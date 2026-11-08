@@ -4,13 +4,19 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 // GitHub Pages serves this app under /workout_app/, so the base path is
 // configurable via VITE_BASE (defaults to '/' for local dev).
+//
+// `--mode native` builds the bundle that ships inside the Android app
+// (Capacitor). It skips the service worker: the assets are already local, and
+// a cached SW would keep serving the previous bundle after an app update.
 export default defineConfig(({ mode }) => {
-  const base = process.env.VITE_BASE ?? '/';
+  const native = mode === 'native';
+  const base = native ? '/' : (process.env.VITE_BASE ?? '/');
   return {
     base,
     plugins: [
       preact(),
       VitePWA({
+        disable: native,
         registerType: 'autoUpdate',
         includeAssets: ['favicon.svg'],
         manifest: {

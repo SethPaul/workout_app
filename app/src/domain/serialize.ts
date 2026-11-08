@@ -11,9 +11,20 @@ import type {
   WorkoutLog,
 } from './types';
 
-/** Serializes AppState to a JSON string for backup/export. */
-export function exportState(state: AppState): string {
-  return JSON.stringify(state, null, 2);
+/**
+ * Serializes AppState to a JSON string for backup/export. The backup carries
+ * an `exportedAt` stamp (ignored by `importState`, which only reads AppState
+ * fields) so an import can say how old the file is before replacing data.
+ */
+export function exportState(state: AppState, exportedAt: Date = new Date()): string {
+  return JSON.stringify({ exportedAt: exportedAt.toISOString(), ...state }, null, 2);
+}
+
+/** A validated backup plus the export metadata it carried, if any. */
+export interface ParsedBackup {
+  state: AppState;
+  /** ISO timestamp from `exportState`; absent in backups made before it was added. */
+  exportedAt?: string;
 }
 
 function fail(message: string): never {
@@ -246,9 +257,20 @@ function validateProgram(value: unknown): AppState['program'] {
  * readable Error describing the first problem found.
  */
 export function importState(json: string): AppState {
+  return parseBackup(json).state;
+}
+
+/**
+ * Like `importState`, but also returns the backup's `exportedAt` stamp. A
+ * leading byte-order mark (added by some editors and cloud-drive round trips)
+ * and surrounding whitespace are tolerated.
+ */
+export function parseBackup(json: string): ParsedBackup {
+  const text = json.replace(/^\uFEFF/, '').trim();
+  if (text === '') fail('the file is empty');
   let parsed: unknown;
   try {
-    parsed = JSON.parse(json);
+    parsed = JSON.parse(text);
   } catch (e) {
     fail(`could not parse JSON (${e instanceof Error ? e.message : String(e)})`);
   }
@@ -306,6 +328,10 @@ export function importState(json: string): AppState {
     program,
     ...(parsed.seedRevision !== undefined ? { seedRevision: parsed.seedRevision } : {}),
   };
+  const exportedAt =
+    typeof parsed.exportedAt === 'string' && !Number.isNaN(Date.parse(parsed.exportedAt))
+      ? parsed.exportedAt
+      : undefined;
   // Upgrades a v1 import to v2 (SPEC 9.1) and is a no-op on an already-full v2 import.
-  return migrate(raw);
+  return { state: migrate(raw), ...(exportedAt ? { exportedAt } : {}) };
 }

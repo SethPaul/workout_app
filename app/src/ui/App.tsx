@@ -1,6 +1,8 @@
 import { useEffect } from 'preact/hooks';
 import { LocationProvider, Route, Router, useLocation } from 'preact-iso';
+import { onIncomingBackup } from '../platform/backupIO';
 import { init, state } from '../state/store';
+import { importBackupText } from './backupImport';
 import { BottomNav } from './components/BottomNav';
 import { Today } from './pages/Today';
 import { Run } from './pages/Run';
@@ -56,7 +58,18 @@ function AppShell() {
 
 export function App() {
   useEffect(() => {
-    void init();
+    const ready = init();
+    // Android: a backup opened with / shared to the app (including the one
+    // that launched it) is imported once the current state has loaded.
+    return onIncomingBackup((payload) => {
+      void ready.then(() => {
+        if (payload.error) {
+          alert(`Couldn't open ${payload.name ?? 'the file'}: ${payload.error}`);
+        } else if (payload.text !== undefined) {
+          void importBackupText(payload.text, payload.name);
+        }
+      });
+    });
   }, []);
 
   if (!state.value) {

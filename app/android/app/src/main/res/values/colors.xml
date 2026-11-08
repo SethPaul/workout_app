@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Matches the web app's theme_color / background_color (#111318). -->
+    <color name="splash_background">#111318</color>
+    <color name="colorPrimary">#111318</color>
+    <color name="colorPrimaryDark">#111318</color>
+    <color name="colorAccent">#1F6FEB</color>
+</resources>
