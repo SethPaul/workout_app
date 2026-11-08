@@ -404,6 +404,20 @@ export function Run() {
         : 'Set Done';
   const canFail = format === 'death_by';
   const canSkipBlock = format !== 'death_by' && !openSets;
+  // Pause/Resume is the headline button when it's the only thing to tap:
+  // while paused (the other actions are disabled) or for formats with no
+  // manual "done" action.
+  const pauseIsPrimary = !running || !(canNext || canRoundDone || canFail);
+  // While paused the other actions are disabled, so only Resume stays big.
+  const big = running ? ' btn-big' : '';
+  const pauseButton = (
+    <button
+      class={pauseIsPrimary ? `btn btn-big${running ? '' : ' btn-primary'}` : 'btn'}
+      onClick={() => fire(running ? 'pause' : 'resume')}
+    >
+      {running ? 'Pause' : 'Resume'}
+    </button>
+  );
 
   return (
     <div class="run-screen">
@@ -464,38 +478,39 @@ export function Run() {
         )}
       </div>
       <div class="run-controls">
-        <button class="btn btn-big" onClick={() => fire(running ? 'pause' : 'resume')}>
-          {running ? 'Pause' : 'Resume'}
-        </button>
+        {pauseIsPrimary && pauseButton}
+        {canNext && (
+          <button class={`btn btn-primary${big}`} onClick={() => fire('next')} disabled={!running}>
+            {nextLabel}
+          </button>
+        )}
         {canRoundDone && (
           <button
-            class="btn btn-primary btn-big"
+            class={`btn btn-primary${big}`}
             onClick={() => fire('roundDone')}
             disabled={!running}
           >
             +1 Round
           </button>
         )}
-        {canNext && (
-          <button class="btn btn-primary btn-big" onClick={() => fire('next')} disabled={!running}>
-            {nextLabel}
-          </button>
-        )}
-        {openSets && (
-          <button class="btn" onClick={() => fire('endBlock')}>
-            End Block
-          </button>
-        )}
         {canFail && (
-          <button class="btn btn-danger btn-big" onClick={() => fire('fail')} disabled={!running}>
+          <button class={`btn btn-danger${big}`} onClick={() => fire('fail')} disabled={!running}>
             Fail
           </button>
         )}
-        {canSkipBlock && (
-          <button class="btn" onClick={() => fire('fail')} disabled={!running}>
-            Skip Block
-          </button>
-        )}
+        <div class="run-controls-secondary">
+          {!pauseIsPrimary && pauseButton}
+          {openSets && (
+            <button class="btn" onClick={() => fire('endBlock')}>
+              End Block
+            </button>
+          )}
+          {canSkipBlock && (
+            <button class="btn" onClick={() => fire('fail')} disabled={!running}>
+              Skip Block
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
