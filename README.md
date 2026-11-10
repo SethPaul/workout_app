@@ -9,6 +9,7 @@ you have, runs a format-aware timer with audio cues, and logs weight and reps.
 | Path | What it is |
 |---|---|
 | `app/` | **The current app.** Browser PWA (Vite + Preact + TypeScript), no backend. See `app/SPEC.md` and `app/README.md`. |
+| `app/android/` | Android app: the same bundle packaged with Capacitor. See `app/ANDROID.md` (build, install, moving data from the web app). |
 | `app/seed/` | Curated movement library and workout pool derived from the original spreadsheet. |
 | `project_docs/`, `xlsx_version/` | Domain reference: workout formats, intensity levels, movement list, the original spreadsheet. |
 | everything else at the root | Legacy Flutter prototype (June 2025). Not maintained; slated for archival. |

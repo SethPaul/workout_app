@@ -1,10 +1,19 @@
 import { useRef } from 'preact/hooks';
 import type { Equipment, Units } from '../../domain/types';
-import { exportState, importState } from '../../domain/serialize';
+import { exportState } from '../../domain/serialize';
 import { resolveSettings, type DeloadPolicy, type Focus } from '../../domain/program/context';
 import { clearTodayWorkout, startNewCycle, state, update } from '../../state/store';
 import { buildSeedState } from '../../storage/seed';
+import {
+  backupFilename,
+  canShareBackup,
+  isNativeApp,
+  openBackupFile,
+  saveBackup,
+  shareBackup,
+} from '../../platform/backupIO';
 import { playTestTone } from '../audio';
+import { importBackupText } from '../backupImport';
 import { EQUIPMENT_LABELS } from '../helpers';
 
 const ALL_EQUIPMENT = Object.keys(EQUIPMENT_LABELS) as Equipment[];
@@ -55,22 +64,41 @@ export function Settings() {
     void update((cur) => ({ ...cur, settings: { ...cur.settings, soundVolume: v } }));
   }
 
-  function exportJson() {
-    const json = exportState(s);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const dateStr = new Date().toISOString().slice(0, 10);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `workout-backup-${dateStr}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+  const native = isNativeApp();
+  const shareable = canShareBackup();
+
+  function reportError(action: string, err: unknown) {
+    alert(`${action} failed: ${err instanceof Error ? err.message : String(err)}`);
   }
 
-  function pickImportFile() {
-    fileInputRef.current?.click();
+  async function handleSave() {
+    try {
+      const saved = await saveBackup(backupFilename(), exportState(s));
+      if (saved && native) alert('Backup saved.');
+    } catch (err) {
+      reportError('Saving the backup', err);
+    }
+  }
+
+  async function handleShare() {
+    try {
+      await shareBackup(backupFilename(), exportState(s));
+    } catch (err) {
+      reportError('Sharing the backup', err);
+    }
+  }
+
+  async function pickImportFile() {
+    if (!native) {
+      fileInputRef.current?.click();
+      return;
+    }
+    try {
+      const file = await openBackupFile();
+      if (file) await importBackupText(file.text, file.name);
+    } catch (err) {
+      reportError('Opening the file', err);
+    }
   }
 
   async function handleFile(e: Event) {
@@ -78,17 +106,7 @@ export function Settings() {
     const file = input.files?.[0];
     input.value = '';
     if (!file) return;
-    const text = await file.text();
-    let parsed;
-    try {
-      parsed = importState(text);
-    } catch (err) {
-      alert(`Import failed: ${err instanceof Error ? err.message : String(err)}`);
-      return;
-    }
-    if (!confirm('Replace all current data with this backup? This cannot be undone.')) return;
-    await update(() => parsed);
-    clearTodayWorkout();
+    await importBackupText(await file.text(), file.name);
   }
 
   async function resetToSeed() {
@@ -262,16 +280,26 @@ export function Settings() {
 
       <div class="section-title">Backup</div>
       <div class="stack">
-        <button class="btn btn-block" onClick={exportJson}>
-          Export JSON
+        <div class="muted">
+          Your data lives only on this device. A backup is one JSON file with all workouts, logs,
+          movements and settings. To move to {native ? 'another device' : 'the Android app'}, export
+          here, send the file over (email, Drive, USB), then open it with Workout or use Import.
+        </div>
+        <button class="btn btn-block" onClick={() => void handleSave()}>
+          {native ? 'Save backup to a file' : 'Export JSON'}
         </button>
-        <button class="btn btn-block" onClick={pickImportFile}>
+        {shareable && (
+          <button class="btn btn-block" onClick={() => void handleShare()}>
+            Share backup
+          </button>
+        )}
+        <button class="btn btn-block" onClick={() => void pickImportFile()}>
           Import JSON
         </button>
         <input
           ref={fileInputRef}
           type="file"
-          accept="application/json"
+          accept="application/json,.json"
           style="display:none"
           onChange={(e) => void handleFile(e)}
         />

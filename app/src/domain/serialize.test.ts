@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { exportState, importState } from './serialize';
+import { exportState, importState, parseBackup } from './serialize';
 import { VASA_SEED_MOVEMENTS } from './vasa/seedMovements';
 import type { AppState } from './types';
 
@@ -386,5 +386,43 @@ describe('importState SPEC 10.2/10.8 (Vasa library facet) additions', () => {
     const imported = importState(JSON.stringify(state));
     expect(imported.movements[0].equipment).toContain('band');
     expect(imported.settings.availableEquipment).toContain('band');
+  });
+});
+
+describe('backup file handling (web export → Android import)', () => {
+  it('stamps exportedAt, which parseBackup returns and importState ignores', () => {
+    const json = exportState(validState(), new Date('2026-11-01T12:00:00.000Z'));
+    expect(JSON.parse(json).exportedAt).toBe('2026-11-01T12:00:00.000Z');
+    const parsed = parseBackup(json);
+    expect(parsed.exportedAt).toBe('2026-11-01T12:00:00.000Z');
+    expect(parsed.state).not.toHaveProperty('exportedAt');
+    expect(importState(json)).not.toHaveProperty('exportedAt');
+  });
+
+  it('accepts an older backup with no exportedAt', () => {
+    const parsed = parseBackup(JSON.stringify(validState()));
+    expect(parsed.exportedAt).toBeUndefined();
+    expect(parsed.state.pool).toHaveLength(1);
+  });
+
+  it('ignores a malformed exportedAt rather than rejecting the backup', () => {
+    const parsed = parseBackup(JSON.stringify({ ...validState(), exportedAt: 'not a date' }));
+    expect(parsed.exportedAt).toBeUndefined();
+  });
+
+  it('tolerates a UTF-8 byte-order mark and surrounding whitespace', () => {
+    const json = '\uFEFF' + `\n  ${exportState(validState())}\n\n`;
+    expect(importState(json).pool[0].id).toBe('w1');
+  });
+
+  it('round-trips a re-export of an imported backup', () => {
+    const once = importState(exportState(validState()));
+    const twice = importState(exportState(once));
+    expect(twice).toEqual(once);
+  });
+
+  it('rejects an empty file with a readable message', () => {
+    expect(() => importState('')).toThrow(/file is empty/);
+    expect(() => importState('﻿  \n')).toThrow(/file is empty/);
   });
 });

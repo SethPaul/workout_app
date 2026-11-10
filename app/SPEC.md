@@ -254,6 +254,11 @@ available. Screen: `navigator.wakeLock` when available, gracefully ignored other
 5. **History** (`/history`): reverse-chronological logs; tap → detail (snapshot + results).
 6. **Settings** (`/settings`): equipment toggles, sound/vibrate/wake-lock, **Export JSON** (download),
    **Import JSON** (file picker, replaces state after confirm), **Reset to seed**.
+   Exports carry an `exportedAt` ISO timestamp next to the AppState fields (ignored on
+   import). The import confirmation summarises the backup (file name, export date, counts)
+   and warns when logs on the device are missing from it. In the Android app (`ANDROID.md`)
+   export uses the system save dialog or share sheet, and a backup opened with / shared to
+   the app goes through the same confirm-and-replace flow.
 
 ## 6. Tech
 
